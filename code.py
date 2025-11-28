@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 
 id_to_path_map = {
@@ -27,9 +28,36 @@ id_to_path_map = {
 def locate_reproduction_code(id: str):
     trajectory = load_trajectory(id)
 
-    print_trajectory_steps(trajectory)
+    log_file = open('locate_reproduction_code.log', 'a', encoding='utf-8')
+    original_stdout = sys.stdout
+    sys.stdout = log_file
+    
+    print(f"\n{'='*80}")
+    print(f"ID: {id}")
+    print(f"{'='*80}")
 
-    return
+    repro_steps = []
+    for i, step in enumerate(trajectory):
+        observation = step["observation"]
+        
+        # check if observation contains "created successfully"
+        if "created successfully" in observation:
+            observation_lower = observation.lower()
+            action = step["action"]
+            
+            # check if observation contains "reproduce"
+            if "reproduce" in observation_lower and len(observation_lower) < 200:
+                repro_steps.append(i)
+                print(f"Found reproduction code at step {i} for ID {id}")
+                print(f"Observation: {observation}")
+                print(f"Action: {action}")
+                print("-" * 80)
+    
+    print(f"Result: {repro_steps}")
+    sys.stdout = original_stdout
+    log_file.close()
+    
+    return repro_steps
 
 def locate_search():
     return
@@ -41,6 +69,8 @@ def print_trajectory_steps(trajectory):
     for (i, step) in enumerate(trajectory):
         print(str(i+1) + ": " + step["thought"])
         print(">> " + step["action"])
+        print(step["observation"])
+        print(step["action"])
         print('-' * 80)
 
     print("Finished in " + str(len(trajectory)) + " steps")
@@ -55,3 +85,7 @@ def load_trajectory(id: str):
         data = json.load(f)
     
     return data["trajectory"]
+
+for id in id_to_path_map.keys():
+    result = locate_reproduction_code(id)
+    print(f"{id} => {result}")
