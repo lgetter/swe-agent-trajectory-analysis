@@ -1,0 +1,4158 @@
+
+================================================================================
+ID: 10554
+================================================================================
+Found reproduction code at step 18 for ID 10554
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+settings.configure(
+    DEBUG=True,
+    DATABASES={
+        '"'"'default'"'"': {
+            '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+            '"'"'NAME'"'"': '"'"':memory:'"'"',
+        }
+    },
+    INSTALLED_APPS=[
+        '"'"'django.contrib.contenttypes'"'"',
+        '"'"'django.contrib.auth'"'"',
+    ],
+    SECRET_KEY='"'"'test-secret-key'"'"',
+)
+
+django.setup()
+
+from django.db import models
+
+# Create a simple model for testing
+class Dimension(models.Model):
+    name = models.CharField(max_length=100)
+    order = models.IntegerField(default=0)
+    
+    class Meta:
+        app_label = '"'"'test'"'"'
+        ordering = ['"'"'order'"'"']
+
+# Create the table
+from django.db import connection
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(Dimension)
+
+# Create some test data
+dimensions = []
+for i in range(10, 19):
+    dim = Dimension(id=i, name=f'"'"'dimension_{i}'"'"', order=i)
+    dim.save()
+    dimensions.append(dim)
+
+print("Initial data:")
+print(list(Dimension.objects.values_list('"'"'id'"'"', flat=True)))
+
+print("\nCreating union queryset with ordering...")
+qs = (
+    Dimension.objects.filter(pk__in=[10, 11])
+    .union(Dimension.objects.filter(pk__in=[16, 17]))
+    .order_by('"'"'order'"'"')
+)
+
+print("Union queryset:")
+print(qs)
+
+print("\nCreating derived queryset...")
+derived_qs = qs.order_by().values_list('"'"'pk'"'"', flat=True)
+print("Derived queryset result:")
+print(list(derived_qs))
+
+print("\nTrying to re-evaluate original queryset...")
+try:
+    print(qs)
+    print("SUCCESS: Original queryset re-evaluated without error")
+except Exception as e:
+    print(f"ERROR: {e}")
+    import traceback
+    traceback.print_exc()'
+--------------------------------------------------------------------------------
+Result: [18]
+
+================================================================================
+ID: 11138
+================================================================================
+Found reproduction code at step 12 for ID 11138
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the TIME_ZONE issue in database backends.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+os.environ.setdefault('"'"'DJANGO_SETTINGS_MODULE'"'"', '"'"'test_settings'"'"')
+
+# Create a minimal settings module
+settings.configure(
+    DEBUG=True,
+    USE_TZ=True,
+    TIME_ZONE='"'"'Europe/Paris'"'"',
+    DATABASES={
+        '"'"'default'"'"': {
+            '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+            '"'"'NAME'"'"': '"'"':memory:'"'"',
+            '"'"'TIME_ZONE'"'"': '"'"'Europe/Paris'"'"',
+        }
+    },
+    INSTALLED_APPS=[
+        '"'"'django.contrib.contenttypes'"'"',
+        '"'"'django.contrib.auth'"'"',
+    ],
+    SECRET_KEY='"'"'test-secret-key'"'"',
+)
+
+django.setup()
+
+from django.db import models, connection
+from django.utils import timezone
+import datetime
+
+# Create a test model
+class TestModel(models.Model):
+    my_datetime_field = models.DateTimeField()
+    
+    class Meta:
+        app_label = '"'"'test'"'"'
+
+# Create the table
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(TestModel)
+
+# Test the issue
+print("Testing TIME_ZONE issue reproduction...")
+print(f"Global TIME_ZONE: {settings.TIME_ZONE}")
+print(f"Database TIME_ZONE: {connection.settings_dict.get('"'"'TIME_ZONE'"'"')}")
+print(f"Connection timezone_name: {connection.timezone_name}")
+
+# Create a test datetime
+dt = timezone.make_aware(datetime.datetime(2017, 7, 6, 20, 50))
+print(f"Test datetime: {dt}")
+
+# Insert test data
+test_obj = TestModel.objects.create(my_datetime_field=dt)
+print(f"Created object with ID: {test_obj.id}")
+
+# Test normal query (should work)
+exists_normal = TestModel.objects.filter(my_datetime_field=dt).exists()
+print(f"Normal query exists: {exists_normal}")
+
+# Test date lookup (this is where the issue occurs)
+exists_date = TestModel.objects.filter(my_datetime_field__date=dt.date()).exists()
+print(f"Date lookup exists: {exists_date}")
+
+# Let'"'"'s check what SQL is generated for the date lookup
+from django.db import connection
+from django.db.models import Q
+
+# Reset queries log
+connection.queries_log.clear()
+
+# Perform the date lookup query
+TestModel.objects.filter(my_datetime_field__date=dt.date()).exists()
+
+# Print the SQL query
+if connection.queries_log:
+    print(f"Generated SQL: {connection.queries_log[-1]['"'"'sql'"'"']}")
+
+# Test with MySQL operations directly
+print("\n--- Testing MySQL operations directly ---")
+from django.db.backends.mysql.operations import DatabaseOperations as MySQLOps
+
+# Create a mock connection with TIME_ZONE setting
+class MockConnection:
+    def __init__(self, timezone_name):
+        self.timezone_name = timezone_name
+        self.settings_dict = {'"'"'TIME_ZONE'"'"': timezone_name}
+
+mysql_conn = MockConnection('"'"'Europe/Paris'"'"')
+mysql_ops = MySQLOps(mysql_conn)
+
+# Test the _convert_field_to_tz method
+field_name = "my_field"
+tzname = "Europe/Paris"
+converted_field = mysql_ops._convert_field_to_tz(field_name, tzname)
+print(f"MySQL converted field: {converted_field}")
+print("Issue: Should convert from '"'"'Europe/Paris'"'"' to '"'"'Europe/Paris'"'"', not from '"'"'UTC'"'"' to '"'"'Europe/Paris'"'"'")
+
+# Test with Oracle operations directly
+print("\n--- Testing Oracle operations directly ---")
+from django.db.backends.oracle.operations import DatabaseOperations as OracleOps
+
+oracle_conn = MockConnection('"'"'Europe/Paris'"'"')
+oracle_ops = OracleOps(oracle_conn)
+
+# Test the _convert_field_to_tz method
+converted_field_oracle = oracle_ops._convert_field_to_tz(field_name, tzname)
+print(f"Oracle converted field: {converted_field_oracle}")
+print("Issue: Should convert from '"'"'Europe/Paris'"'"' to '"'"'Europe/Paris'"'"', not from '"'"'0:00'"'"' (UTC) to '"'"'Europe/Paris'"'"'")'
+--------------------------------------------------------------------------------
+Result: [12]
+
+================================================================================
+ID: 12308
+================================================================================
+Found reproduction code at step 12 for ID 12308
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+    )
+
+django.setup()
+
+from django.db import models
+from django.contrib.admin.utils import display_for_field
+
+# Create a test model with JSONField
+class TestModel(models.Model):
+    json_data = models.JSONField()
+    
+    class Meta:
+        app_label = '"'"'test'"'"'
+
+# Test the current behavior
+def test_display_for_field():
+    print("Testing JSONField display in admin readonly fields...")
+    
+    # Create a JSONField instance
+    field = TestModel._meta.get_field('"'"'json_data'"'"')
+    
+    # Test with a dictionary value
+    test_value = {"foo": "bar", "nested": {"key": "value"}}
+    
+    print(f"Original value: {test_value}")
+    print(f"Type: {type(test_value)}")
+    
+    # Test current display_for_field behavior
+    result = display_for_field(test_value, field, "N/A")
+    print(f"Current display_for_field result: {result}")
+    print(f"Result type: {type(result)}")
+    
+    # Show the problem: this will display as Python dict representation
+    # instead of valid JSON
+    print(f"Is valid JSON? {is_valid_json(result)}")
+    
+    # Test with forms JSONField prepare_value for comparison
+    from django.forms.fields import JSONField as FormsJSONField
+    forms_field = FormsJSONField()
+    prepared_value = forms_field.prepare_value(test_value)
+    print(f"Forms JSONField prepare_value result: {prepared_value}")
+    print(f"Is valid JSON? {is_valid_json(prepared_value)}")
+
+def is_valid_json(value):
+    import json
+    try:
+        json.loads(value)
+        return True
+    except (json.JSONDecodeError, TypeError):
+        return False
+
+if __name__ == "__main__":
+    test_display_for_field()'
+--------------------------------------------------------------------------------
+Result: [12]
+
+================================================================================
+ID: 12774
+================================================================================
+Found reproduction code at step 9 for ID 12774
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.auth'"'"',
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+    )
+
+django.setup()
+
+from django.db import models
+
+# Define the test model
+class Article(models.Model):
+    slug = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, default="Test Title")
+    
+    class Meta:
+        app_label = '"'"'test_app'"'"'
+        constraints = [
+            models.UniqueConstraint(fields=["slug"], name="test_app_article_slug_unq")
+        ]
+
+# Create the table
+from django.db import connection
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(Article)
+
+# Test the issue
+print("Testing in_bulk() with UniqueConstraint field...")
+try:
+    result = Article.objects.in_bulk(field_name="slug")
+    print("SUCCESS: in_bulk() worked with UniqueConstraint field")
+except ValueError as e:
+    print(f"ERROR: {e}")
+
+# Test with a regular unique field for comparison
+class ArticleWithUniqueField(models.Model):
+    slug = models.CharField(max_length=255, unique=True)
+    title = models.CharField(max_length=255, default="Test Title")
+    
+    class Meta:
+        app_label = '"'"'test_app'"'"'
+
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(ArticleWithUniqueField)
+
+print("\nTesting in_bulk() with unique=True field...")
+try:
+    result = ArticleWithUniqueField.objects.in_bulk(field_name="slug")
+    print("SUCCESS: in_bulk() worked with unique=True field")
+except ValueError as e:
+    print(f"ERROR: {e}")'
+--------------------------------------------------------------------------------
+Result: [9]
+
+================================================================================
+ID: 15127
+================================================================================
+Found reproduction code at step 8 for ID 15127
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the LEVEL_TAGS issue with @override_settings
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+os.environ.setdefault('"'"'DJANGO_SETTINGS_MODULE'"'"', '"'"'test_settings'"'"')
+
+# Create a minimal settings module
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        INSTALLED_APPS=[
+            '"'"'django.contrib.messages'"'"',
+        ],
+        MESSAGE_TAGS={},
+    )
+
+django.setup()
+
+from django.contrib.messages import constants
+from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+from django.test import override_settings
+
+def test_level_tags_issue():
+    print("=== Testing LEVEL_TAGS issue ===")
+    
+    # Create a message with a custom level
+    custom_level = 35
+    message = Message(custom_level, "Test message")
+    
+    print(f"Initial LEVEL_TAGS: {LEVEL_TAGS}")
+    print(f"Message level: {message.level}")
+    print(f"Message level_tag (before override): '"'"'{message.level_tag}'"'"'")
+    
+    # Now override settings to add a custom tag for level 35
+    with override_settings(MESSAGE_TAGS={35: '"'"'custom'"'"'}):
+        print(f"LEVEL_TAGS inside override_settings: {LEVEL_TAGS}")
+        print(f"Message level_tag (inside override): '"'"'{message.level_tag}'"'"'")
+        
+        # Create a new message inside the override
+        new_message = Message(custom_level, "New test message")
+        print(f"New message level_tag (inside override): '"'"'{new_message.level_tag}'"'"'")
+    
+    print(f"LEVEL_TAGS after override_settings: {LEVEL_TAGS}")
+    print(f"Message level_tag (after override): '"'"'{message.level_tag}'"'"'")
+
+if __name__ == '"'"'__main__'"'"':
+    test_level_tags_issue()'
+--------------------------------------------------------------------------------
+Result: [8]
+
+================================================================================
+ID: 16631
+================================================================================
+Found reproduction code at step 10 for ID 16631
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python3
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+settings.configure(
+    SECRET_KEY='"'"'new-secret-key'"'"',
+    SECRET_KEY_FALLBACKS=['"'"'old-secret-key'"'"'],
+    INSTALLED_APPS=[
+        '"'"'django.contrib.auth'"'"',
+        '"'"'django.contrib.contenttypes'"'"',
+    ],
+    DATABASES={
+        '"'"'default'"'"': {
+            '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+            '"'"'NAME'"'"': '"'"':memory:'"'"',
+        }
+    },
+    USE_TZ=True,
+)
+
+django.setup()
+
+from django.contrib.auth.models import User
+from django.utils.crypto import salted_hmac
+
+def test_session_auth_hash_fallback():
+    """Test that session auth hash works with fallback keys"""
+    
+    # Create a user
+    user = User(username='"'"'testuser'"'"', password='"'"'hashed_password'"'"')
+    
+    # Get session auth hash with current secret key
+    current_hash = user.get_session_auth_hash()
+    print(f"Current session auth hash: {current_hash}")
+    
+    # Simulate what should happen with fallback keys
+    # This is what the session auth hash would have been with the old key
+    key_salt = "django.contrib.auth.models.AbstractBaseUser.get_session_auth_hash"
+    old_hash = salted_hmac(
+        key_salt,
+        user.password,
+        secret='"'"'old-secret-key'"'"',  # Using the fallback key
+        algorithm="sha256",
+    ).hexdigest()
+    print(f"Old session auth hash (with fallback key): {old_hash}")
+    
+    # These should be different because get_session_auth_hash doesn'"'"'t use fallbacks
+    print(f"Hashes are different: {current_hash != old_hash}")
+    
+    # This demonstrates the problem: if a user had a session created with the old key,
+    # their session would be invalidated when the key is rotated, even though
+    # SECRET_KEY_FALLBACKS is configured.
+    
+    return current_hash != old_hash
+
+if __name__ == '"'"'__main__'"'"':
+    result = test_session_auth_hash_fallback()
+    print(f"\nTest result: {'"'"'PASS'"'"' if result else '"'"'FAIL'"'"'}")
+    print("This demonstrates that get_session_auth_hash doesn'"'"'t use SECRET_KEY_FALLBACKS")'
+--------------------------------------------------------------------------------
+Result: [10]
+
+================================================================================
+ID: 16950
+================================================================================
+Found reproduction code at step 14 for ID 16950
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the Django Admin UUIDField default value issue with inlines.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+            '"'"'__main__'"'"',  # This module
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+        ROOT_URLCONF='"'"'__main__'"'"',
+    )
+
+django.setup()
+
+import uuid
+from django.db import models
+from django.contrib import admin
+from django.urls import path
+from django.http import HttpResponse
+from django.test import RequestFactory
+from django.contrib.auth.models import User
+
+
+# Models from the bug report
+class UUIDModel(models.Model):
+    pkid = models.BigAutoField(primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    class Meta:
+        abstract = True
+
+
+class Thing(UUIDModel):
+    name = models.CharField(max_length=191)
+    
+    def __str__(self):
+        return self.name
+
+
+class SubThing(models.Model):
+    name = models.CharField(max_length=191)
+    thing = models.ForeignKey(
+        '"'"'Thing'"'"',
+        to_field='"'"'id'"'"',  # This is the UUID field
+        on_delete=models.CASCADE,
+        related_name='"'"'subthings'"'"',
+    )
+    
+    def __str__(self):
+        return self.name
+
+
+# Admin configuration from the bug report
+class SubThingInline(admin.StackedInline):
+    model = SubThing
+
+
+@admin.register(Thing)
+class ThingAdmin(admin.ModelAdmin):
+    list_display = ('"'"'name'"'"',)
+    ordering = ('"'"'pkid'"'"',)
+    inlines = (SubThingInline,)
+
+
+# URL configuration
+urlpatterns = [
+    path('"'"'admin/'"'"', admin.site.urls),
+]
+
+
+def test_issue():
+    """Test the issue described in the bug report."""
+    print("Setting up database...")
+    
+    # Create tables
+    from django.core.management import execute_from_command_line
+    execute_from_command_line(['"'"'manage.py'"'"', '"'"'migrate'"'"', '"'"'--run-syncdb'"'"', '"'"'--verbosity=0'"'"'])
+    
+    # Create a superuser
+    User.objects.create_superuser('"'"'admin'"'"', '"'"'admin@example.com'"'"', '"'"'password'"'"')
+    
+    print("Testing the issue...")
+    
+    # Create a request factory
+    factory = RequestFactory()
+    
+    # Simulate creating a new Thing with SubThing inline
+    request = factory.post('"'"'/admin/thing/add/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    # Get the admin instance
+    thing_admin = ThingAdmin(Thing, admin.site)
+    
+    # Try to process the form
+    try:
+        # Get the formset
+        formset_class = thing_admin.get_formset(request)
+        formset = formset_class(request.POST, instance=None)
+        
+        print(f"Formset is valid: {formset.is_valid()}")
+        
+        if not formset.is_valid():
+            print("Formset errors:")
+            for i, form in enumerate(formset.forms):
+                if form.errors:
+                    print(f"  Form {i} errors: {form.errors}")
+            print(f"Non-form errors: {formset.non_form_errors()}")
+        
+        # Try to save if valid
+        if formset.is_valid():
+            # Create a parent instance first
+            thing = Thing(name='"'"'Test Thing'"'"')
+            thing.save()
+            print(f"Created Thing with id: {thing.id} (UUID), pkid: {thing.pkid}")
+            
+            # Now try to save the formset
+            formset.instance = thing
+            instances = formset.save()
+            print(f"Saved {len(instances)} SubThing instances")
+            
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+        
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+if __name__ == '"'"'__main__'"'"':
+    test_issue()'
+--------------------------------------------------------------------------------
+Found reproduction code at step 24 for ID 16950
+Observation: File created successfully at: /testbed/reproduce_issue_detailed.py
+Action: str_replace_editor create /testbed/reproduce_issue_detailed.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the Django Admin UUIDField default value issue with inlines.
+This version simulates the actual admin form submission process more closely.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+            '"'"'__main__'"'"',  # This module
+        ],
+        MIDDLEWARE=[
+            '"'"'django.contrib.sessions.middleware.SessionMiddleware'"'"',
+            '"'"'django.contrib.auth.middleware.AuthenticationMiddleware'"'"',
+            '"'"'django.contrib.messages.middleware.MessageMiddleware'"'"',
+        ],
+        TEMPLATES=[
+            {
+                '"'"'BACKEND'"'"': '"'"'django.template.backends.django.DjangoTemplates'"'"',
+                '"'"'DIRS'"'"': [],
+                '"'"'APP_DIRS'"'"': True,
+                '"'"'OPTIONS'"'"': {
+                    '"'"'context_processors'"'"': [
+                        '"'"'django.template.context_processors.debug'"'"',
+                        '"'"'django.template.context_processors.request'"'"',
+                        '"'"'django.contrib.auth.context_processors.auth'"'"',
+                        '"'"'django.contrib.messages.context_processors.messages'"'"',
+                    ],
+                },
+            },
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+        ROOT_URLCONF='"'"'__main__'"'"',
+        DEFAULT_AUTO_FIELD='"'"'django.db.models.BigAutoField'"'"',
+    )
+
+django.setup()
+
+import uuid
+from django.db import models
+from django.contrib import admin
+from django.urls import path
+from django.http import HttpResponse
+from django.test import RequestFactory
+from django.contrib.auth.models import User
+
+
+# Models from the bug report
+class UUIDModel(models.Model):
+    pkid = models.BigAutoField(primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    class Meta:
+        abstract = True
+
+
+class Thing(UUIDModel):
+    name = models.CharField(max_length=191)
+    
+    def __str__(self):
+        return self.name
+
+
+class SubThing(models.Model):
+    name = models.CharField(max_length=191)
+    thing = models.ForeignKey(
+        '"'"'Thing'"'"',
+        to_field='"'"'id'"'"',  # This is the UUID field
+        on_delete=models.CASCADE,
+        related_name='"'"'subthings'"'"',
+    )
+    
+    def __str__(self):
+        return self.name
+
+
+# Admin configuration from the bug report
+class SubThingInline(admin.StackedInline):
+    model = SubThing
+
+
+@admin.register(Thing)
+class ThingAdmin(admin.ModelAdmin):
+    list_display = ('"'"'name'"'"',)
+    ordering = ('"'"'pkid'"'"',)
+    inlines = (SubThingInline,)
+
+
+# URL configuration
+urlpatterns = [
+    path('"'"'admin/'"'"', admin.site.urls),
+]
+
+
+def test_issue():
+    """Test the issue described in the bug report."""
+    print("Setting up database...")
+    
+    # Create tables manually
+    from django.db import connection
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(Thing)
+        schema_editor.create_model(SubThing)
+        
+        # Create User model table
+        from django.contrib.auth.models import User
+        schema_editor.create_model(User)
+    
+    # Create a superuser
+    User.objects.create_superuser('"'"'admin'"'"', '"'"'admin@example.com'"'"', '"'"'password'"'"')
+    
+    print("Testing the issue...")
+    
+    # Create a request factory
+    factory = RequestFactory()
+    
+    # Test 1: Create a Thing without SubThings (this should work)
+    print("\n=== Test 1: Creating Thing without SubThings ===")
+    request = factory.post('"'"'/admin/thing/add/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing 1'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    thing_admin = ThingAdmin(Thing, admin.site)
+    
+    # Simulate the admin form processing
+    form_class = thing_admin.get_form(request)
+    form = form_class(request.POST)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if form.is_valid():
+        thing1 = form.save()
+        print(f"Created Thing1 with id: {thing1.id} (UUID), pkid: {thing1.pkid}")
+    else:
+        print(f"Main form errors: {form.errors}")
+    
+    # Test 2: Create a Thing with SubThings (this might fail)
+    print("\n=== Test 2: Creating Thing with SubThings ===")
+    request = factory.post('"'"'/admin/thing/add/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing 2'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    # Get the main form
+    form_class = thing_admin.get_form(request)
+    form = form_class(request.POST)
+    
+    # Get the inline formsets
+    inline_instances = thing_admin.get_inline_instances(request)
+    formsets = []
+    
+    for inline in inline_instances:
+        formset_class = inline.get_formset(request)
+        prefix = formset_class.get_default_prefix()
+        formset = formset_class(request.POST, instance=None, prefix=prefix)
+        formsets.append(formset)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if not form.is_valid():
+        print(f"Main form errors: {form.errors}")
+    
+    all_valid = form.is_valid()
+    for i, formset in enumerate(formsets):
+        valid = formset.is_valid()
+        print(f"Formset {i} is valid: {valid}")
+        if not valid:
+            print(f"  Formset {i} errors: {formset.errors}")
+            print(f"  Formset {i} non-form errors: {formset.non_form_errors()}")
+        all_valid = all_valid and valid
+    
+    if all_valid:
+        # Save the main object first
+        thing2 = form.save()
+        print(f"Created Thing2 with id: {thing2.id} (UUID), pkid: {thing2.pkid}")
+        
+        # Now save the formsets
+        for i, formset in enumerate(formsets):
+            formset.instance = thing2
+            instances = formset.save()
+            print(f"Saved {len(instances)} instances from formset {i}")
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+    
+    # Test 3: Simulate the exact scenario from the bug report
+    print("\n=== Test 3: Simulating exact bug scenario ===")
+    
+    # First create a Thing with no SubThings and save it
+    thing3 = Thing(name='"'"'Test Thing 3'"'"')
+    thing3.save()
+    print(f"Created Thing3 with id: {thing3.id} (UUID), pkid: {thing3.pkid}")
+    
+    # Now try to add a SubThing to the existing Thing
+    request = factory.post(f'"'"'/admin/thing/{thing3.pkid}/change/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing 3 Updated'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing for Thing 3'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    # Get the main form with the existing instance
+    form_class = thing_admin.get_form(request, thing3)
+    form = form_class(request.POST, instance=thing3)
+    
+    # Get the inline formsets with the existing instance
+    inline_instances = thing_admin.get_inline_instances(request, thing3)
+    formsets = []
+    
+    for inline in inline_instances:
+        formset_class = inline.get_formset(request, thing3)
+        prefix = formset_class.get_default_prefix()
+        formset = formset_class(request.POST, instance=thing3, prefix=prefix)
+        formsets.append(formset)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if not form.is_valid():
+        print(f"Main form errors: {form.errors}")
+    
+    all_valid = form.is_valid()
+    for i, formset in enumerate(formsets):
+        valid = formset.is_valid()
+        print(f"Formset {i} is valid: {valid}")
+        if not valid:
+            print(f"  Formset {i} errors: {formset.errors}")
+            print(f"  Formset {i} non-form errors: {formset.non_form_errors()}")
+            
+            # Let'"'"'s examine the forms in detail
+            for j, form_in_set in enumerate(formset.forms):
+                print(f"    Form {j} in formset {i}:")
+                print(f"      Errors: {form_in_set.errors}")
+                print(f"      Cleaned data: {getattr(form_in_set, '"'"'cleaned_data'"'"', '"'"'Not available'"'"')}")
+                if hasattr(form_in_set, '"'"'instance'"'"'):
+                    print(f"      Instance: {form_in_set.instance}")
+                    print(f"      Instance thing_id: {getattr(form_in_set.instance, '"'"'thing_id'"'"', '"'"'Not set'"'"')}")
+        all_valid = all_valid and valid
+    
+    if all_valid:
+        # Save the main object first
+        thing3_updated = form.save()
+        print(f"Updated Thing3 with id: {thing3_updated.id} (UUID), pkid: {thing3_updated.pkid}")
+        
+        # Now save the formsets
+        for i, formset in enumerate(formsets):
+            instances = formset.save()
+            print(f"Saved {len(instances)} instances from formset {i}")
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+
+
+if __name__ == '"'"'__main__'"'"':
+    test_issue()'
+--------------------------------------------------------------------------------
+Found reproduction code at step 26 for ID 16950
+Observation: File created successfully at: /testbed/reproduce_exact_issue.py
+Action: str_replace_editor create /testbed/reproduce_exact_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the exact Django Admin UUIDField default value issue with inlines.
+This version tries to reproduce the exact scenario from the bug report.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+            '"'"'__main__'"'"',  # This module
+        ],
+        MIDDLEWARE=[
+            '"'"'django.contrib.sessions.middleware.SessionMiddleware'"'"',
+            '"'"'django.contrib.auth.middleware.AuthenticationMiddleware'"'"',
+            '"'"'django.contrib.messages.middleware.MessageMiddleware'"'"',
+        ],
+        TEMPLATES=[
+            {
+                '"'"'BACKEND'"'"': '"'"'django.template.backends.django.DjangoTemplates'"'"',
+                '"'"'DIRS'"'"': [],
+                '"'"'APP_DIRS'"'"': True,
+                '"'"'OPTIONS'"'"': {
+                    '"'"'context_processors'"'"': [
+                        '"'"'django.template.context_processors.debug'"'"',
+                        '"'"'django.template.context_processors.request'"'"',
+                        '"'"'django.contrib.auth.context_processors.auth'"'"',
+                        '"'"'django.contrib.messages.context_processors.messages'"'"',
+                    ],
+                },
+            },
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+        ROOT_URLCONF='"'"'__main__'"'"',
+        DEFAULT_AUTO_FIELD='"'"'django.db.models.BigAutoField'"'"',
+    )
+
+django.setup()
+
+import uuid
+from django.db import models
+from django.contrib import admin
+from django.urls import path
+from django.http import HttpResponse
+from django.test import RequestFactory
+from django.contrib.auth.models import User
+
+
+# Models from the bug report
+class UUIDModel(models.Model):
+    pkid = models.BigAutoField(primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    class Meta:
+        abstract = True
+
+
+class Thing(UUIDModel):
+    name = models.CharField(max_length=191)
+    
+    def __str__(self):
+        return self.name
+
+
+class SubThing(models.Model):
+    name = models.CharField(max_length=191)
+    thing = models.ForeignKey(
+        '"'"'Thing'"'"',
+        to_field='"'"'id'"'"',  # This is the UUID field
+        on_delete=models.CASCADE,
+        related_name='"'"'subthings'"'"',
+    )
+    
+    def __str__(self):
+        return self.name
+
+
+# Admin configuration from the bug report
+class SubThingInline(admin.StackedInline):
+    model = SubThing
+
+
+@admin.register(Thing)
+class ThingAdmin(admin.ModelAdmin):
+    list_display = ('"'"'name'"'"',)
+    ordering = ('"'"'pkid'"'"',)
+    inlines = (SubThingInline,)
+
+
+# URL configuration
+urlpatterns = [
+    path('"'"'admin/'"'"', admin.site.urls),
+]
+
+
+def test_issue():
+    """Test the issue described in the bug report."""
+    print("Setting up database...")
+    
+    # Create tables manually
+    from django.db import connection
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(Thing)
+        schema_editor.create_model(SubThing)
+        
+        # Create User model table
+        from django.contrib.auth.models import User
+        schema_editor.create_model(User)
+    
+    # Create a superuser
+    User.objects.create_superuser('"'"'admin'"'"', '"'"'admin@example.com'"'"', '"'"'password'"'"')
+    
+    print("Testing the issue...")
+    
+    # Create a request factory
+    factory = RequestFactory()
+    
+    # Test the exact scenario: Create a new Thing with a SubThing inline
+    # This simulates the admin form submission when creating a new object
+    print("\n=== Testing exact scenario from bug report ===")
+    
+    # Simulate form data that would be sent when creating a new Thing with SubThing
+    form_data = {
+        '"'"'name'"'"': '"'"'Test Thing'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+        '"'"'subthings-0-id'"'"': '"'"''"'"',  # Empty for new objects
+        '"'"'subthings-0-thing'"'"': '"'"''"'"',  # This should be set to the parent'"'"'s UUID
+    }
+    
+    request = factory.post('"'"'/admin/thing/add/'"'"', form_data)
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    thing_admin = ThingAdmin(Thing, admin.site)
+    
+    # Get the main form
+    form_class = thing_admin.get_form(request)
+    form = form_class(request.POST)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if not form.is_valid():
+        print(f"Main form errors: {form.errors}")
+        return
+    
+    # Create the main object but don'"'"'t save yet (this is what admin does)
+    thing = form.save(commit=False)
+    print(f"Created Thing instance (not saved yet): id={thing.id}, pkid={thing.pkid}")
+    
+    # Get the inline formsets
+    inline_instances = thing_admin.get_inline_instances(request)
+    formsets = []
+    
+    for inline in inline_instances:
+        formset_class = inline.get_formset(request)
+        prefix = formset_class.get_default_prefix()
+        # Pass the unsaved instance to the formset
+        formset = formset_class(request.POST, instance=thing, prefix=prefix)
+        formsets.append(formset)
+    
+    # Check if formsets are valid
+    all_valid = True
+    for i, formset in enumerate(formsets):
+        valid = formset.is_valid()
+        print(f"Formset {i} is valid: {valid}")
+        if not valid:
+            print(f"  Formset {i} errors: {formset.errors}")
+            print(f"  Formset {i} non-form errors: {formset.non_form_errors()}")
+            
+            # Let'"'"'s examine the forms in detail
+            for j, form_in_set in enumerate(formset.forms):
+                print(f"    Form {j} in formset {i}:")
+                print(f"      Errors: {form_in_set.errors}")
+                if hasattr(form_in_set, '"'"'cleaned_data'"'"'):
+                    print(f"      Cleaned data: {form_in_set.cleaned_data}")
+                if hasattr(form_in_set, '"'"'instance'"'"'):
+                    print(f"      Instance: {form_in_set.instance}")
+                    print(f"      Instance thing_id: {getattr(form_in_set.instance, '"'"'thing_id'"'"', '"'"'Not set'"'"')}")
+                    print(f"      Instance thing: {getattr(form_in_set.instance, '"'"'thing'"'"', '"'"'Not set'"'"')}")
+        all_valid = all_valid and valid
+    
+    if all_valid:
+        # Now save the main object
+        thing.save()
+        print(f"Saved Thing with id: {thing.id} (UUID), pkid: {thing.pkid}")
+        
+        # Now save the formsets
+        for i, formset in enumerate(formsets):
+            instances = formset.save()
+            print(f"Saved {len(instances)} instances from formset {i}")
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+    else:
+        print("Could not save due to validation errors")
+    
+    # Let'"'"'s also test what happens when we create a formset with an unsaved instance
+    print("\n=== Testing formset with unsaved instance ===")
+    
+    # Create a new unsaved Thing
+    new_thing = Thing(name='"'"'Unsaved Thing'"'"')
+    print(f"Unsaved Thing: id={new_thing.id}, pkid={new_thing.pkid}")
+    
+    # Create a formset with this unsaved instance
+    inline = SubThingInline(Thing, admin.site)
+    formset_class = inline.get_formset(request)
+    
+    # Test with empty data first
+    formset = formset_class(instance=new_thing)
+    print(f"Empty formset with unsaved instance created successfully")
+    
+    # Test with data
+    form_data_2 = {
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing 2'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+        '"'"'subthings-0-id'"'"': '"'"''"'"',
+        '"'"'subthings-0-thing'"'"': '"'"''"'"',
+    }
+    
+    formset = formset_class(form_data_2, instance=new_thing)
+    print(f"Formset with data and unsaved instance is valid: {formset.is_valid()}")
+    
+    if not formset.is_valid():
+        print(f"Formset errors: {formset.errors}")
+        print(f"Non-form errors: {formset.non_form_errors()}")
+        
+        for j, form_in_set in enumerate(formset.forms):
+            print(f"  Form {j}:")
+            print(f"    Errors: {form_in_set.errors}")
+            if hasattr(form_in_set, '"'"'cleaned_data'"'"'):
+                print(f"    Cleaned data: {form_in_set.cleaned_data}")
+            if hasattr(form_in_set, '"'"'instance'"'"'):
+                print(f"    Instance: {form_in_set.instance}")
+                print(f"    Instance thing_id: {getattr(form_in_set.instance, '"'"'thing_id'"'"', '"'"'Not set'"'"')}")
+                print(f"    Instance thing: {getattr(form_in_set.instance, '"'"'thing'"'"', '"'"'Not set'"'"')}")
+
+
+if __name__ == '"'"'__main__'"'"':
+    test_issue()'
+--------------------------------------------------------------------------------
+Result: [14, 24, 26]
+
+================================================================================
+ID: 26113
+================================================================================
+Found reproduction code at step 8 for ID 26113
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python3
+
+"""
+Script to reproduce the hexbin mincnt inconsistency issue.
+"""
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Set up test data
+np.random.seed(42)
+X, Y = np.random.multivariate_normal([0.0, 0.0], [[1.0, 0.1], [0.1, 1.0]], size=250).T
+Z = np.ones_like(X)
+
+extent = [-3., 3., -3., 3.]
+gridsize = (7, 7)
+
+def count_visible_hexagons(ax):
+    """Count the number of visible hexagons in the plot."""
+    # Get the collection from the hexbin plot
+    collections = ax.collections
+    if collections:
+        # Get the array of values (which contains NaN for filtered hexagons)
+        array = collections[0].get_array()
+        # Count non-NaN values
+        return np.sum(~np.isnan(array))
+    return 0
+
+print("Testing hexbin mincnt behavior...")
+print("=" * 50)
+
+# Test case 1: mincnt=1, no C argument
+fig, ax = plt.subplots(1, 1)
+ax.hexbin(X, Y, mincnt=1, extent=extent, gridsize=gridsize, linewidth=0.0, cmap='"'"'Blues'"'"')
+count_no_c = count_visible_hexagons(ax)
+plt.close(fig)
+
+# Test case 2: mincnt=1, C argument specified
+fig, ax = plt.subplots(1, 1)
+ax.hexbin(X, Y, C=Z, reduce_C_function=np.sum, mincnt=1, extent=extent, gridsize=gridsize, linewidth=0.0, cmap='"'"'Blues'"'"')
+count_with_c = count_visible_hexagons(ax)
+plt.close(fig)
+
+# Test case 3: mincnt=0, C argument specified
+fig, ax = plt.subplots(1, 1)
+ax.hexbin(X, Y, C=Z, reduce_C_function=np.sum, mincnt=0, extent=extent, gridsize=gridsize, linewidth=0.0, cmap='"'"'Blues'"'"')
+count_with_c_mincnt0 = count_visible_hexagons(ax)
+plt.close(fig)
+
+print(f"Hexagons visible with mincnt=1, no C:     {count_no_c}")
+print(f"Hexagons visible with mincnt=1, with C:   {count_with_c}")
+print(f"Hexagons visible with mincnt=0, with C:   {count_with_c_mincnt0}")
+
+if count_no_c != count_with_c:
+    print("\n❌ BUG CONFIRMED: Inconsistent behavior!")
+    print(f"   Expected same count for both cases, but got {count_no_c} vs {count_with_c}")
+else:
+    print("\n✅ No inconsistency detected")
+
+if count_with_c_mincnt0 == count_no_c:
+    print("✅ As expected: mincnt=0 with C shows same hexagons as mincnt=1 without C")
+else:
+    print(f"❓ Unexpected: mincnt=0 with C shows {count_with_c_mincnt0} hexagons vs {count_no_c} for mincnt=1 without C")'
+--------------------------------------------------------------------------------
+Result: [8]
+
+================================================================================
+ID: 4687
+================================================================================
+Found reproduction code at step 13 for ID 4687
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python3
+
+import numpy as np
+import xarray as xr
+
+print("Testing xr.where attribute preservation...")
+
+# Test case 1: Simple case from the issue
+print("\n=== Test case 1: Simple case ===")
+da = xr.DataArray(1)
+da.attrs['"'"'foo'"'"'] = '"'"'bar'"'"'
+print(f"Original attrs: {da.attrs}")
+result = xr.where(da == 0, -1, da)
+print(f"Result attrs: {result.attrs}")
+print(f"Attributes preserved: {result.attrs == da.attrs}")
+
+# Test case 2: More complex case from the issue
+print("\n=== Test case 2: Complex case ===")
+data = xr.DataArray(np.ones([10, 10], dtype=np.int8))
+data.attrs["attr_1"] = "test1"
+data.attrs["attr_2"] = "test2"
+print(f"Original attrs: {data.attrs}")
+print(f"Original dtype: {data.dtype}")
+
+data2 = xr.where(data == 1, 5, 0)
+print(f"Result attrs: {data2.attrs}")
+print(f"Result dtype: {data2.dtype}")
+print(f"Attributes preserved: {data2.attrs == data.attrs}")
+print(f"Dtype preserved: {data2.dtype == data.dtype}")
+
+# Test case 3: Multiple DataArrays with attributes
+print("\n=== Test case 3: Multiple DataArrays ===")
+x = xr.DataArray([1, 2, 3], attrs={'"'"'x_attr'"'"': '"'"'x_value'"'"'})
+y = xr.DataArray([4, 5, 6], attrs={'"'"'y_attr'"'"': '"'"'y_value'"'"'})
+cond = xr.DataArray([True, False, True])
+print(f"x attrs: {x.attrs}")
+print(f"y attrs: {y.attrs}")
+
+result = xr.where(cond, x, y)
+print(f"Result attrs: {result.attrs}")
+print(f"Any attributes preserved: {bool(result.attrs)}")'
+--------------------------------------------------------------------------------
+Result: [13]
+
+================================================================================
+ID: 6938
+================================================================================
+Found reproduction code at step 2 for ID 6938
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text 'import numpy as np
+import xarray as xr
+
+print("Reproducing the swap_dims issue...")
+
+nz = 11
+ds = xr.Dataset(
+    data_vars={
+        "y": ("z", np.random.rand(nz)),
+        "lev": ("z", np.arange(nz) * 10),
+        # ^ We want this to be a dimension coordinate
+    },
+)
+print(f"ds\n{ds}")
+print(f"\nds, '"'"'lev'"'"' -> dim coord\n{ds.swap_dims(z='"'"'lev'"'"')}")
+
+ds2 = (
+    ds.swap_dims(z="lev")
+    .rename_dims(lev="z")
+    .reset_index("lev")
+    .reset_coords()
+)
+print(f"\nds2\n{ds2}")
+# ^ This Dataset appears same as the original
+
+print(f"\nds2 before .swap_dims() applied - lev dims: {ds2['"'"'lev'"'"'].dims}")
+
+print(f"\nds2, '"'"'lev'"'"' -> dim coord\n{ds2.swap_dims(z='"'"'lev'"'"')}")
+# ^ Produces a Dataset with dimension coordinate '"'"'lev'"'"'
+
+print(f"\nds2 after .swap_dims() applied - lev dims: {ds2['"'"'lev'"'"'].dims}")
+# ^ `ds2['"'"'lev'"'"']` now has dimension '"'"'lev'"'"' although otherwise same
+
+print("\nThe issue is that ds2['"'"'lev'"'"'].dims changed from ('"'"'z'"'"',) to ('"'"'lev'"'"',)")
+print("This shows that swap_dims modified the original object!")'
+--------------------------------------------------------------------------------
+Result: [2]
+
+================================================================================
+ID: 10554
+================================================================================
+Found reproduction code at step 18 for ID 10554
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+settings.configure(
+    DEBUG=True,
+    DATABASES={
+        '"'"'default'"'"': {
+            '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+            '"'"'NAME'"'"': '"'"':memory:'"'"',
+        }
+    },
+    INSTALLED_APPS=[
+        '"'"'django.contrib.contenttypes'"'"',
+        '"'"'django.contrib.auth'"'"',
+    ],
+    SECRET_KEY='"'"'test-secret-key'"'"',
+)
+
+django.setup()
+
+from django.db import models
+
+# Create a simple model for testing
+class Dimension(models.Model):
+    name = models.CharField(max_length=100)
+    order = models.IntegerField(default=0)
+    
+    class Meta:
+        app_label = '"'"'test'"'"'
+        ordering = ['"'"'order'"'"']
+
+# Create the table
+from django.db import connection
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(Dimension)
+
+# Create some test data
+dimensions = []
+for i in range(10, 19):
+    dim = Dimension(id=i, name=f'"'"'dimension_{i}'"'"', order=i)
+    dim.save()
+    dimensions.append(dim)
+
+print("Initial data:")
+print(list(Dimension.objects.values_list('"'"'id'"'"', flat=True)))
+
+print("\nCreating union queryset with ordering...")
+qs = (
+    Dimension.objects.filter(pk__in=[10, 11])
+    .union(Dimension.objects.filter(pk__in=[16, 17]))
+    .order_by('"'"'order'"'"')
+)
+
+print("Union queryset:")
+print(qs)
+
+print("\nCreating derived queryset...")
+derived_qs = qs.order_by().values_list('"'"'pk'"'"', flat=True)
+print("Derived queryset result:")
+print(list(derived_qs))
+
+print("\nTrying to re-evaluate original queryset...")
+try:
+    print(qs)
+    print("SUCCESS: Original queryset re-evaluated without error")
+except Exception as e:
+    print(f"ERROR: {e}")
+    import traceback
+    traceback.print_exc()'
+--------------------------------------------------------------------------------
+Result: [18]
+
+================================================================================
+ID: 11138
+================================================================================
+Found reproduction code at step 12 for ID 11138
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the TIME_ZONE issue in database backends.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+os.environ.setdefault('"'"'DJANGO_SETTINGS_MODULE'"'"', '"'"'test_settings'"'"')
+
+# Create a minimal settings module
+settings.configure(
+    DEBUG=True,
+    USE_TZ=True,
+    TIME_ZONE='"'"'Europe/Paris'"'"',
+    DATABASES={
+        '"'"'default'"'"': {
+            '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+            '"'"'NAME'"'"': '"'"':memory:'"'"',
+            '"'"'TIME_ZONE'"'"': '"'"'Europe/Paris'"'"',
+        }
+    },
+    INSTALLED_APPS=[
+        '"'"'django.contrib.contenttypes'"'"',
+        '"'"'django.contrib.auth'"'"',
+    ],
+    SECRET_KEY='"'"'test-secret-key'"'"',
+)
+
+django.setup()
+
+from django.db import models, connection
+from django.utils import timezone
+import datetime
+
+# Create a test model
+class TestModel(models.Model):
+    my_datetime_field = models.DateTimeField()
+    
+    class Meta:
+        app_label = '"'"'test'"'"'
+
+# Create the table
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(TestModel)
+
+# Test the issue
+print("Testing TIME_ZONE issue reproduction...")
+print(f"Global TIME_ZONE: {settings.TIME_ZONE}")
+print(f"Database TIME_ZONE: {connection.settings_dict.get('"'"'TIME_ZONE'"'"')}")
+print(f"Connection timezone_name: {connection.timezone_name}")
+
+# Create a test datetime
+dt = timezone.make_aware(datetime.datetime(2017, 7, 6, 20, 50))
+print(f"Test datetime: {dt}")
+
+# Insert test data
+test_obj = TestModel.objects.create(my_datetime_field=dt)
+print(f"Created object with ID: {test_obj.id}")
+
+# Test normal query (should work)
+exists_normal = TestModel.objects.filter(my_datetime_field=dt).exists()
+print(f"Normal query exists: {exists_normal}")
+
+# Test date lookup (this is where the issue occurs)
+exists_date = TestModel.objects.filter(my_datetime_field__date=dt.date()).exists()
+print(f"Date lookup exists: {exists_date}")
+
+# Let'"'"'s check what SQL is generated for the date lookup
+from django.db import connection
+from django.db.models import Q
+
+# Reset queries log
+connection.queries_log.clear()
+
+# Perform the date lookup query
+TestModel.objects.filter(my_datetime_field__date=dt.date()).exists()
+
+# Print the SQL query
+if connection.queries_log:
+    print(f"Generated SQL: {connection.queries_log[-1]['"'"'sql'"'"']}")
+
+# Test with MySQL operations directly
+print("\n--- Testing MySQL operations directly ---")
+from django.db.backends.mysql.operations import DatabaseOperations as MySQLOps
+
+# Create a mock connection with TIME_ZONE setting
+class MockConnection:
+    def __init__(self, timezone_name):
+        self.timezone_name = timezone_name
+        self.settings_dict = {'"'"'TIME_ZONE'"'"': timezone_name}
+
+mysql_conn = MockConnection('"'"'Europe/Paris'"'"')
+mysql_ops = MySQLOps(mysql_conn)
+
+# Test the _convert_field_to_tz method
+field_name = "my_field"
+tzname = "Europe/Paris"
+converted_field = mysql_ops._convert_field_to_tz(field_name, tzname)
+print(f"MySQL converted field: {converted_field}")
+print("Issue: Should convert from '"'"'Europe/Paris'"'"' to '"'"'Europe/Paris'"'"', not from '"'"'UTC'"'"' to '"'"'Europe/Paris'"'"'")
+
+# Test with Oracle operations directly
+print("\n--- Testing Oracle operations directly ---")
+from django.db.backends.oracle.operations import DatabaseOperations as OracleOps
+
+oracle_conn = MockConnection('"'"'Europe/Paris'"'"')
+oracle_ops = OracleOps(oracle_conn)
+
+# Test the _convert_field_to_tz method
+converted_field_oracle = oracle_ops._convert_field_to_tz(field_name, tzname)
+print(f"Oracle converted field: {converted_field_oracle}")
+print("Issue: Should convert from '"'"'Europe/Paris'"'"' to '"'"'Europe/Paris'"'"', not from '"'"'0:00'"'"' (UTC) to '"'"'Europe/Paris'"'"'")'
+--------------------------------------------------------------------------------
+Result: [12]
+
+================================================================================
+ID: 12308
+================================================================================
+Found reproduction code at step 12 for ID 12308
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+    )
+
+django.setup()
+
+from django.db import models
+from django.contrib.admin.utils import display_for_field
+
+# Create a test model with JSONField
+class TestModel(models.Model):
+    json_data = models.JSONField()
+    
+    class Meta:
+        app_label = '"'"'test'"'"'
+
+# Test the current behavior
+def test_display_for_field():
+    print("Testing JSONField display in admin readonly fields...")
+    
+    # Create a JSONField instance
+    field = TestModel._meta.get_field('"'"'json_data'"'"')
+    
+    # Test with a dictionary value
+    test_value = {"foo": "bar", "nested": {"key": "value"}}
+    
+    print(f"Original value: {test_value}")
+    print(f"Type: {type(test_value)}")
+    
+    # Test current display_for_field behavior
+    result = display_for_field(test_value, field, "N/A")
+    print(f"Current display_for_field result: {result}")
+    print(f"Result type: {type(result)}")
+    
+    # Show the problem: this will display as Python dict representation
+    # instead of valid JSON
+    print(f"Is valid JSON? {is_valid_json(result)}")
+    
+    # Test with forms JSONField prepare_value for comparison
+    from django.forms.fields import JSONField as FormsJSONField
+    forms_field = FormsJSONField()
+    prepared_value = forms_field.prepare_value(test_value)
+    print(f"Forms JSONField prepare_value result: {prepared_value}")
+    print(f"Is valid JSON? {is_valid_json(prepared_value)}")
+
+def is_valid_json(value):
+    import json
+    try:
+        json.loads(value)
+        return True
+    except (json.JSONDecodeError, TypeError):
+        return False
+
+if __name__ == "__main__":
+    test_display_for_field()'
+--------------------------------------------------------------------------------
+Result: [12]
+
+================================================================================
+ID: 12774
+================================================================================
+Found reproduction code at step 9 for ID 12774
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.auth'"'"',
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+    )
+
+django.setup()
+
+from django.db import models
+
+# Define the test model
+class Article(models.Model):
+    slug = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, default="Test Title")
+    
+    class Meta:
+        app_label = '"'"'test_app'"'"'
+        constraints = [
+            models.UniqueConstraint(fields=["slug"], name="test_app_article_slug_unq")
+        ]
+
+# Create the table
+from django.db import connection
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(Article)
+
+# Test the issue
+print("Testing in_bulk() with UniqueConstraint field...")
+try:
+    result = Article.objects.in_bulk(field_name="slug")
+    print("SUCCESS: in_bulk() worked with UniqueConstraint field")
+except ValueError as e:
+    print(f"ERROR: {e}")
+
+# Test with a regular unique field for comparison
+class ArticleWithUniqueField(models.Model):
+    slug = models.CharField(max_length=255, unique=True)
+    title = models.CharField(max_length=255, default="Test Title")
+    
+    class Meta:
+        app_label = '"'"'test_app'"'"'
+
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(ArticleWithUniqueField)
+
+print("\nTesting in_bulk() with unique=True field...")
+try:
+    result = ArticleWithUniqueField.objects.in_bulk(field_name="slug")
+    print("SUCCESS: in_bulk() worked with unique=True field")
+except ValueError as e:
+    print(f"ERROR: {e}")'
+--------------------------------------------------------------------------------
+Result: [9]
+
+================================================================================
+ID: 15127
+================================================================================
+Found reproduction code at step 8 for ID 15127
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the LEVEL_TAGS issue with @override_settings
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+os.environ.setdefault('"'"'DJANGO_SETTINGS_MODULE'"'"', '"'"'test_settings'"'"')
+
+# Create a minimal settings module
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        INSTALLED_APPS=[
+            '"'"'django.contrib.messages'"'"',
+        ],
+        MESSAGE_TAGS={},
+    )
+
+django.setup()
+
+from django.contrib.messages import constants
+from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+from django.test import override_settings
+
+def test_level_tags_issue():
+    print("=== Testing LEVEL_TAGS issue ===")
+    
+    # Create a message with a custom level
+    custom_level = 35
+    message = Message(custom_level, "Test message")
+    
+    print(f"Initial LEVEL_TAGS: {LEVEL_TAGS}")
+    print(f"Message level: {message.level}")
+    print(f"Message level_tag (before override): '"'"'{message.level_tag}'"'"'")
+    
+    # Now override settings to add a custom tag for level 35
+    with override_settings(MESSAGE_TAGS={35: '"'"'custom'"'"'}):
+        print(f"LEVEL_TAGS inside override_settings: {LEVEL_TAGS}")
+        print(f"Message level_tag (inside override): '"'"'{message.level_tag}'"'"'")
+        
+        # Create a new message inside the override
+        new_message = Message(custom_level, "New test message")
+        print(f"New message level_tag (inside override): '"'"'{new_message.level_tag}'"'"'")
+    
+    print(f"LEVEL_TAGS after override_settings: {LEVEL_TAGS}")
+    print(f"Message level_tag (after override): '"'"'{message.level_tag}'"'"'")
+
+if __name__ == '"'"'__main__'"'"':
+    test_level_tags_issue()'
+--------------------------------------------------------------------------------
+Result: [8]
+
+================================================================================
+ID: 16631
+================================================================================
+Found reproduction code at step 10 for ID 16631
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python3
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+settings.configure(
+    SECRET_KEY='"'"'new-secret-key'"'"',
+    SECRET_KEY_FALLBACKS=['"'"'old-secret-key'"'"'],
+    INSTALLED_APPS=[
+        '"'"'django.contrib.auth'"'"',
+        '"'"'django.contrib.contenttypes'"'"',
+    ],
+    DATABASES={
+        '"'"'default'"'"': {
+            '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+            '"'"'NAME'"'"': '"'"':memory:'"'"',
+        }
+    },
+    USE_TZ=True,
+)
+
+django.setup()
+
+from django.contrib.auth.models import User
+from django.utils.crypto import salted_hmac
+
+def test_session_auth_hash_fallback():
+    """Test that session auth hash works with fallback keys"""
+    
+    # Create a user
+    user = User(username='"'"'testuser'"'"', password='"'"'hashed_password'"'"')
+    
+    # Get session auth hash with current secret key
+    current_hash = user.get_session_auth_hash()
+    print(f"Current session auth hash: {current_hash}")
+    
+    # Simulate what should happen with fallback keys
+    # This is what the session auth hash would have been with the old key
+    key_salt = "django.contrib.auth.models.AbstractBaseUser.get_session_auth_hash"
+    old_hash = salted_hmac(
+        key_salt,
+        user.password,
+        secret='"'"'old-secret-key'"'"',  # Using the fallback key
+        algorithm="sha256",
+    ).hexdigest()
+    print(f"Old session auth hash (with fallback key): {old_hash}")
+    
+    # These should be different because get_session_auth_hash doesn'"'"'t use fallbacks
+    print(f"Hashes are different: {current_hash != old_hash}")
+    
+    # This demonstrates the problem: if a user had a session created with the old key,
+    # their session would be invalidated when the key is rotated, even though
+    # SECRET_KEY_FALLBACKS is configured.
+    
+    return current_hash != old_hash
+
+if __name__ == '"'"'__main__'"'"':
+    result = test_session_auth_hash_fallback()
+    print(f"\nTest result: {'"'"'PASS'"'"' if result else '"'"'FAIL'"'"'}")
+    print("This demonstrates that get_session_auth_hash doesn'"'"'t use SECRET_KEY_FALLBACKS")'
+--------------------------------------------------------------------------------
+Result: [10]
+
+================================================================================
+ID: 16950
+================================================================================
+Found reproduction code at step 14 for ID 16950
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the Django Admin UUIDField default value issue with inlines.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+            '"'"'__main__'"'"',  # This module
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+        ROOT_URLCONF='"'"'__main__'"'"',
+    )
+
+django.setup()
+
+import uuid
+from django.db import models
+from django.contrib import admin
+from django.urls import path
+from django.http import HttpResponse
+from django.test import RequestFactory
+from django.contrib.auth.models import User
+
+
+# Models from the bug report
+class UUIDModel(models.Model):
+    pkid = models.BigAutoField(primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    class Meta:
+        abstract = True
+
+
+class Thing(UUIDModel):
+    name = models.CharField(max_length=191)
+    
+    def __str__(self):
+        return self.name
+
+
+class SubThing(models.Model):
+    name = models.CharField(max_length=191)
+    thing = models.ForeignKey(
+        '"'"'Thing'"'"',
+        to_field='"'"'id'"'"',  # This is the UUID field
+        on_delete=models.CASCADE,
+        related_name='"'"'subthings'"'"',
+    )
+    
+    def __str__(self):
+        return self.name
+
+
+# Admin configuration from the bug report
+class SubThingInline(admin.StackedInline):
+    model = SubThing
+
+
+@admin.register(Thing)
+class ThingAdmin(admin.ModelAdmin):
+    list_display = ('"'"'name'"'"',)
+    ordering = ('"'"'pkid'"'"',)
+    inlines = (SubThingInline,)
+
+
+# URL configuration
+urlpatterns = [
+    path('"'"'admin/'"'"', admin.site.urls),
+]
+
+
+def test_issue():
+    """Test the issue described in the bug report."""
+    print("Setting up database...")
+    
+    # Create tables
+    from django.core.management import execute_from_command_line
+    execute_from_command_line(['"'"'manage.py'"'"', '"'"'migrate'"'"', '"'"'--run-syncdb'"'"', '"'"'--verbosity=0'"'"'])
+    
+    # Create a superuser
+    User.objects.create_superuser('"'"'admin'"'"', '"'"'admin@example.com'"'"', '"'"'password'"'"')
+    
+    print("Testing the issue...")
+    
+    # Create a request factory
+    factory = RequestFactory()
+    
+    # Simulate creating a new Thing with SubThing inline
+    request = factory.post('"'"'/admin/thing/add/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    # Get the admin instance
+    thing_admin = ThingAdmin(Thing, admin.site)
+    
+    # Try to process the form
+    try:
+        # Get the formset
+        formset_class = thing_admin.get_formset(request)
+        formset = formset_class(request.POST, instance=None)
+        
+        print(f"Formset is valid: {formset.is_valid()}")
+        
+        if not formset.is_valid():
+            print("Formset errors:")
+            for i, form in enumerate(formset.forms):
+                if form.errors:
+                    print(f"  Form {i} errors: {form.errors}")
+            print(f"Non-form errors: {formset.non_form_errors()}")
+        
+        # Try to save if valid
+        if formset.is_valid():
+            # Create a parent instance first
+            thing = Thing(name='"'"'Test Thing'"'"')
+            thing.save()
+            print(f"Created Thing with id: {thing.id} (UUID), pkid: {thing.pkid}")
+            
+            # Now try to save the formset
+            formset.instance = thing
+            instances = formset.save()
+            print(f"Saved {len(instances)} SubThing instances")
+            
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+        
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+if __name__ == '"'"'__main__'"'"':
+    test_issue()'
+--------------------------------------------------------------------------------
+Found reproduction code at step 24 for ID 16950
+Observation: File created successfully at: /testbed/reproduce_issue_detailed.py
+Action: str_replace_editor create /testbed/reproduce_issue_detailed.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the Django Admin UUIDField default value issue with inlines.
+This version simulates the actual admin form submission process more closely.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+            '"'"'__main__'"'"',  # This module
+        ],
+        MIDDLEWARE=[
+            '"'"'django.contrib.sessions.middleware.SessionMiddleware'"'"',
+            '"'"'django.contrib.auth.middleware.AuthenticationMiddleware'"'"',
+            '"'"'django.contrib.messages.middleware.MessageMiddleware'"'"',
+        ],
+        TEMPLATES=[
+            {
+                '"'"'BACKEND'"'"': '"'"'django.template.backends.django.DjangoTemplates'"'"',
+                '"'"'DIRS'"'"': [],
+                '"'"'APP_DIRS'"'"': True,
+                '"'"'OPTIONS'"'"': {
+                    '"'"'context_processors'"'"': [
+                        '"'"'django.template.context_processors.debug'"'"',
+                        '"'"'django.template.context_processors.request'"'"',
+                        '"'"'django.contrib.auth.context_processors.auth'"'"',
+                        '"'"'django.contrib.messages.context_processors.messages'"'"',
+                    ],
+                },
+            },
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+        ROOT_URLCONF='"'"'__main__'"'"',
+        DEFAULT_AUTO_FIELD='"'"'django.db.models.BigAutoField'"'"',
+    )
+
+django.setup()
+
+import uuid
+from django.db import models
+from django.contrib import admin
+from django.urls import path
+from django.http import HttpResponse
+from django.test import RequestFactory
+from django.contrib.auth.models import User
+
+
+# Models from the bug report
+class UUIDModel(models.Model):
+    pkid = models.BigAutoField(primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    class Meta:
+        abstract = True
+
+
+class Thing(UUIDModel):
+    name = models.CharField(max_length=191)
+    
+    def __str__(self):
+        return self.name
+
+
+class SubThing(models.Model):
+    name = models.CharField(max_length=191)
+    thing = models.ForeignKey(
+        '"'"'Thing'"'"',
+        to_field='"'"'id'"'"',  # This is the UUID field
+        on_delete=models.CASCADE,
+        related_name='"'"'subthings'"'"',
+    )
+    
+    def __str__(self):
+        return self.name
+
+
+# Admin configuration from the bug report
+class SubThingInline(admin.StackedInline):
+    model = SubThing
+
+
+@admin.register(Thing)
+class ThingAdmin(admin.ModelAdmin):
+    list_display = ('"'"'name'"'"',)
+    ordering = ('"'"'pkid'"'"',)
+    inlines = (SubThingInline,)
+
+
+# URL configuration
+urlpatterns = [
+    path('"'"'admin/'"'"', admin.site.urls),
+]
+
+
+def test_issue():
+    """Test the issue described in the bug report."""
+    print("Setting up database...")
+    
+    # Create tables manually
+    from django.db import connection
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(Thing)
+        schema_editor.create_model(SubThing)
+        
+        # Create User model table
+        from django.contrib.auth.models import User
+        schema_editor.create_model(User)
+    
+    # Create a superuser
+    User.objects.create_superuser('"'"'admin'"'"', '"'"'admin@example.com'"'"', '"'"'password'"'"')
+    
+    print("Testing the issue...")
+    
+    # Create a request factory
+    factory = RequestFactory()
+    
+    # Test 1: Create a Thing without SubThings (this should work)
+    print("\n=== Test 1: Creating Thing without SubThings ===")
+    request = factory.post('"'"'/admin/thing/add/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing 1'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    thing_admin = ThingAdmin(Thing, admin.site)
+    
+    # Simulate the admin form processing
+    form_class = thing_admin.get_form(request)
+    form = form_class(request.POST)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if form.is_valid():
+        thing1 = form.save()
+        print(f"Created Thing1 with id: {thing1.id} (UUID), pkid: {thing1.pkid}")
+    else:
+        print(f"Main form errors: {form.errors}")
+    
+    # Test 2: Create a Thing with SubThings (this might fail)
+    print("\n=== Test 2: Creating Thing with SubThings ===")
+    request = factory.post('"'"'/admin/thing/add/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing 2'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    # Get the main form
+    form_class = thing_admin.get_form(request)
+    form = form_class(request.POST)
+    
+    # Get the inline formsets
+    inline_instances = thing_admin.get_inline_instances(request)
+    formsets = []
+    
+    for inline in inline_instances:
+        formset_class = inline.get_formset(request)
+        prefix = formset_class.get_default_prefix()
+        formset = formset_class(request.POST, instance=None, prefix=prefix)
+        formsets.append(formset)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if not form.is_valid():
+        print(f"Main form errors: {form.errors}")
+    
+    all_valid = form.is_valid()
+    for i, formset in enumerate(formsets):
+        valid = formset.is_valid()
+        print(f"Formset {i} is valid: {valid}")
+        if not valid:
+            print(f"  Formset {i} errors: {formset.errors}")
+            print(f"  Formset {i} non-form errors: {formset.non_form_errors()}")
+        all_valid = all_valid and valid
+    
+    if all_valid:
+        # Save the main object first
+        thing2 = form.save()
+        print(f"Created Thing2 with id: {thing2.id} (UUID), pkid: {thing2.pkid}")
+        
+        # Now save the formsets
+        for i, formset in enumerate(formsets):
+            formset.instance = thing2
+            instances = formset.save()
+            print(f"Saved {len(instances)} instances from formset {i}")
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+    
+    # Test 3: Simulate the exact scenario from the bug report
+    print("\n=== Test 3: Simulating exact bug scenario ===")
+    
+    # First create a Thing with no SubThings and save it
+    thing3 = Thing(name='"'"'Test Thing 3'"'"')
+    thing3.save()
+    print(f"Created Thing3 with id: {thing3.id} (UUID), pkid: {thing3.pkid}")
+    
+    # Now try to add a SubThing to the existing Thing
+    request = factory.post(f'"'"'/admin/thing/{thing3.pkid}/change/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing 3 Updated'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing for Thing 3'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    # Get the main form with the existing instance
+    form_class = thing_admin.get_form(request, thing3)
+    form = form_class(request.POST, instance=thing3)
+    
+    # Get the inline formsets with the existing instance
+    inline_instances = thing_admin.get_inline_instances(request, thing3)
+    formsets = []
+    
+    for inline in inline_instances:
+        formset_class = inline.get_formset(request, thing3)
+        prefix = formset_class.get_default_prefix()
+        formset = formset_class(request.POST, instance=thing3, prefix=prefix)
+        formsets.append(formset)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if not form.is_valid():
+        print(f"Main form errors: {form.errors}")
+    
+    all_valid = form.is_valid()
+    for i, formset in enumerate(formsets):
+        valid = formset.is_valid()
+        print(f"Formset {i} is valid: {valid}")
+        if not valid:
+            print(f"  Formset {i} errors: {formset.errors}")
+            print(f"  Formset {i} non-form errors: {formset.non_form_errors()}")
+            
+            # Let'"'"'s examine the forms in detail
+            for j, form_in_set in enumerate(formset.forms):
+                print(f"    Form {j} in formset {i}:")
+                print(f"      Errors: {form_in_set.errors}")
+                print(f"      Cleaned data: {getattr(form_in_set, '"'"'cleaned_data'"'"', '"'"'Not available'"'"')}")
+                if hasattr(form_in_set, '"'"'instance'"'"'):
+                    print(f"      Instance: {form_in_set.instance}")
+                    print(f"      Instance thing_id: {getattr(form_in_set.instance, '"'"'thing_id'"'"', '"'"'Not set'"'"')}")
+        all_valid = all_valid and valid
+    
+    if all_valid:
+        # Save the main object first
+        thing3_updated = form.save()
+        print(f"Updated Thing3 with id: {thing3_updated.id} (UUID), pkid: {thing3_updated.pkid}")
+        
+        # Now save the formsets
+        for i, formset in enumerate(formsets):
+            instances = formset.save()
+            print(f"Saved {len(instances)} instances from formset {i}")
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+
+
+if __name__ == '"'"'__main__'"'"':
+    test_issue()'
+--------------------------------------------------------------------------------
+Found reproduction code at step 26 for ID 16950
+Observation: File created successfully at: /testbed/reproduce_exact_issue.py
+Action: str_replace_editor create /testbed/reproduce_exact_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the exact Django Admin UUIDField default value issue with inlines.
+This version tries to reproduce the exact scenario from the bug report.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+            '"'"'__main__'"'"',  # This module
+        ],
+        MIDDLEWARE=[
+            '"'"'django.contrib.sessions.middleware.SessionMiddleware'"'"',
+            '"'"'django.contrib.auth.middleware.AuthenticationMiddleware'"'"',
+            '"'"'django.contrib.messages.middleware.MessageMiddleware'"'"',
+        ],
+        TEMPLATES=[
+            {
+                '"'"'BACKEND'"'"': '"'"'django.template.backends.django.DjangoTemplates'"'"',
+                '"'"'DIRS'"'"': [],
+                '"'"'APP_DIRS'"'"': True,
+                '"'"'OPTIONS'"'"': {
+                    '"'"'context_processors'"'"': [
+                        '"'"'django.template.context_processors.debug'"'"',
+                        '"'"'django.template.context_processors.request'"'"',
+                        '"'"'django.contrib.auth.context_processors.auth'"'"',
+                        '"'"'django.contrib.messages.context_processors.messages'"'"',
+                    ],
+                },
+            },
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+        ROOT_URLCONF='"'"'__main__'"'"',
+        DEFAULT_AUTO_FIELD='"'"'django.db.models.BigAutoField'"'"',
+    )
+
+django.setup()
+
+import uuid
+from django.db import models
+from django.contrib import admin
+from django.urls import path
+from django.http import HttpResponse
+from django.test import RequestFactory
+from django.contrib.auth.models import User
+
+
+# Models from the bug report
+class UUIDModel(models.Model):
+    pkid = models.BigAutoField(primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    class Meta:
+        abstract = True
+
+
+class Thing(UUIDModel):
+    name = models.CharField(max_length=191)
+    
+    def __str__(self):
+        return self.name
+
+
+class SubThing(models.Model):
+    name = models.CharField(max_length=191)
+    thing = models.ForeignKey(
+        '"'"'Thing'"'"',
+        to_field='"'"'id'"'"',  # This is the UUID field
+        on_delete=models.CASCADE,
+        related_name='"'"'subthings'"'"',
+    )
+    
+    def __str__(self):
+        return self.name
+
+
+# Admin configuration from the bug report
+class SubThingInline(admin.StackedInline):
+    model = SubThing
+
+
+@admin.register(Thing)
+class ThingAdmin(admin.ModelAdmin):
+    list_display = ('"'"'name'"'"',)
+    ordering = ('"'"'pkid'"'"',)
+    inlines = (SubThingInline,)
+
+
+# URL configuration
+urlpatterns = [
+    path('"'"'admin/'"'"', admin.site.urls),
+]
+
+
+def test_issue():
+    """Test the issue described in the bug report."""
+    print("Setting up database...")
+    
+    # Create tables manually
+    from django.db import connection
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(Thing)
+        schema_editor.create_model(SubThing)
+        
+        # Create User model table
+        from django.contrib.auth.models import User
+        schema_editor.create_model(User)
+    
+    # Create a superuser
+    User.objects.create_superuser('"'"'admin'"'"', '"'"'admin@example.com'"'"', '"'"'password'"'"')
+    
+    print("Testing the issue...")
+    
+    # Create a request factory
+    factory = RequestFactory()
+    
+    # Test the exact scenario: Create a new Thing with a SubThing inline
+    # This simulates the admin form submission when creating a new object
+    print("\n=== Testing exact scenario from bug report ===")
+    
+    # Simulate form data that would be sent when creating a new Thing with SubThing
+    form_data = {
+        '"'"'name'"'"': '"'"'Test Thing'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+        '"'"'subthings-0-id'"'"': '"'"''"'"',  # Empty for new objects
+        '"'"'subthings-0-thing'"'"': '"'"''"'"',  # This should be set to the parent'"'"'s UUID
+    }
+    
+    request = factory.post('"'"'/admin/thing/add/'"'"', form_data)
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    thing_admin = ThingAdmin(Thing, admin.site)
+    
+    # Get the main form
+    form_class = thing_admin.get_form(request)
+    form = form_class(request.POST)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if not form.is_valid():
+        print(f"Main form errors: {form.errors}")
+        return
+    
+    # Create the main object but don'"'"'t save yet (this is what admin does)
+    thing = form.save(commit=False)
+    print(f"Created Thing instance (not saved yet): id={thing.id}, pkid={thing.pkid}")
+    
+    # Get the inline formsets
+    inline_instances = thing_admin.get_inline_instances(request)
+    formsets = []
+    
+    for inline in inline_instances:
+        formset_class = inline.get_formset(request)
+        prefix = formset_class.get_default_prefix()
+        # Pass the unsaved instance to the formset
+        formset = formset_class(request.POST, instance=thing, prefix=prefix)
+        formsets.append(formset)
+    
+    # Check if formsets are valid
+    all_valid = True
+    for i, formset in enumerate(formsets):
+        valid = formset.is_valid()
+        print(f"Formset {i} is valid: {valid}")
+        if not valid:
+            print(f"  Formset {i} errors: {formset.errors}")
+            print(f"  Formset {i} non-form errors: {formset.non_form_errors()}")
+            
+            # Let'"'"'s examine the forms in detail
+            for j, form_in_set in enumerate(formset.forms):
+                print(f"    Form {j} in formset {i}:")
+                print(f"      Errors: {form_in_set.errors}")
+                if hasattr(form_in_set, '"'"'cleaned_data'"'"'):
+                    print(f"      Cleaned data: {form_in_set.cleaned_data}")
+                if hasattr(form_in_set, '"'"'instance'"'"'):
+                    print(f"      Instance: {form_in_set.instance}")
+                    print(f"      Instance thing_id: {getattr(form_in_set.instance, '"'"'thing_id'"'"', '"'"'Not set'"'"')}")
+                    print(f"      Instance thing: {getattr(form_in_set.instance, '"'"'thing'"'"', '"'"'Not set'"'"')}")
+        all_valid = all_valid and valid
+    
+    if all_valid:
+        # Now save the main object
+        thing.save()
+        print(f"Saved Thing with id: {thing.id} (UUID), pkid: {thing.pkid}")
+        
+        # Now save the formsets
+        for i, formset in enumerate(formsets):
+            instances = formset.save()
+            print(f"Saved {len(instances)} instances from formset {i}")
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+    else:
+        print("Could not save due to validation errors")
+    
+    # Let'"'"'s also test what happens when we create a formset with an unsaved instance
+    print("\n=== Testing formset with unsaved instance ===")
+    
+    # Create a new unsaved Thing
+    new_thing = Thing(name='"'"'Unsaved Thing'"'"')
+    print(f"Unsaved Thing: id={new_thing.id}, pkid={new_thing.pkid}")
+    
+    # Create a formset with this unsaved instance
+    inline = SubThingInline(Thing, admin.site)
+    formset_class = inline.get_formset(request)
+    
+    # Test with empty data first
+    formset = formset_class(instance=new_thing)
+    print(f"Empty formset with unsaved instance created successfully")
+    
+    # Test with data
+    form_data_2 = {
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing 2'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+        '"'"'subthings-0-id'"'"': '"'"''"'"',
+        '"'"'subthings-0-thing'"'"': '"'"''"'"',
+    }
+    
+    formset = formset_class(form_data_2, instance=new_thing)
+    print(f"Formset with data and unsaved instance is valid: {formset.is_valid()}")
+    
+    if not formset.is_valid():
+        print(f"Formset errors: {formset.errors}")
+        print(f"Non-form errors: {formset.non_form_errors()}")
+        
+        for j, form_in_set in enumerate(formset.forms):
+            print(f"  Form {j}:")
+            print(f"    Errors: {form_in_set.errors}")
+            if hasattr(form_in_set, '"'"'cleaned_data'"'"'):
+                print(f"    Cleaned data: {form_in_set.cleaned_data}")
+            if hasattr(form_in_set, '"'"'instance'"'"'):
+                print(f"    Instance: {form_in_set.instance}")
+                print(f"    Instance thing_id: {getattr(form_in_set.instance, '"'"'thing_id'"'"', '"'"'Not set'"'"')}")
+                print(f"    Instance thing: {getattr(form_in_set.instance, '"'"'thing'"'"', '"'"'Not set'"'"')}")
+
+
+if __name__ == '"'"'__main__'"'"':
+    test_issue()'
+--------------------------------------------------------------------------------
+Result: [14, 24, 26]
+
+================================================================================
+ID: 26113
+================================================================================
+Found reproduction code at step 8 for ID 26113
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python3
+
+"""
+Script to reproduce the hexbin mincnt inconsistency issue.
+"""
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Set up test data
+np.random.seed(42)
+X, Y = np.random.multivariate_normal([0.0, 0.0], [[1.0, 0.1], [0.1, 1.0]], size=250).T
+Z = np.ones_like(X)
+
+extent = [-3., 3., -3., 3.]
+gridsize = (7, 7)
+
+def count_visible_hexagons(ax):
+    """Count the number of visible hexagons in the plot."""
+    # Get the collection from the hexbin plot
+    collections = ax.collections
+    if collections:
+        # Get the array of values (which contains NaN for filtered hexagons)
+        array = collections[0].get_array()
+        # Count non-NaN values
+        return np.sum(~np.isnan(array))
+    return 0
+
+print("Testing hexbin mincnt behavior...")
+print("=" * 50)
+
+# Test case 1: mincnt=1, no C argument
+fig, ax = plt.subplots(1, 1)
+ax.hexbin(X, Y, mincnt=1, extent=extent, gridsize=gridsize, linewidth=0.0, cmap='"'"'Blues'"'"')
+count_no_c = count_visible_hexagons(ax)
+plt.close(fig)
+
+# Test case 2: mincnt=1, C argument specified
+fig, ax = plt.subplots(1, 1)
+ax.hexbin(X, Y, C=Z, reduce_C_function=np.sum, mincnt=1, extent=extent, gridsize=gridsize, linewidth=0.0, cmap='"'"'Blues'"'"')
+count_with_c = count_visible_hexagons(ax)
+plt.close(fig)
+
+# Test case 3: mincnt=0, C argument specified
+fig, ax = plt.subplots(1, 1)
+ax.hexbin(X, Y, C=Z, reduce_C_function=np.sum, mincnt=0, extent=extent, gridsize=gridsize, linewidth=0.0, cmap='"'"'Blues'"'"')
+count_with_c_mincnt0 = count_visible_hexagons(ax)
+plt.close(fig)
+
+print(f"Hexagons visible with mincnt=1, no C:     {count_no_c}")
+print(f"Hexagons visible with mincnt=1, with C:   {count_with_c}")
+print(f"Hexagons visible with mincnt=0, with C:   {count_with_c_mincnt0}")
+
+if count_no_c != count_with_c:
+    print("\n❌ BUG CONFIRMED: Inconsistent behavior!")
+    print(f"   Expected same count for both cases, but got {count_no_c} vs {count_with_c}")
+else:
+    print("\n✅ No inconsistency detected")
+
+if count_with_c_mincnt0 == count_no_c:
+    print("✅ As expected: mincnt=0 with C shows same hexagons as mincnt=1 without C")
+else:
+    print(f"❓ Unexpected: mincnt=0 with C shows {count_with_c_mincnt0} hexagons vs {count_no_c} for mincnt=1 without C")'
+--------------------------------------------------------------------------------
+Result: [8]
+
+================================================================================
+ID: 4687
+================================================================================
+Found reproduction code at step 13 for ID 4687
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python3
+
+import numpy as np
+import xarray as xr
+
+print("Testing xr.where attribute preservation...")
+
+# Test case 1: Simple case from the issue
+print("\n=== Test case 1: Simple case ===")
+da = xr.DataArray(1)
+da.attrs['"'"'foo'"'"'] = '"'"'bar'"'"'
+print(f"Original attrs: {da.attrs}")
+result = xr.where(da == 0, -1, da)
+print(f"Result attrs: {result.attrs}")
+print(f"Attributes preserved: {result.attrs == da.attrs}")
+
+# Test case 2: More complex case from the issue
+print("\n=== Test case 2: Complex case ===")
+data = xr.DataArray(np.ones([10, 10], dtype=np.int8))
+data.attrs["attr_1"] = "test1"
+data.attrs["attr_2"] = "test2"
+print(f"Original attrs: {data.attrs}")
+print(f"Original dtype: {data.dtype}")
+
+data2 = xr.where(data == 1, 5, 0)
+print(f"Result attrs: {data2.attrs}")
+print(f"Result dtype: {data2.dtype}")
+print(f"Attributes preserved: {data2.attrs == data.attrs}")
+print(f"Dtype preserved: {data2.dtype == data.dtype}")
+
+# Test case 3: Multiple DataArrays with attributes
+print("\n=== Test case 3: Multiple DataArrays ===")
+x = xr.DataArray([1, 2, 3], attrs={'"'"'x_attr'"'"': '"'"'x_value'"'"'})
+y = xr.DataArray([4, 5, 6], attrs={'"'"'y_attr'"'"': '"'"'y_value'"'"'})
+cond = xr.DataArray([True, False, True])
+print(f"x attrs: {x.attrs}")
+print(f"y attrs: {y.attrs}")
+
+result = xr.where(cond, x, y)
+print(f"Result attrs: {result.attrs}")
+print(f"Any attributes preserved: {bool(result.attrs)}")'
+--------------------------------------------------------------------------------
+Result: [13]
+
+================================================================================
+ID: 6938
+================================================================================
+Found reproduction code at step 2 for ID 6938
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text 'import numpy as np
+import xarray as xr
+
+print("Reproducing the swap_dims issue...")
+
+nz = 11
+ds = xr.Dataset(
+    data_vars={
+        "y": ("z", np.random.rand(nz)),
+        "lev": ("z", np.arange(nz) * 10),
+        # ^ We want this to be a dimension coordinate
+    },
+)
+print(f"ds\n{ds}")
+print(f"\nds, '"'"'lev'"'"' -> dim coord\n{ds.swap_dims(z='"'"'lev'"'"')}")
+
+ds2 = (
+    ds.swap_dims(z="lev")
+    .rename_dims(lev="z")
+    .reset_index("lev")
+    .reset_coords()
+)
+print(f"\nds2\n{ds2}")
+# ^ This Dataset appears same as the original
+
+print(f"\nds2 before .swap_dims() applied - lev dims: {ds2['"'"'lev'"'"'].dims}")
+
+print(f"\nds2, '"'"'lev'"'"' -> dim coord\n{ds2.swap_dims(z='"'"'lev'"'"')}")
+# ^ Produces a Dataset with dimension coordinate '"'"'lev'"'"'
+
+print(f"\nds2 after .swap_dims() applied - lev dims: {ds2['"'"'lev'"'"'].dims}")
+# ^ `ds2['"'"'lev'"'"']` now has dimension '"'"'lev'"'"' although otherwise same
+
+print("\nThe issue is that ds2['"'"'lev'"'"'].dims changed from ('"'"'z'"'"',) to ('"'"'lev'"'"',)")
+print("This shows that swap_dims modified the original object!")'
+--------------------------------------------------------------------------------
+Result: [2]
+
+================================================================================
+ID: 10554
+================================================================================
+Found reproduction code at step 18 for ID 10554
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+settings.configure(
+    DEBUG=True,
+    DATABASES={
+        '"'"'default'"'"': {
+            '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+            '"'"'NAME'"'"': '"'"':memory:'"'"',
+        }
+    },
+    INSTALLED_APPS=[
+        '"'"'django.contrib.contenttypes'"'"',
+        '"'"'django.contrib.auth'"'"',
+    ],
+    SECRET_KEY='"'"'test-secret-key'"'"',
+)
+
+django.setup()
+
+from django.db import models
+
+# Create a simple model for testing
+class Dimension(models.Model):
+    name = models.CharField(max_length=100)
+    order = models.IntegerField(default=0)
+    
+    class Meta:
+        app_label = '"'"'test'"'"'
+        ordering = ['"'"'order'"'"']
+
+# Create the table
+from django.db import connection
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(Dimension)
+
+# Create some test data
+dimensions = []
+for i in range(10, 19):
+    dim = Dimension(id=i, name=f'"'"'dimension_{i}'"'"', order=i)
+    dim.save()
+    dimensions.append(dim)
+
+print("Initial data:")
+print(list(Dimension.objects.values_list('"'"'id'"'"', flat=True)))
+
+print("\nCreating union queryset with ordering...")
+qs = (
+    Dimension.objects.filter(pk__in=[10, 11])
+    .union(Dimension.objects.filter(pk__in=[16, 17]))
+    .order_by('"'"'order'"'"')
+)
+
+print("Union queryset:")
+print(qs)
+
+print("\nCreating derived queryset...")
+derived_qs = qs.order_by().values_list('"'"'pk'"'"', flat=True)
+print("Derived queryset result:")
+print(list(derived_qs))
+
+print("\nTrying to re-evaluate original queryset...")
+try:
+    print(qs)
+    print("SUCCESS: Original queryset re-evaluated without error")
+except Exception as e:
+    print(f"ERROR: {e}")
+    import traceback
+    traceback.print_exc()'
+--------------------------------------------------------------------------------
+Result: [18]
+
+================================================================================
+ID: 11138
+================================================================================
+Found reproduction code at step 12 for ID 11138
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the TIME_ZONE issue in database backends.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+os.environ.setdefault('"'"'DJANGO_SETTINGS_MODULE'"'"', '"'"'test_settings'"'"')
+
+# Create a minimal settings module
+settings.configure(
+    DEBUG=True,
+    USE_TZ=True,
+    TIME_ZONE='"'"'Europe/Paris'"'"',
+    DATABASES={
+        '"'"'default'"'"': {
+            '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+            '"'"'NAME'"'"': '"'"':memory:'"'"',
+            '"'"'TIME_ZONE'"'"': '"'"'Europe/Paris'"'"',
+        }
+    },
+    INSTALLED_APPS=[
+        '"'"'django.contrib.contenttypes'"'"',
+        '"'"'django.contrib.auth'"'"',
+    ],
+    SECRET_KEY='"'"'test-secret-key'"'"',
+)
+
+django.setup()
+
+from django.db import models, connection
+from django.utils import timezone
+import datetime
+
+# Create a test model
+class TestModel(models.Model):
+    my_datetime_field = models.DateTimeField()
+    
+    class Meta:
+        app_label = '"'"'test'"'"'
+
+# Create the table
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(TestModel)
+
+# Test the issue
+print("Testing TIME_ZONE issue reproduction...")
+print(f"Global TIME_ZONE: {settings.TIME_ZONE}")
+print(f"Database TIME_ZONE: {connection.settings_dict.get('"'"'TIME_ZONE'"'"')}")
+print(f"Connection timezone_name: {connection.timezone_name}")
+
+# Create a test datetime
+dt = timezone.make_aware(datetime.datetime(2017, 7, 6, 20, 50))
+print(f"Test datetime: {dt}")
+
+# Insert test data
+test_obj = TestModel.objects.create(my_datetime_field=dt)
+print(f"Created object with ID: {test_obj.id}")
+
+# Test normal query (should work)
+exists_normal = TestModel.objects.filter(my_datetime_field=dt).exists()
+print(f"Normal query exists: {exists_normal}")
+
+# Test date lookup (this is where the issue occurs)
+exists_date = TestModel.objects.filter(my_datetime_field__date=dt.date()).exists()
+print(f"Date lookup exists: {exists_date}")
+
+# Let'"'"'s check what SQL is generated for the date lookup
+from django.db import connection
+from django.db.models import Q
+
+# Reset queries log
+connection.queries_log.clear()
+
+# Perform the date lookup query
+TestModel.objects.filter(my_datetime_field__date=dt.date()).exists()
+
+# Print the SQL query
+if connection.queries_log:
+    print(f"Generated SQL: {connection.queries_log[-1]['"'"'sql'"'"']}")
+
+# Test with MySQL operations directly
+print("\n--- Testing MySQL operations directly ---")
+from django.db.backends.mysql.operations import DatabaseOperations as MySQLOps
+
+# Create a mock connection with TIME_ZONE setting
+class MockConnection:
+    def __init__(self, timezone_name):
+        self.timezone_name = timezone_name
+        self.settings_dict = {'"'"'TIME_ZONE'"'"': timezone_name}
+
+mysql_conn = MockConnection('"'"'Europe/Paris'"'"')
+mysql_ops = MySQLOps(mysql_conn)
+
+# Test the _convert_field_to_tz method
+field_name = "my_field"
+tzname = "Europe/Paris"
+converted_field = mysql_ops._convert_field_to_tz(field_name, tzname)
+print(f"MySQL converted field: {converted_field}")
+print("Issue: Should convert from '"'"'Europe/Paris'"'"' to '"'"'Europe/Paris'"'"', not from '"'"'UTC'"'"' to '"'"'Europe/Paris'"'"'")
+
+# Test with Oracle operations directly
+print("\n--- Testing Oracle operations directly ---")
+from django.db.backends.oracle.operations import DatabaseOperations as OracleOps
+
+oracle_conn = MockConnection('"'"'Europe/Paris'"'"')
+oracle_ops = OracleOps(oracle_conn)
+
+# Test the _convert_field_to_tz method
+converted_field_oracle = oracle_ops._convert_field_to_tz(field_name, tzname)
+print(f"Oracle converted field: {converted_field_oracle}")
+print("Issue: Should convert from '"'"'Europe/Paris'"'"' to '"'"'Europe/Paris'"'"', not from '"'"'0:00'"'"' (UTC) to '"'"'Europe/Paris'"'"'")'
+--------------------------------------------------------------------------------
+Result: [12]
+
+================================================================================
+ID: 12308
+================================================================================
+Found reproduction code at step 12 for ID 12308
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+    )
+
+django.setup()
+
+from django.db import models
+from django.contrib.admin.utils import display_for_field
+
+# Create a test model with JSONField
+class TestModel(models.Model):
+    json_data = models.JSONField()
+    
+    class Meta:
+        app_label = '"'"'test'"'"'
+
+# Test the current behavior
+def test_display_for_field():
+    print("Testing JSONField display in admin readonly fields...")
+    
+    # Create a JSONField instance
+    field = TestModel._meta.get_field('"'"'json_data'"'"')
+    
+    # Test with a dictionary value
+    test_value = {"foo": "bar", "nested": {"key": "value"}}
+    
+    print(f"Original value: {test_value}")
+    print(f"Type: {type(test_value)}")
+    
+    # Test current display_for_field behavior
+    result = display_for_field(test_value, field, "N/A")
+    print(f"Current display_for_field result: {result}")
+    print(f"Result type: {type(result)}")
+    
+    # Show the problem: this will display as Python dict representation
+    # instead of valid JSON
+    print(f"Is valid JSON? {is_valid_json(result)}")
+    
+    # Test with forms JSONField prepare_value for comparison
+    from django.forms.fields import JSONField as FormsJSONField
+    forms_field = FormsJSONField()
+    prepared_value = forms_field.prepare_value(test_value)
+    print(f"Forms JSONField prepare_value result: {prepared_value}")
+    print(f"Is valid JSON? {is_valid_json(prepared_value)}")
+
+def is_valid_json(value):
+    import json
+    try:
+        json.loads(value)
+        return True
+    except (json.JSONDecodeError, TypeError):
+        return False
+
+if __name__ == "__main__":
+    test_display_for_field()'
+--------------------------------------------------------------------------------
+Result: [12]
+
+================================================================================
+ID: 12774
+================================================================================
+Found reproduction code at step 9 for ID 12774
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.auth'"'"',
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+    )
+
+django.setup()
+
+from django.db import models
+
+# Define the test model
+class Article(models.Model):
+    slug = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, default="Test Title")
+    
+    class Meta:
+        app_label = '"'"'test_app'"'"'
+        constraints = [
+            models.UniqueConstraint(fields=["slug"], name="test_app_article_slug_unq")
+        ]
+
+# Create the table
+from django.db import connection
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(Article)
+
+# Test the issue
+print("Testing in_bulk() with UniqueConstraint field...")
+try:
+    result = Article.objects.in_bulk(field_name="slug")
+    print("SUCCESS: in_bulk() worked with UniqueConstraint field")
+except ValueError as e:
+    print(f"ERROR: {e}")
+
+# Test with a regular unique field for comparison
+class ArticleWithUniqueField(models.Model):
+    slug = models.CharField(max_length=255, unique=True)
+    title = models.CharField(max_length=255, default="Test Title")
+    
+    class Meta:
+        app_label = '"'"'test_app'"'"'
+
+with connection.schema_editor() as schema_editor:
+    schema_editor.create_model(ArticleWithUniqueField)
+
+print("\nTesting in_bulk() with unique=True field...")
+try:
+    result = ArticleWithUniqueField.objects.in_bulk(field_name="slug")
+    print("SUCCESS: in_bulk() worked with unique=True field")
+except ValueError as e:
+    print(f"ERROR: {e}")'
+--------------------------------------------------------------------------------
+Result: [9]
+
+================================================================================
+ID: 15127
+================================================================================
+Found reproduction code at step 8 for ID 15127
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the LEVEL_TAGS issue with @override_settings
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+os.environ.setdefault('"'"'DJANGO_SETTINGS_MODULE'"'"', '"'"'test_settings'"'"')
+
+# Create a minimal settings module
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        INSTALLED_APPS=[
+            '"'"'django.contrib.messages'"'"',
+        ],
+        MESSAGE_TAGS={},
+    )
+
+django.setup()
+
+from django.contrib.messages import constants
+from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+from django.test import override_settings
+
+def test_level_tags_issue():
+    print("=== Testing LEVEL_TAGS issue ===")
+    
+    # Create a message with a custom level
+    custom_level = 35
+    message = Message(custom_level, "Test message")
+    
+    print(f"Initial LEVEL_TAGS: {LEVEL_TAGS}")
+    print(f"Message level: {message.level}")
+    print(f"Message level_tag (before override): '"'"'{message.level_tag}'"'"'")
+    
+    # Now override settings to add a custom tag for level 35
+    with override_settings(MESSAGE_TAGS={35: '"'"'custom'"'"'}):
+        print(f"LEVEL_TAGS inside override_settings: {LEVEL_TAGS}")
+        print(f"Message level_tag (inside override): '"'"'{message.level_tag}'"'"'")
+        
+        # Create a new message inside the override
+        new_message = Message(custom_level, "New test message")
+        print(f"New message level_tag (inside override): '"'"'{new_message.level_tag}'"'"'")
+    
+    print(f"LEVEL_TAGS after override_settings: {LEVEL_TAGS}")
+    print(f"Message level_tag (after override): '"'"'{message.level_tag}'"'"'")
+
+if __name__ == '"'"'__main__'"'"':
+    test_level_tags_issue()'
+--------------------------------------------------------------------------------
+Result: [8]
+
+================================================================================
+ID: 16631
+================================================================================
+Found reproduction code at step 10 for ID 16631
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python3
+
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+settings.configure(
+    SECRET_KEY='"'"'new-secret-key'"'"',
+    SECRET_KEY_FALLBACKS=['"'"'old-secret-key'"'"'],
+    INSTALLED_APPS=[
+        '"'"'django.contrib.auth'"'"',
+        '"'"'django.contrib.contenttypes'"'"',
+    ],
+    DATABASES={
+        '"'"'default'"'"': {
+            '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+            '"'"'NAME'"'"': '"'"':memory:'"'"',
+        }
+    },
+    USE_TZ=True,
+)
+
+django.setup()
+
+from django.contrib.auth.models import User
+from django.utils.crypto import salted_hmac
+
+def test_session_auth_hash_fallback():
+    """Test that session auth hash works with fallback keys"""
+    
+    # Create a user
+    user = User(username='"'"'testuser'"'"', password='"'"'hashed_password'"'"')
+    
+    # Get session auth hash with current secret key
+    current_hash = user.get_session_auth_hash()
+    print(f"Current session auth hash: {current_hash}")
+    
+    # Simulate what should happen with fallback keys
+    # This is what the session auth hash would have been with the old key
+    key_salt = "django.contrib.auth.models.AbstractBaseUser.get_session_auth_hash"
+    old_hash = salted_hmac(
+        key_salt,
+        user.password,
+        secret='"'"'old-secret-key'"'"',  # Using the fallback key
+        algorithm="sha256",
+    ).hexdigest()
+    print(f"Old session auth hash (with fallback key): {old_hash}")
+    
+    # These should be different because get_session_auth_hash doesn'"'"'t use fallbacks
+    print(f"Hashes are different: {current_hash != old_hash}")
+    
+    # This demonstrates the problem: if a user had a session created with the old key,
+    # their session would be invalidated when the key is rotated, even though
+    # SECRET_KEY_FALLBACKS is configured.
+    
+    return current_hash != old_hash
+
+if __name__ == '"'"'__main__'"'"':
+    result = test_session_auth_hash_fallback()
+    print(f"\nTest result: {'"'"'PASS'"'"' if result else '"'"'FAIL'"'"'}")
+    print("This demonstrates that get_session_auth_hash doesn'"'"'t use SECRET_KEY_FALLBACKS")'
+--------------------------------------------------------------------------------
+Result: [10]
+
+================================================================================
+ID: 16950
+================================================================================
+Found reproduction code at step 14 for ID 16950
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the Django Admin UUIDField default value issue with inlines.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+            '"'"'__main__'"'"',  # This module
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+        ROOT_URLCONF='"'"'__main__'"'"',
+    )
+
+django.setup()
+
+import uuid
+from django.db import models
+from django.contrib import admin
+from django.urls import path
+from django.http import HttpResponse
+from django.test import RequestFactory
+from django.contrib.auth.models import User
+
+
+# Models from the bug report
+class UUIDModel(models.Model):
+    pkid = models.BigAutoField(primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    class Meta:
+        abstract = True
+
+
+class Thing(UUIDModel):
+    name = models.CharField(max_length=191)
+    
+    def __str__(self):
+        return self.name
+
+
+class SubThing(models.Model):
+    name = models.CharField(max_length=191)
+    thing = models.ForeignKey(
+        '"'"'Thing'"'"',
+        to_field='"'"'id'"'"',  # This is the UUID field
+        on_delete=models.CASCADE,
+        related_name='"'"'subthings'"'"',
+    )
+    
+    def __str__(self):
+        return self.name
+
+
+# Admin configuration from the bug report
+class SubThingInline(admin.StackedInline):
+    model = SubThing
+
+
+@admin.register(Thing)
+class ThingAdmin(admin.ModelAdmin):
+    list_display = ('"'"'name'"'"',)
+    ordering = ('"'"'pkid'"'"',)
+    inlines = (SubThingInline,)
+
+
+# URL configuration
+urlpatterns = [
+    path('"'"'admin/'"'"', admin.site.urls),
+]
+
+
+def test_issue():
+    """Test the issue described in the bug report."""
+    print("Setting up database...")
+    
+    # Create tables
+    from django.core.management import execute_from_command_line
+    execute_from_command_line(['"'"'manage.py'"'"', '"'"'migrate'"'"', '"'"'--run-syncdb'"'"', '"'"'--verbosity=0'"'"'])
+    
+    # Create a superuser
+    User.objects.create_superuser('"'"'admin'"'"', '"'"'admin@example.com'"'"', '"'"'password'"'"')
+    
+    print("Testing the issue...")
+    
+    # Create a request factory
+    factory = RequestFactory()
+    
+    # Simulate creating a new Thing with SubThing inline
+    request = factory.post('"'"'/admin/thing/add/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    # Get the admin instance
+    thing_admin = ThingAdmin(Thing, admin.site)
+    
+    # Try to process the form
+    try:
+        # Get the formset
+        formset_class = thing_admin.get_formset(request)
+        formset = formset_class(request.POST, instance=None)
+        
+        print(f"Formset is valid: {formset.is_valid()}")
+        
+        if not formset.is_valid():
+            print("Formset errors:")
+            for i, form in enumerate(formset.forms):
+                if form.errors:
+                    print(f"  Form {i} errors: {form.errors}")
+            print(f"Non-form errors: {formset.non_form_errors()}")
+        
+        # Try to save if valid
+        if formset.is_valid():
+            # Create a parent instance first
+            thing = Thing(name='"'"'Test Thing'"'"')
+            thing.save()
+            print(f"Created Thing with id: {thing.id} (UUID), pkid: {thing.pkid}")
+            
+            # Now try to save the formset
+            formset.instance = thing
+            instances = formset.save()
+            print(f"Saved {len(instances)} SubThing instances")
+            
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+        
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+if __name__ == '"'"'__main__'"'"':
+    test_issue()'
+--------------------------------------------------------------------------------
+Found reproduction code at step 24 for ID 16950
+Observation: File created successfully at: /testbed/reproduce_issue_detailed.py
+Action: str_replace_editor create /testbed/reproduce_issue_detailed.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the Django Admin UUIDField default value issue with inlines.
+This version simulates the actual admin form submission process more closely.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+            '"'"'__main__'"'"',  # This module
+        ],
+        MIDDLEWARE=[
+            '"'"'django.contrib.sessions.middleware.SessionMiddleware'"'"',
+            '"'"'django.contrib.auth.middleware.AuthenticationMiddleware'"'"',
+            '"'"'django.contrib.messages.middleware.MessageMiddleware'"'"',
+        ],
+        TEMPLATES=[
+            {
+                '"'"'BACKEND'"'"': '"'"'django.template.backends.django.DjangoTemplates'"'"',
+                '"'"'DIRS'"'"': [],
+                '"'"'APP_DIRS'"'"': True,
+                '"'"'OPTIONS'"'"': {
+                    '"'"'context_processors'"'"': [
+                        '"'"'django.template.context_processors.debug'"'"',
+                        '"'"'django.template.context_processors.request'"'"',
+                        '"'"'django.contrib.auth.context_processors.auth'"'"',
+                        '"'"'django.contrib.messages.context_processors.messages'"'"',
+                    ],
+                },
+            },
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+        ROOT_URLCONF='"'"'__main__'"'"',
+        DEFAULT_AUTO_FIELD='"'"'django.db.models.BigAutoField'"'"',
+    )
+
+django.setup()
+
+import uuid
+from django.db import models
+from django.contrib import admin
+from django.urls import path
+from django.http import HttpResponse
+from django.test import RequestFactory
+from django.contrib.auth.models import User
+
+
+# Models from the bug report
+class UUIDModel(models.Model):
+    pkid = models.BigAutoField(primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    class Meta:
+        abstract = True
+
+
+class Thing(UUIDModel):
+    name = models.CharField(max_length=191)
+    
+    def __str__(self):
+        return self.name
+
+
+class SubThing(models.Model):
+    name = models.CharField(max_length=191)
+    thing = models.ForeignKey(
+        '"'"'Thing'"'"',
+        to_field='"'"'id'"'"',  # This is the UUID field
+        on_delete=models.CASCADE,
+        related_name='"'"'subthings'"'"',
+    )
+    
+    def __str__(self):
+        return self.name
+
+
+# Admin configuration from the bug report
+class SubThingInline(admin.StackedInline):
+    model = SubThing
+
+
+@admin.register(Thing)
+class ThingAdmin(admin.ModelAdmin):
+    list_display = ('"'"'name'"'"',)
+    ordering = ('"'"'pkid'"'"',)
+    inlines = (SubThingInline,)
+
+
+# URL configuration
+urlpatterns = [
+    path('"'"'admin/'"'"', admin.site.urls),
+]
+
+
+def test_issue():
+    """Test the issue described in the bug report."""
+    print("Setting up database...")
+    
+    # Create tables manually
+    from django.db import connection
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(Thing)
+        schema_editor.create_model(SubThing)
+        
+        # Create User model table
+        from django.contrib.auth.models import User
+        schema_editor.create_model(User)
+    
+    # Create a superuser
+    User.objects.create_superuser('"'"'admin'"'"', '"'"'admin@example.com'"'"', '"'"'password'"'"')
+    
+    print("Testing the issue...")
+    
+    # Create a request factory
+    factory = RequestFactory()
+    
+    # Test 1: Create a Thing without SubThings (this should work)
+    print("\n=== Test 1: Creating Thing without SubThings ===")
+    request = factory.post('"'"'/admin/thing/add/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing 1'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    thing_admin = ThingAdmin(Thing, admin.site)
+    
+    # Simulate the admin form processing
+    form_class = thing_admin.get_form(request)
+    form = form_class(request.POST)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if form.is_valid():
+        thing1 = form.save()
+        print(f"Created Thing1 with id: {thing1.id} (UUID), pkid: {thing1.pkid}")
+    else:
+        print(f"Main form errors: {form.errors}")
+    
+    # Test 2: Create a Thing with SubThings (this might fail)
+    print("\n=== Test 2: Creating Thing with SubThings ===")
+    request = factory.post('"'"'/admin/thing/add/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing 2'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    # Get the main form
+    form_class = thing_admin.get_form(request)
+    form = form_class(request.POST)
+    
+    # Get the inline formsets
+    inline_instances = thing_admin.get_inline_instances(request)
+    formsets = []
+    
+    for inline in inline_instances:
+        formset_class = inline.get_formset(request)
+        prefix = formset_class.get_default_prefix()
+        formset = formset_class(request.POST, instance=None, prefix=prefix)
+        formsets.append(formset)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if not form.is_valid():
+        print(f"Main form errors: {form.errors}")
+    
+    all_valid = form.is_valid()
+    for i, formset in enumerate(formsets):
+        valid = formset.is_valid()
+        print(f"Formset {i} is valid: {valid}")
+        if not valid:
+            print(f"  Formset {i} errors: {formset.errors}")
+            print(f"  Formset {i} non-form errors: {formset.non_form_errors()}")
+        all_valid = all_valid and valid
+    
+    if all_valid:
+        # Save the main object first
+        thing2 = form.save()
+        print(f"Created Thing2 with id: {thing2.id} (UUID), pkid: {thing2.pkid}")
+        
+        # Now save the formsets
+        for i, formset in enumerate(formsets):
+            formset.instance = thing2
+            instances = formset.save()
+            print(f"Saved {len(instances)} instances from formset {i}")
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+    
+    # Test 3: Simulate the exact scenario from the bug report
+    print("\n=== Test 3: Simulating exact bug scenario ===")
+    
+    # First create a Thing with no SubThings and save it
+    thing3 = Thing(name='"'"'Test Thing 3'"'"')
+    thing3.save()
+    print(f"Created Thing3 with id: {thing3.id} (UUID), pkid: {thing3.pkid}")
+    
+    # Now try to add a SubThing to the existing Thing
+    request = factory.post(f'"'"'/admin/thing/{thing3.pkid}/change/'"'"', {
+        '"'"'name'"'"': '"'"'Test Thing 3 Updated'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing for Thing 3'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+    })
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    # Get the main form with the existing instance
+    form_class = thing_admin.get_form(request, thing3)
+    form = form_class(request.POST, instance=thing3)
+    
+    # Get the inline formsets with the existing instance
+    inline_instances = thing_admin.get_inline_instances(request, thing3)
+    formsets = []
+    
+    for inline in inline_instances:
+        formset_class = inline.get_formset(request, thing3)
+        prefix = formset_class.get_default_prefix()
+        formset = formset_class(request.POST, instance=thing3, prefix=prefix)
+        formsets.append(formset)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if not form.is_valid():
+        print(f"Main form errors: {form.errors}")
+    
+    all_valid = form.is_valid()
+    for i, formset in enumerate(formsets):
+        valid = formset.is_valid()
+        print(f"Formset {i} is valid: {valid}")
+        if not valid:
+            print(f"  Formset {i} errors: {formset.errors}")
+            print(f"  Formset {i} non-form errors: {formset.non_form_errors()}")
+            
+            # Let'"'"'s examine the forms in detail
+            for j, form_in_set in enumerate(formset.forms):
+                print(f"    Form {j} in formset {i}:")
+                print(f"      Errors: {form_in_set.errors}")
+                print(f"      Cleaned data: {getattr(form_in_set, '"'"'cleaned_data'"'"', '"'"'Not available'"'"')}")
+                if hasattr(form_in_set, '"'"'instance'"'"'):
+                    print(f"      Instance: {form_in_set.instance}")
+                    print(f"      Instance thing_id: {getattr(form_in_set.instance, '"'"'thing_id'"'"', '"'"'Not set'"'"')}")
+        all_valid = all_valid and valid
+    
+    if all_valid:
+        # Save the main object first
+        thing3_updated = form.save()
+        print(f"Updated Thing3 with id: {thing3_updated.id} (UUID), pkid: {thing3_updated.pkid}")
+        
+        # Now save the formsets
+        for i, formset in enumerate(formsets):
+            instances = formset.save()
+            print(f"Saved {len(instances)} instances from formset {i}")
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+
+
+if __name__ == '"'"'__main__'"'"':
+    test_issue()'
+--------------------------------------------------------------------------------
+Found reproduction code at step 26 for ID 16950
+Observation: File created successfully at: /testbed/reproduce_exact_issue.py
+Action: str_replace_editor create /testbed/reproduce_exact_issue.py --file_text '#!/usr/bin/env python
+"""
+Script to reproduce the exact Django Admin UUIDField default value issue with inlines.
+This version tries to reproduce the exact scenario from the bug report.
+"""
+import os
+import sys
+import django
+from django.conf import settings
+
+# Configure Django settings
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        DATABASES={
+            '"'"'default'"'"': {
+                '"'"'ENGINE'"'"': '"'"'django.db.backends.sqlite3'"'"',
+                '"'"'NAME'"'"': '"'"':memory:'"'"',
+            }
+        },
+        INSTALLED_APPS=[
+            '"'"'django.contrib.admin'"'"',
+            '"'"'django.contrib.auth'"'"',
+            '"'"'django.contrib.contenttypes'"'"',
+            '"'"'django.contrib.sessions'"'"',
+            '"'"'django.contrib.messages'"'"',
+            '"'"'django.contrib.staticfiles'"'"',
+            '"'"'__main__'"'"',  # This module
+        ],
+        MIDDLEWARE=[
+            '"'"'django.contrib.sessions.middleware.SessionMiddleware'"'"',
+            '"'"'django.contrib.auth.middleware.AuthenticationMiddleware'"'"',
+            '"'"'django.contrib.messages.middleware.MessageMiddleware'"'"',
+        ],
+        TEMPLATES=[
+            {
+                '"'"'BACKEND'"'"': '"'"'django.template.backends.django.DjangoTemplates'"'"',
+                '"'"'DIRS'"'"': [],
+                '"'"'APP_DIRS'"'"': True,
+                '"'"'OPTIONS'"'"': {
+                    '"'"'context_processors'"'"': [
+                        '"'"'django.template.context_processors.debug'"'"',
+                        '"'"'django.template.context_processors.request'"'"',
+                        '"'"'django.contrib.auth.context_processors.auth'"'"',
+                        '"'"'django.contrib.messages.context_processors.messages'"'"',
+                    ],
+                },
+            },
+        ],
+        SECRET_KEY='"'"'test-secret-key'"'"',
+        USE_TZ=True,
+        ROOT_URLCONF='"'"'__main__'"'"',
+        DEFAULT_AUTO_FIELD='"'"'django.db.models.BigAutoField'"'"',
+    )
+
+django.setup()
+
+import uuid
+from django.db import models
+from django.contrib import admin
+from django.urls import path
+from django.http import HttpResponse
+from django.test import RequestFactory
+from django.contrib.auth.models import User
+
+
+# Models from the bug report
+class UUIDModel(models.Model):
+    pkid = models.BigAutoField(primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    class Meta:
+        abstract = True
+
+
+class Thing(UUIDModel):
+    name = models.CharField(max_length=191)
+    
+    def __str__(self):
+        return self.name
+
+
+class SubThing(models.Model):
+    name = models.CharField(max_length=191)
+    thing = models.ForeignKey(
+        '"'"'Thing'"'"',
+        to_field='"'"'id'"'"',  # This is the UUID field
+        on_delete=models.CASCADE,
+        related_name='"'"'subthings'"'"',
+    )
+    
+    def __str__(self):
+        return self.name
+
+
+# Admin configuration from the bug report
+class SubThingInline(admin.StackedInline):
+    model = SubThing
+
+
+@admin.register(Thing)
+class ThingAdmin(admin.ModelAdmin):
+    list_display = ('"'"'name'"'"',)
+    ordering = ('"'"'pkid'"'"',)
+    inlines = (SubThingInline,)
+
+
+# URL configuration
+urlpatterns = [
+    path('"'"'admin/'"'"', admin.site.urls),
+]
+
+
+def test_issue():
+    """Test the issue described in the bug report."""
+    print("Setting up database...")
+    
+    # Create tables manually
+    from django.db import connection
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(Thing)
+        schema_editor.create_model(SubThing)
+        
+        # Create User model table
+        from django.contrib.auth.models import User
+        schema_editor.create_model(User)
+    
+    # Create a superuser
+    User.objects.create_superuser('"'"'admin'"'"', '"'"'admin@example.com'"'"', '"'"'password'"'"')
+    
+    print("Testing the issue...")
+    
+    # Create a request factory
+    factory = RequestFactory()
+    
+    # Test the exact scenario: Create a new Thing with a SubThing inline
+    # This simulates the admin form submission when creating a new object
+    print("\n=== Testing exact scenario from bug report ===")
+    
+    # Simulate form data that would be sent when creating a new Thing with SubThing
+    form_data = {
+        '"'"'name'"'"': '"'"'Test Thing'"'"',
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+        '"'"'subthings-0-id'"'"': '"'"''"'"',  # Empty for new objects
+        '"'"'subthings-0-thing'"'"': '"'"''"'"',  # This should be set to the parent'"'"'s UUID
+    }
+    
+    request = factory.post('"'"'/admin/thing/add/'"'"', form_data)
+    request.user = User.objects.get(username='"'"'admin'"'"')
+    
+    thing_admin = ThingAdmin(Thing, admin.site)
+    
+    # Get the main form
+    form_class = thing_admin.get_form(request)
+    form = form_class(request.POST)
+    
+    print(f"Main form is valid: {form.is_valid()}")
+    if not form.is_valid():
+        print(f"Main form errors: {form.errors}")
+        return
+    
+    # Create the main object but don'"'"'t save yet (this is what admin does)
+    thing = form.save(commit=False)
+    print(f"Created Thing instance (not saved yet): id={thing.id}, pkid={thing.pkid}")
+    
+    # Get the inline formsets
+    inline_instances = thing_admin.get_inline_instances(request)
+    formsets = []
+    
+    for inline in inline_instances:
+        formset_class = inline.get_formset(request)
+        prefix = formset_class.get_default_prefix()
+        # Pass the unsaved instance to the formset
+        formset = formset_class(request.POST, instance=thing, prefix=prefix)
+        formsets.append(formset)
+    
+    # Check if formsets are valid
+    all_valid = True
+    for i, formset in enumerate(formsets):
+        valid = formset.is_valid()
+        print(f"Formset {i} is valid: {valid}")
+        if not valid:
+            print(f"  Formset {i} errors: {formset.errors}")
+            print(f"  Formset {i} non-form errors: {formset.non_form_errors()}")
+            
+            # Let'"'"'s examine the forms in detail
+            for j, form_in_set in enumerate(formset.forms):
+                print(f"    Form {j} in formset {i}:")
+                print(f"      Errors: {form_in_set.errors}")
+                if hasattr(form_in_set, '"'"'cleaned_data'"'"'):
+                    print(f"      Cleaned data: {form_in_set.cleaned_data}")
+                if hasattr(form_in_set, '"'"'instance'"'"'):
+                    print(f"      Instance: {form_in_set.instance}")
+                    print(f"      Instance thing_id: {getattr(form_in_set.instance, '"'"'thing_id'"'"', '"'"'Not set'"'"')}")
+                    print(f"      Instance thing: {getattr(form_in_set.instance, '"'"'thing'"'"', '"'"'Not set'"'"')}")
+        all_valid = all_valid and valid
+    
+    if all_valid:
+        # Now save the main object
+        thing.save()
+        print(f"Saved Thing with id: {thing.id} (UUID), pkid: {thing.pkid}")
+        
+        # Now save the formsets
+        for i, formset in enumerate(formsets):
+            instances = formset.save()
+            print(f"Saved {len(instances)} instances from formset {i}")
+            for instance in instances:
+                print(f"  SubThing: {instance.name}, thing_id: {instance.thing_id}")
+    else:
+        print("Could not save due to validation errors")
+    
+    # Let'"'"'s also test what happens when we create a formset with an unsaved instance
+    print("\n=== Testing formset with unsaved instance ===")
+    
+    # Create a new unsaved Thing
+    new_thing = Thing(name='"'"'Unsaved Thing'"'"')
+    print(f"Unsaved Thing: id={new_thing.id}, pkid={new_thing.pkid}")
+    
+    # Create a formset with this unsaved instance
+    inline = SubThingInline(Thing, admin.site)
+    formset_class = inline.get_formset(request)
+    
+    # Test with empty data first
+    formset = formset_class(instance=new_thing)
+    print(f"Empty formset with unsaved instance created successfully")
+    
+    # Test with data
+    form_data_2 = {
+        '"'"'subthings-TOTAL_FORMS'"'"': '"'"'1'"'"',
+        '"'"'subthings-INITIAL_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MIN_NUM_FORMS'"'"': '"'"'0'"'"',
+        '"'"'subthings-MAX_NUM_FORMS'"'"': '"'"'1000'"'"',
+        '"'"'subthings-0-name'"'"': '"'"'Test SubThing 2'"'"',
+        '"'"'subthings-0-DELETE'"'"': '"'"''"'"',
+        '"'"'subthings-0-id'"'"': '"'"''"'"',
+        '"'"'subthings-0-thing'"'"': '"'"''"'"',
+    }
+    
+    formset = formset_class(form_data_2, instance=new_thing)
+    print(f"Formset with data and unsaved instance is valid: {formset.is_valid()}")
+    
+    if not formset.is_valid():
+        print(f"Formset errors: {formset.errors}")
+        print(f"Non-form errors: {formset.non_form_errors()}")
+        
+        for j, form_in_set in enumerate(formset.forms):
+            print(f"  Form {j}:")
+            print(f"    Errors: {form_in_set.errors}")
+            if hasattr(form_in_set, '"'"'cleaned_data'"'"'):
+                print(f"    Cleaned data: {form_in_set.cleaned_data}")
+            if hasattr(form_in_set, '"'"'instance'"'"'):
+                print(f"    Instance: {form_in_set.instance}")
+                print(f"    Instance thing_id: {getattr(form_in_set.instance, '"'"'thing_id'"'"', '"'"'Not set'"'"')}")
+                print(f"    Instance thing: {getattr(form_in_set.instance, '"'"'thing'"'"', '"'"'Not set'"'"')}")
+
+
+if __name__ == '"'"'__main__'"'"':
+    test_issue()'
+--------------------------------------------------------------------------------
+Result: [14, 24, 26]
+
+================================================================================
+ID: 26113
+================================================================================
+Found reproduction code at step 8 for ID 26113
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python3
+
+"""
+Script to reproduce the hexbin mincnt inconsistency issue.
+"""
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Set up test data
+np.random.seed(42)
+X, Y = np.random.multivariate_normal([0.0, 0.0], [[1.0, 0.1], [0.1, 1.0]], size=250).T
+Z = np.ones_like(X)
+
+extent = [-3., 3., -3., 3.]
+gridsize = (7, 7)
+
+def count_visible_hexagons(ax):
+    """Count the number of visible hexagons in the plot."""
+    # Get the collection from the hexbin plot
+    collections = ax.collections
+    if collections:
+        # Get the array of values (which contains NaN for filtered hexagons)
+        array = collections[0].get_array()
+        # Count non-NaN values
+        return np.sum(~np.isnan(array))
+    return 0
+
+print("Testing hexbin mincnt behavior...")
+print("=" * 50)
+
+# Test case 1: mincnt=1, no C argument
+fig, ax = plt.subplots(1, 1)
+ax.hexbin(X, Y, mincnt=1, extent=extent, gridsize=gridsize, linewidth=0.0, cmap='"'"'Blues'"'"')
+count_no_c = count_visible_hexagons(ax)
+plt.close(fig)
+
+# Test case 2: mincnt=1, C argument specified
+fig, ax = plt.subplots(1, 1)
+ax.hexbin(X, Y, C=Z, reduce_C_function=np.sum, mincnt=1, extent=extent, gridsize=gridsize, linewidth=0.0, cmap='"'"'Blues'"'"')
+count_with_c = count_visible_hexagons(ax)
+plt.close(fig)
+
+# Test case 3: mincnt=0, C argument specified
+fig, ax = plt.subplots(1, 1)
+ax.hexbin(X, Y, C=Z, reduce_C_function=np.sum, mincnt=0, extent=extent, gridsize=gridsize, linewidth=0.0, cmap='"'"'Blues'"'"')
+count_with_c_mincnt0 = count_visible_hexagons(ax)
+plt.close(fig)
+
+print(f"Hexagons visible with mincnt=1, no C:     {count_no_c}")
+print(f"Hexagons visible with mincnt=1, with C:   {count_with_c}")
+print(f"Hexagons visible with mincnt=0, with C:   {count_with_c_mincnt0}")
+
+if count_no_c != count_with_c:
+    print("\n❌ BUG CONFIRMED: Inconsistent behavior!")
+    print(f"   Expected same count for both cases, but got {count_no_c} vs {count_with_c}")
+else:
+    print("\n✅ No inconsistency detected")
+
+if count_with_c_mincnt0 == count_no_c:
+    print("✅ As expected: mincnt=0 with C shows same hexagons as mincnt=1 without C")
+else:
+    print(f"❓ Unexpected: mincnt=0 with C shows {count_with_c_mincnt0} hexagons vs {count_no_c} for mincnt=1 without C")'
+--------------------------------------------------------------------------------
+Result: [8]
+
+================================================================================
+ID: 4687
+================================================================================
+Found reproduction code at step 13 for ID 4687
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python3
+
+import numpy as np
+import xarray as xr
+
+print("Testing xr.where attribute preservation...")
+
+# Test case 1: Simple case from the issue
+print("\n=== Test case 1: Simple case ===")
+da = xr.DataArray(1)
+da.attrs['"'"'foo'"'"'] = '"'"'bar'"'"'
+print(f"Original attrs: {da.attrs}")
+result = xr.where(da == 0, -1, da)
+print(f"Result attrs: {result.attrs}")
+print(f"Attributes preserved: {result.attrs == da.attrs}")
+
+# Test case 2: More complex case from the issue
+print("\n=== Test case 2: Complex case ===")
+data = xr.DataArray(np.ones([10, 10], dtype=np.int8))
+data.attrs["attr_1"] = "test1"
+data.attrs["attr_2"] = "test2"
+print(f"Original attrs: {data.attrs}")
+print(f"Original dtype: {data.dtype}")
+
+data2 = xr.where(data == 1, 5, 0)
+print(f"Result attrs: {data2.attrs}")
+print(f"Result dtype: {data2.dtype}")
+print(f"Attributes preserved: {data2.attrs == data.attrs}")
+print(f"Dtype preserved: {data2.dtype == data.dtype}")
+
+# Test case 3: Multiple DataArrays with attributes
+print("\n=== Test case 3: Multiple DataArrays ===")
+x = xr.DataArray([1, 2, 3], attrs={'"'"'x_attr'"'"': '"'"'x_value'"'"'})
+y = xr.DataArray([4, 5, 6], attrs={'"'"'y_attr'"'"': '"'"'y_value'"'"'})
+cond = xr.DataArray([True, False, True])
+print(f"x attrs: {x.attrs}")
+print(f"y attrs: {y.attrs}")
+
+result = xr.where(cond, x, y)
+print(f"Result attrs: {result.attrs}")
+print(f"Any attributes preserved: {bool(result.attrs)}")'
+--------------------------------------------------------------------------------
+Result: [13]
+
+================================================================================
+ID: 6938
+================================================================================
+Found reproduction code at step 2 for ID 6938
+Observation: File created successfully at: /testbed/reproduce_issue.py
+Action: str_replace_editor create /testbed/reproduce_issue.py --file_text 'import numpy as np
+import xarray as xr
+
+print("Reproducing the swap_dims issue...")
+
+nz = 11
+ds = xr.Dataset(
+    data_vars={
+        "y": ("z", np.random.rand(nz)),
+        "lev": ("z", np.arange(nz) * 10),
+        # ^ We want this to be a dimension coordinate
+    },
+)
+print(f"ds\n{ds}")
+print(f"\nds, '"'"'lev'"'"' -> dim coord\n{ds.swap_dims(z='"'"'lev'"'"')}")
+
+ds2 = (
+    ds.swap_dims(z="lev")
+    .rename_dims(lev="z")
+    .reset_index("lev")
+    .reset_coords()
+)
+print(f"\nds2\n{ds2}")
+# ^ This Dataset appears same as the original
+
+print(f"\nds2 before .swap_dims() applied - lev dims: {ds2['"'"'lev'"'"'].dims}")
+
+print(f"\nds2, '"'"'lev'"'"' -> dim coord\n{ds2.swap_dims(z='"'"'lev'"'"')}")
+# ^ Produces a Dataset with dimension coordinate '"'"'lev'"'"'
+
+print(f"\nds2 after .swap_dims() applied - lev dims: {ds2['"'"'lev'"'"'].dims}")
+# ^ `ds2['"'"'lev'"'"']` now has dimension '"'"'lev'"'"' although otherwise same
+
+print("\nThe issue is that ds2['"'"'lev'"'"'].dims changed from ('"'"'z'"'"',) to ('"'"'lev'"'"',)")
+print("This shows that swap_dims modified the original object!")'
+--------------------------------------------------------------------------------
+Result: [2]

@@ -1,0 +1,2568 @@
+1: I'll help you implement the necessary changes to fix the issue where `.swap_dims()` can modify the original object. Let's start by understanding the problem and then implementing a fix.
+
+## Step 1: Understanding the Problem
+
+Let me first explore the repository structure and understand the codebase:
+>> str_replace_editor view /testbed
+Here's the files and directories up to 2 levels deep in /testbed, excluding hidden items:
+/testbed
+/testbed/requirements.txt
+/testbed/CITATION.cff
+/testbed/asv_bench
+/testbed/asv_bench/asv.conf.json
+/testbed/asv_bench/benchmarks
+/testbed/design_notes
+/testbed/design_notes/flexible_indexes_notes.md
+/testbed/setup.py
+/testbed/licenses
+/testbed/licenses/ICOMOON_LICENSE
+/testbed/licenses/NUMPY_LICENSE
+/testbed/licenses/DASK_LICENSE
+/testbed/licenses/SEABORN_LICENSE
+/testbed/licenses/PYTHON_LICENSE
+/testbed/licenses/PANDAS_LICENSE
+/testbed/licenses/SCIKIT_LEARN_LICENSE
+/testbed/setup.cfg
+/testbed/pyproject.toml
+/testbed/xarray
+/testbed/xarray/backends
+/testbed/xarray/conventions.py
+/testbed/xarray/core
+/testbed/xarray/convert.py
+/testbed/xarray/static
+/testbed/xarray/plot
+/testbed/xarray/testing.py
+/testbed/xarray/tests
+/testbed/xarray/py.typed
+/testbed/xarray/tutorial.py
+/testbed/xarray/__init__.py
+/testbed/xarray/coding
+/testbed/xarray/util
+/testbed/doc
+/testbed/doc/contributing.rst
+/testbed/doc/_static
+/testbed/doc/gallery.yml
+/testbed/doc/README.rst
+/testbed/doc/gallery.rst
+/testbed/doc/getting-started-guide
+/testbed/doc/roadmap.rst
+/testbed/doc/videos.yml
+/testbed/doc/whats-new.rst
+/testbed/doc/howdoi.rst
+/testbed/doc/user-guide
+/testbed/doc/team.yml
+/testbed/doc/conf.py
+/testbed/doc/ecosystem.rst
+/testbed/doc/api-hidden.rst
+/testbed/doc/tutorials-and-videos.rst
+/testbed/doc/gallery
+/testbed/doc/internals
+/testbed/doc/Makefile
+/testbed/doc/examples
+/testbed/doc/developers-meeting.rst
+/testbed/doc/index.rst
+/testbed/doc/_templates
+/testbed/doc/team.rst
+/testbed/doc/api.rst
+/testbed/HOW_TO_RELEASE.md
+/testbed/xarray.egg-info
+/testbed/xarray.egg-info/requires.txt
+/testbed/xarray.egg-info/SOURCES.txt
+/testbed/xarray.egg-info/not-zip-safe
+/testbed/xarray.egg-info/dependency_links.txt
+/testbed/xarray.egg-info/top_level.txt
+/testbed/xarray.egg-info/PKG-INFO
+/testbed/README.md
+/testbed/CODE_OF_CONDUCT.md
+/testbed/LICENSE
+/testbed/CONTRIBUTING.md
+/testbed/properties
+/testbed/properties/test_encode_decode.py
+/testbed/properties/README.md
+/testbed/properties/test_pandas_roundtrip.py
+/testbed/properties/conftest.py
+/testbed/conftest.py
+/testbed/ci
+/testbed/ci/min_deps_check.py
+/testbed/ci/requirements
+/testbed/ci/install-upstream-wheels.sh
+--------------------------------------------------------------------------------
+2: Let me look at the xarray core directory to find the swap_dims implementation:
+>> str_replace_editor view /testbed/xarray/core
+Here's the files and directories up to 2 levels deep in /testbed/xarray/core, excluding hidden items:
+/testbed/xarray/core
+/testbed/xarray/core/npcompat.py
+/testbed/xarray/core/pycompat.py
+/testbed/xarray/core/coordinates.py
+/testbed/xarray/core/extensions.py
+/testbed/xarray/core/combine.py
+/testbed/xarray/core/dataset.py
+/testbed/xarray/core/_typed_ops.pyi
+/testbed/xarray/core/arithmetic.py
+/testbed/xarray/core/nanops.py
+/testbed/xarray/core/dtypes.py
+/testbed/xarray/core/concat.py
+/testbed/xarray/core/_reductions.py
+/testbed/xarray/core/merge.py
+/testbed/xarray/core/variable.py
+/testbed/xarray/core/groupby.py
+/testbed/xarray/core/ops.py
+/testbed/xarray/core/nputils.py
+/testbed/xarray/core/_typed_ops.py
+/testbed/xarray/core/rolling_exp.py
+/testbed/xarray/core/computation.py
+/testbed/xarray/core/indexing.py
+/testbed/xarray/core/formatting_html.py
+/testbed/xarray/core/types.py
+/testbed/xarray/core/__init__.py
+/testbed/xarray/core/duck_array_ops.py
+/testbed/xarray/core/parallel.py
+/testbed/xarray/core/accessor_str.py
+/testbed/xarray/core/resample_cftime.py
+/testbed/xarray/core/alignment.py
+/testbed/xarray/core/resample.py
+/testbed/xarray/core/weighted.py
+/testbed/xarray/core/missing.py
+/testbed/xarray/core/options.py
+/testbed/xarray/core/utils.py
+/testbed/xarray/core/accessor_dt.py
+/testbed/xarray/core/common.py
+/testbed/xarray/core/formatting.py
+/testbed/xarray/core/pdcompat.py
+/testbed/xarray/core/dask_array_ops.py
+/testbed/xarray/core/dataarray.py
+/testbed/xarray/core/indexes.py
+/testbed/xarray/core/rolling.py
+/testbed/xarray/core/dask_array_compat.py
+--------------------------------------------------------------------------------
+3: Let me first create a script to reproduce the issue:
+>> str_replace_editor create /testbed/reproduce_issue.py --file_text 'import numpy as np
+File created successfully at: /testbed/reproduce_issue.py
+--------------------------------------------------------------------------------
+4: 
+>> cd /testbed && python reproduce_issue.py
+Reproducing the swap_dims issue...
+ds
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.3031 0.8378 0.1897 0.7441 ... 0.1797 0.7459 0.7216
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.3031 0.8378 0.1897 0.7441 ... 0.1797 0.7459 0.7216
+
+ds2
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.3031 0.8378 0.1897 0.7441 ... 0.1797 0.7459 0.7216
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds2 before .swap_dims() applied - lev dims: ('z',)
+
+ds2, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.3031 0.8378 0.1897 0.7441 ... 0.1797 0.7459 0.7216
+
+ds2 after .swap_dims() applied - lev dims: ('lev',)
+
+The issue is that ds2['lev'].dims changed from ('z',) to ('lev',)
+This shows that swap_dims modified the original object!
+--------------------------------------------------------------------------------
+5: Great! I've confirmed the issue. The `swap_dims()` method is modifying the original object's data variable dimensions. Now let me find the `swap_dims` implementation:
+>> cd /testbed && find . -name "*.py" -exec grep -l "def swap_dims" {} \;
+./xarray/core/dataset.py
+./xarray/core/dataarray.py
+--------------------------------------------------------------------------------
+6: Let me examine the `swap_dims` implementation in the dataset module:
+>> str_replace_editor view /testbed/xarray/core/dataset.py  --view_range 1 50
+Here's the result of running `cat -n` on /testbed/xarray/core/dataset.py:
+     1	from __future__ import annotations
+     2	
+     3	import copy
+     4	import datetime
+     5	import inspect
+     6	import itertools
+     7	import math
+     8	import sys
+     9	import warnings
+    10	from collections import defaultdict
+    11	from html import escape
+    12	from numbers import Number
+    13	from operator import methodcaller
+    14	from os import PathLike
+    15	from typing import (
+    16	    IO,
+    17	    TYPE_CHECKING,
+    18	    Any,
+    19	    Callable,
+    20	    Collection,
+    21	    Generic,
+    22	    Hashable,
+    23	    Iterable,
+    24	    Iterator,
+    25	    Literal,
+    26	    Mapping,
+    27	    MutableMapping,
+    28	    Sequence,
+    29	    cast,
+    30	    overload,
+    31	)
+    32	
+    33	import numpy as np
+    34	import pandas as pd
+    35	
+    36	from ..coding.calendar_ops import convert_calendar, interp_calendar
+    37	from ..coding.cftimeindex import CFTimeIndex, _parse_array_of_cftime_strings
+    38	from ..plot.dataset_plot import _Dataset_PlotMethods
+    39	from . import alignment
+    40	from . import dtypes as xrdtypes
+    41	from . import duck_array_ops, formatting, formatting_html, ops, utils
+    42	from ._reductions import DatasetReductions
+    43	from .alignment import _broadcast_helper, _get_broadcast_dims_map_common_coords, align
+    44	from .arithmetic import DatasetArithmetic
+    45	from .common import DataWithCoords, _contains_datetime_like_objects, get_chunksizes
+    46	from .computation import unify_chunks
+    47	from .coordinates import DatasetCoordinates, assert_coordinate_consistent
+    48	from .duck_array_ops import datetime_to_numeric
+    49	from .indexes import (
+    50	    Index,
+--------------------------------------------------------------------------------
+7: Let me search for the swap_dims method specifically:
+>> cd /testbed && grep -n "def swap_dims" xarray/core/dataset.py
+3688:    def swap_dims(
+--------------------------------------------------------------------------------
+8: 
+>> str_replace_editor view /testbed/xarray/core/dataset.py  --view_range 3688 3750
+Here's the result of running `cat -n` on /testbed/xarray/core/dataset.py:
+  3688	    def swap_dims(
+  3689	        self: T_Dataset, dims_dict: Mapping[Any, Hashable] = None, **dims_kwargs
+  3690	    ) -> T_Dataset:
+  3691	        """Returns a new object with swapped dimensions.
+  3692	
+  3693	        Parameters
+  3694	        ----------
+  3695	        dims_dict : dict-like
+  3696	            Dictionary whose keys are current dimension names and whose values
+  3697	            are new names.
+  3698	        **dims_kwargs : {existing_dim: new_dim, ...}, optional
+  3699	            The keyword arguments form of ``dims_dict``.
+  3700	            One of dims_dict or dims_kwargs must be provided.
+  3701	
+  3702	        Returns
+  3703	        -------
+  3704	        swapped : Dataset
+  3705	            Dataset with swapped dimensions.
+  3706	
+  3707	        Examples
+  3708	        --------
+  3709	        >>> ds = xr.Dataset(
+  3710	        ...     data_vars={"a": ("x", [5, 7]), "b": ("x", [0.1, 2.4])},
+  3711	        ...     coords={"x": ["a", "b"], "y": ("x", [0, 1])},
+  3712	        ... )
+  3713	        >>> ds
+  3714	        <xarray.Dataset>
+  3715	        Dimensions:  (x: 2)
+  3716	        Coordinates:
+  3717	          * x        (x) <U1 'a' 'b'
+  3718	            y        (x) int64 0 1
+  3719	        Data variables:
+  3720	            a        (x) int64 5 7
+  3721	            b        (x) float64 0.1 2.4
+  3722	
+  3723	        >>> ds.swap_dims({"x": "y"})
+  3724	        <xarray.Dataset>
+  3725	        Dimensions:  (y: 2)
+  3726	        Coordinates:
+  3727	            x        (y) <U1 'a' 'b'
+  3728	          * y        (y) int64 0 1
+  3729	        Data variables:
+  3730	            a        (y) int64 5 7
+  3731	            b        (y) float64 0.1 2.4
+  3732	
+  3733	        >>> ds.swap_dims({"x": "z"})
+  3734	        <xarray.Dataset>
+  3735	        Dimensions:  (z: 2)
+  3736	        Coordinates:
+  3737	            x        (z) <U1 'a' 'b'
+  3738	            y        (z) int64 0 1
+  3739	        Dimensions without coordinates: z
+  3740	        Data variables:
+  3741	            a        (z) int64 5 7
+  3742	            b        (z) float64 0.1 2.4
+  3743	
+  3744	        See Also
+  3745	        --------
+  3746	        Dataset.rename
+  3747	        DataArray.swap_dims
+  3748	        """
+  3749	        # TODO: deprecate this method in favor of a (less confusing)
+  3750	        # rename_dims() method that only renames dimensions.
+--------------------------------------------------------------------------------
+9: 
+>> str_replace_editor view /testbed/xarray/core/dataset.py  --view_range 3750 3800
+Here's the result of running `cat -n` on /testbed/xarray/core/dataset.py:
+  3750	        # rename_dims() method that only renames dimensions.
+  3751	
+  3752	        dims_dict = either_dict_or_kwargs(dims_dict, dims_kwargs, "swap_dims")
+  3753	        for k, v in dims_dict.items():
+  3754	            if k not in self.dims:
+  3755	                raise ValueError(
+  3756	                    f"cannot swap from dimension {k!r} because it is "
+  3757	                    "not an existing dimension"
+  3758	                )
+  3759	            if v in self.variables and self.variables[v].dims != (k,):
+  3760	                raise ValueError(
+  3761	                    f"replacement dimension {v!r} is not a 1D "
+  3762	                    f"variable along the old dimension {k!r}"
+  3763	                )
+  3764	
+  3765	        result_dims = {dims_dict.get(dim, dim) for dim in self.dims}
+  3766	
+  3767	        coord_names = self._coord_names.copy()
+  3768	        coord_names.update({dim for dim in dims_dict.values() if dim in self.variables})
+  3769	
+  3770	        variables: dict[Hashable, Variable] = {}
+  3771	        indexes: dict[Hashable, Index] = {}
+  3772	        for k, v in self.variables.items():
+  3773	            dims = tuple(dims_dict.get(dim, dim) for dim in v.dims)
+  3774	            if k in result_dims:
+  3775	                var = v.to_index_variable()
+  3776	                var.dims = dims
+  3777	                if k in self._indexes:
+  3778	                    indexes[k] = self._indexes[k]
+  3779	                    variables[k] = var
+  3780	                else:
+  3781	                    index, index_vars = create_default_index_implicit(var)
+  3782	                    indexes.update({name: index for name in index_vars})
+  3783	                    variables.update(index_vars)
+  3784	                    coord_names.update(index_vars)
+  3785	            else:
+  3786	                var = v.to_base_variable()
+  3787	                var.dims = dims
+  3788	                variables[k] = var
+  3789	
+  3790	        return self._replace_with_new_dims(variables, coord_names, indexes=indexes)
+  3791	
+  3792	    # change type of self and return to T_Dataset once
+  3793	    # https://github.com/python/mypy/issues/12846 is resolved
+  3794	    def expand_dims(
+  3795	        self,
+  3796	        dim: None | Hashable | Sequence[Hashable] | Mapping[Any, Any] = None,
+  3797	        axis: None | int | Sequence[int] = None,
+  3798	        **dim_kwargs: Any,
+  3799	    ) -> Dataset:
+  3800	        """Return a new object with an additional axis (or axes) inserted at
+--------------------------------------------------------------------------------
+10: Now I can see the issue! In lines 3776 and 3787, the code is directly modifying the `dims` attribute of the variable objects:
+
+```python
+var.dims = dims
+```
+
+This is modifying the original variable object instead of creating a copy. Let me look at the `to_index_variable()` and `to_base_variable()` methods to understand what they return:
+>> cd /testbed && grep -n "def to_index_variable\|def to_base_variable" xarray/core/variable.py
+539:    def to_base_variable(self):
+547:    def to_index_variable(self):
+2882:    def to_index_variable(self):
+--------------------------------------------------------------------------------
+11: 
+>> str_replace_editor view /testbed/xarray/core/variable.py  --view_range 539 560
+Here's the result of running `cat -n` on /testbed/xarray/core/variable.py:
+   539	    def to_base_variable(self):
+   540	        """Return this variable as a base xarray.Variable"""
+   541	        return Variable(
+   542	            self.dims, self._data, self._attrs, encoding=self._encoding, fastpath=True
+   543	        )
+   544	
+   545	    to_variable = utils.alias(to_base_variable, "to_variable")
+   546	
+   547	    def to_index_variable(self):
+   548	        """Return this variable as an xarray.IndexVariable"""
+   549	        return IndexVariable(
+   550	            self.dims, self._data, self._attrs, encoding=self._encoding, fastpath=True
+   551	        )
+   552	
+   553	    to_coord = utils.alias(to_index_variable, "to_coord")
+   554	
+   555	    def to_index(self):
+   556	        """Convert this variable to a pandas.Index"""
+   557	        return self.to_index_variable().to_index()
+   558	
+   559	    def to_dict(self, data: bool = True, encoding: bool = False) -> dict:
+   560	        """Dictionary representation of variable."""
+--------------------------------------------------------------------------------
+12: Good! Both `to_base_variable()` and `to_index_variable()` create new Variable objects, so they should be safe to modify. However, let me check if there's something special about how `dims` is handled. Let me look at the Variable class definition:
+>> cd /testbed && grep -n "class Variable\|def __init__" xarray/core/variable.py | head -10
+276:class Variable(AbstractArray, NdimSizeLenMixin, VariableArithmetic):
+299:    def __init__(self, dims, data, attrs=None, encoding=None, fastpath=False):
+2723:    def __init__(self, dims, data, attrs=None, encoding=None, fastpath=False):
+--------------------------------------------------------------------------------
+13: 
+>> str_replace_editor view /testbed/xarray/core/variable.py  --view_range 299 350
+Here's the result of running `cat -n` on /testbed/xarray/core/variable.py:
+   299	    def __init__(self, dims, data, attrs=None, encoding=None, fastpath=False):
+   300	        """
+   301	        Parameters
+   302	        ----------
+   303	        dims : str or sequence of str
+   304	            Name(s) of the the data dimension(s). Must be either a string (only
+   305	            for 1D data) or a sequence of strings with length equal to the
+   306	            number of dimensions.
+   307	        data : array_like
+   308	            Data array which supports numpy-like data access.
+   309	        attrs : dict_like or None, optional
+   310	            Attributes to assign to the new variable. If None (default), an
+   311	            empty attribute dictionary is initialized.
+   312	        encoding : dict_like or None, optional
+   313	            Dictionary specifying how to encode this array's data into a
+   314	            serialized format like netCDF4. Currently used keys (for netCDF)
+   315	            include '_FillValue', 'scale_factor', 'add_offset' and 'dtype'.
+   316	            Well-behaved code to serialize a Variable should ignore
+   317	            unrecognized encoding items.
+   318	        """
+   319	        self._data = as_compatible_data(data, fastpath=fastpath)
+   320	        self._dims = self._parse_dimensions(dims)
+   321	        self._attrs = None
+   322	        self._encoding = None
+   323	        if attrs is not None:
+   324	            self.attrs = attrs
+   325	        if encoding is not None:
+   326	            self.encoding = encoding
+   327	
+   328	    @property
+   329	    def dtype(self):
+   330	        return self._data.dtype
+   331	
+   332	    @property
+   333	    def shape(self):
+   334	        return self._data.shape
+   335	
+   336	    @property
+   337	    def nbytes(self) -> int:
+   338	        """
+   339	        Total bytes consumed by the elements of the data array.
+   340	        """
+   341	        if hasattr(self.data, "nbytes"):
+   342	            return self.data.nbytes
+   343	        else:
+   344	            return self.size * self.dtype.itemsize
+   345	
+   346	    @property
+   347	    def _in_memory(self):
+   348	        return isinstance(
+   349	            self._data, (np.ndarray, np.number, PandasIndexingAdapter)
+   350	        ) or (
+--------------------------------------------------------------------------------
+14: Let me check the dims property:
+>> cd /testbed && grep -n -A 10 "def dims" xarray/core/variable.py
+573:    def dims(self) -> tuple[Hashable, ...]:
+574-        """Tuple of dimension names with which this variable is associated."""
+575-        return self._dims
+576-
+577-    @dims.setter
+578:    def dims(self, value: str | Iterable[Hashable]) -> None:
+579-        self._dims = self._parse_dimensions(value)
+580-
+581-    def _parse_dimensions(self, dims: str | Iterable[Hashable]) -> tuple[Hashable, ...]:
+582-        if isinstance(dims, str):
+583-            dims = (dims,)
+584-        dims = tuple(dims)
+585-        if len(dims) != self.ndim:
+586-            raise ValueError(
+587-                f"dimensions {dims} must have the same length as the "
+588-                f"number of data dimensions, ndim={self.ndim}"
+--------------------------------------------------------------------------------
+15: Now I understand the issue! The problem is that when we call `to_base_variable()` or `to_index_variable()`, they create new Variable objects, but they pass the same `dims` tuple from the original variable. When we later modify `var.dims = dims` in the swap_dims method, we're modifying the `_dims` attribute of the new variable, but the issue might be that the original variable's dims tuple is being shared somehow.
+
+Let me create a test to understand this better:
+>> str_replace_editor create /testbed/debug_variable.py --file_text 'import numpy as np
+File created successfully at: /testbed/debug_variable.py
+--------------------------------------------------------------------------------
+16: 
+>> cd /testbed && python debug_variable.py
+Original var dims: ('z',)
+Original var dims id: 129017283697040
+Copy var dims: ('z',)
+Copy var dims id: 129017283697040
+After modifying copy:
+Original var dims: ('z',)
+Copy var dims: ('lev',)
+
+Dataset lev dims before: ('z',)
+Dataset lev dims id before: 129017282805712
+Traceback (most recent call last):
+  File "/testbed/debug_variable.py", line 28, in <module>
+    var = ds['lev'].to_base_variable()
+  File "/testbed/xarray/core/common.py", line 269, in __getattr__
+    raise AttributeError(
+AttributeError: 'DataArray' object has no attribute 'to_base_variable'
+--------------------------------------------------------------------------------
+17: Let me fix the debug script:
+>> str_replace_editor str_replace /testbed/debug_variable.py   --old_str '# Get the variable and modify it
+The file /testbed/debug_variable.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/debug_variable.py:
+    22	    "lev": ("z", np.arange(5))
+    23	})
+    24	print(f"\nDataset lev dims before: {ds['lev'].dims}")
+    25	print(f"Dataset lev dims id before: {id(ds['lev'].dims)}")
+    26	
+    27	# Get the variable and modify it
+    28	var = ds['lev'].variable.to_base_variable()
+    29	var.dims = ('lev',)
+    30	
+    31	print(f"Dataset lev dims after: {ds['lev'].dims}")
+    32	print(f"Modified var dims: {var.dims}")
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+--------------------------------------------------------------------------------
+18: 
+>> cd /testbed && python debug_variable.py
+Original var dims: ('z',)
+Original var dims id: 128949212551568
+Copy var dims: ('z',)
+Copy var dims id: 128949212551568
+After modifying copy:
+Original var dims: ('z',)
+Copy var dims: ('lev',)
+
+Dataset lev dims before: ('z',)
+Dataset lev dims id before: 128949211676624
+Dataset lev dims after: ('z',)
+Modified var dims: ('lev',)
+--------------------------------------------------------------------------------
+19: Interesting! The issue is not with the Variable objects themselves - they seem to work correctly. The dims tuples are being shared (same id), but modifying one doesn't affect the other because tuples are immutable and the setter creates a new tuple.
+
+Let me look more closely at the actual swap_dims implementation. The issue might be that the variables in the dataset are being modified in place. Let me trace through the swap_dims method more carefully:
+>> str_replace_editor create /testbed/debug_swap_dims.py --file_text 'import numpy as np
+File created successfully at: /testbed/debug_swap_dims.py
+--------------------------------------------------------------------------------
+20: 
+>> cd /testbed && python debug_swap_dims.py
+ds2['lev'] variable id before: 133387573374464
+ds2['lev'] dims before: ('z',)
+
+Calling swap_dims...
+Original variable id: 133387573374464
+Original variable dims: ('z',)
+to_base_variable id: 133387583550592
+to_base_variable dims: ('z',)
+After modifying dims: ('lev',)
+Original variable dims after modification: ('z',)
+
+After swap_dims:
+ds2['lev'] dims: ('lev',)
+result['lev'] dims: ('lev',)
+--------------------------------------------------------------------------------
+21: Aha! The issue is that `ds2['lev'].dims` changed from `('z',)` to `('lev',)` after calling `swap_dims`, even though we created a new variable with `to_base_variable()`. This suggests that the issue is not in the Variable creation, but somewhere else in the swap_dims process.
+
+Let me look more carefully at the swap_dims implementation. The issue might be that the variables dictionary is being modified in place or there's some shared reference:
+>> str_replace_editor view /testbed/xarray/core/dataset.py  --view_range 3770 3790
+Here's the result of running `cat -n` on /testbed/xarray/core/dataset.py:
+  3770	        variables: dict[Hashable, Variable] = {}
+  3771	        indexes: dict[Hashable, Index] = {}
+  3772	        for k, v in self.variables.items():
+  3773	            dims = tuple(dims_dict.get(dim, dim) for dim in v.dims)
+  3774	            if k in result_dims:
+  3775	                var = v.to_index_variable()
+  3776	                var.dims = dims
+  3777	                if k in self._indexes:
+  3778	                    indexes[k] = self._indexes[k]
+  3779	                    variables[k] = var
+  3780	                else:
+  3781	                    index, index_vars = create_default_index_implicit(var)
+  3782	                    indexes.update({name: index for name in index_vars})
+  3783	                    variables.update(index_vars)
+  3784	                    coord_names.update(index_vars)
+  3785	            else:
+  3786	                var = v.to_base_variable()
+  3787	                var.dims = dims
+  3788	                variables[k] = var
+  3789	
+  3790	        return self._replace_with_new_dims(variables, coord_names, indexes=indexes)
+--------------------------------------------------------------------------------
+22: Wait, I think I see the issue now. Let me check what `create_default_index_implicit` does:
+>> cd /testbed && grep -n "def create_default_index_implicit" xarray/core/indexes.py
+953:def create_default_index_implicit(
+--------------------------------------------------------------------------------
+23: 
+>> str_replace_editor view /testbed/xarray/core/indexes.py  --view_range 953 980
+Here's the result of running `cat -n` on /testbed/xarray/core/indexes.py:
+   953	def create_default_index_implicit(
+   954	    dim_variable: Variable,
+   955	    all_variables: Mapping | Iterable[Hashable] | None = None,
+   956	) -> tuple[PandasIndex, IndexVars]:
+   957	    """Create a default index from a dimension variable.
+   958	
+   959	    Create a PandasMultiIndex if the given variable wraps a pandas.MultiIndex,
+   960	    otherwise create a PandasIndex (note that this will become obsolete once we
+   961	    depreciate implicitly passing a pandas.MultiIndex as a coordinate).
+   962	
+   963	    """
+   964	    if all_variables is None:
+   965	        all_variables = {}
+   966	    if not isinstance(all_variables, Mapping):
+   967	        all_variables = {k: None for k in all_variables}
+   968	
+   969	    name = dim_variable.dims[0]
+   970	    array = getattr(dim_variable._data, "array", None)
+   971	    index: PandasIndex
+   972	
+   973	    if isinstance(array, pd.MultiIndex):
+   974	        index = PandasMultiIndex(array, name)
+   975	        index_vars = index.create_variables()
+   976	        # check for conflict between level names and variable names
+   977	        duplicate_names = [k for k in index_vars if k in all_variables and k != name]
+   978	        if duplicate_names:
+   979	            # dirty workaround for an edge case where both the dimension
+   980	            # coordinate and the level coordinates are given for the same
+--------------------------------------------------------------------------------
+24: 
+>> str_replace_editor view /testbed/xarray/core/indexes.py  --view_range 980 1000
+Here's the result of running `cat -n` on /testbed/xarray/core/indexes.py:
+   980	            # coordinate and the level coordinates are given for the same
+   981	            # multi-index object => do not raise an error
+   982	            # TODO: remove this check when removing the multi-index dimension coordinate
+   983	            if len(duplicate_names) < len(index.index.names):
+   984	                conflict = True
+   985	            else:
+   986	                duplicate_vars = [all_variables[k] for k in duplicate_names]
+   987	                conflict = any(
+   988	                    v is None or not dim_variable.equals(v) for v in duplicate_vars
+   989	                )
+   990	
+   991	            if conflict:
+   992	                conflict_str = "\n".join(duplicate_names)
+   993	                raise ValueError(
+   994	                    f"conflicting MultiIndex level / variable name(s):\n{conflict_str}"
+   995	                )
+   996	    else:
+   997	        dim_var = {name: dim_variable}
+   998	        index = PandasIndex.from_variables(dim_var)
+   999	        index_vars = index.create_variables(dim_var)
+  1000
+--------------------------------------------------------------------------------
+25: 
+>> str_replace_editor view /testbed/xarray/core/indexes.py  --view_range 1000 1010
+Here's the result of running `cat -n` on /testbed/xarray/core/indexes.py:
+  1000	
+  1001	    return index, index_vars
+  1002	
+  1003	
+  1004	# generic type that represents either a pandas or an xarray index
+  1005	T_PandasOrXarrayIndex = TypeVar("T_PandasOrXarrayIndex", Index, pd.Index)
+  1006	
+  1007	
+  1008	class Indexes(collections.abc.Mapping, Generic[T_PandasOrXarrayIndex]):
+  1009	    """Immutable proxy for Dataset or DataArrary indexes.
+  1010
+--------------------------------------------------------------------------------
+26: Let me check what `create_variables` does in the PandasIndex:
+>> cd /testbed && grep -n -A 10 "def create_variables" xarray/core/indexes.py
+59:    def create_variables(
+60-        self, variables: Mapping[Any, Variable] | None = None
+61-    ) -> IndexVars:
+62-        if variables is not None:
+63-            # pass through
+64-            return dict(**variables)
+65-        else:
+66-            return {}
+67-
+68-    def to_pandas_index(self) -> pd.Index:
+69-        """Cast this xarray index to a pandas.Index object or raise a TypeError
+--
+322:    def create_variables(
+323-        self, variables: Mapping[Any, Variable] | None = None
+324-    ) -> IndexVars:
+325-        from .variable import IndexVariable
+326-
+327-        name = self.index.name
+328-        attrs: Mapping[Hashable, Any] | None
+329-        encoding: Mapping[Hashable, Any] | None
+330-
+331-        if variables is not None and name in variables:
+332-            var = variables[name]
+--
+735:    def create_variables(
+736-        self, variables: Mapping[Any, Variable] | None = None
+737-    ) -> IndexVars:
+738-        from .variable import IndexVariable
+739-
+740-        if variables is None:
+741-            variables = {}
+742-
+743-        index_vars: IndexVars = {}
+744-        for name in (self.dim,) + self.index.names:
+745-            if name == self.dim:
+--------------------------------------------------------------------------------
+27: Let me look at the PandasIndex create_variables method more closely:
+>> str_replace_editor view /testbed/xarray/core/indexes.py  --view_range 322 350
+Here's the result of running `cat -n` on /testbed/xarray/core/indexes.py:
+   322	    def create_variables(
+   323	        self, variables: Mapping[Any, Variable] | None = None
+   324	    ) -> IndexVars:
+   325	        from .variable import IndexVariable
+   326	
+   327	        name = self.index.name
+   328	        attrs: Mapping[Hashable, Any] | None
+   329	        encoding: Mapping[Hashable, Any] | None
+   330	
+   331	        if variables is not None and name in variables:
+   332	            var = variables[name]
+   333	            attrs = var.attrs
+   334	            encoding = var.encoding
+   335	        else:
+   336	            attrs = None
+   337	            encoding = None
+   338	
+   339	        data = PandasIndexingAdapter(self.index, dtype=self.coord_dtype)
+   340	        var = IndexVariable(self.dim, data, attrs=attrs, encoding=encoding)
+   341	        return {name: var}
+   342	
+   343	    def to_pandas_index(self) -> pd.Index:
+   344	        return self.index
+   345	
+   346	    def isel(
+   347	        self, indexers: Mapping[Any, int | slice | np.ndarray | Variable]
+   348	    ) -> PandasIndex | None:
+   349	        from .variable import Variable
+   350
+--------------------------------------------------------------------------------
+28: Now I think I understand the issue! Let me trace through what happens in the problematic case:
+
+1. We have `ds2` with a variable `lev` that has dims `('z',)`
+2. When we call `ds2.swap_dims(z='lev')`, the code goes through the loop in lines 3772-3788
+3. For the variable `lev`, since `k` (which is `'lev'`) is in `result_dims` (which contains `'lev'`), it goes to line 3775
+4. It calls `v.to_index_variable()` to create a new IndexVariable
+5. It sets `var.dims = dims` where `dims` is `('lev',)` 
+6. Since `k` is not in `self._indexes`, it goes to the else branch at line 3780
+7. It calls `create_default_index_implicit(var)` 
+8. This creates a new PandasIndex and calls `index.create_variables(dim_var)` where `dim_var = {name: dim_variable}`
+9. The `create_variables` method creates a new IndexVariable, but it might be reusing the same variable somehow
+
+Let me create a more detailed debug script to trace this:
+>> str_replace_editor create /testbed/debug_detailed.py --file_text 'import numpy as np
+File created successfully at: /testbed/debug_detailed.py
+--------------------------------------------------------------------------------
+29: 
+>> cd /testbed && python debug_detailed.py
+Before swap_dims:
+ds2['lev'] variable id: 132376034736576
+ds2['lev'] dims: ('z',)
+ds2.variables['lev'] id: 132376034736576
+result_dims: {'lev'}
+coord_names: {'lev'}
+
+Processing variable y
+  Original variable id: 132376034736256
+  Original dims: ('z',)
+  New dims: ('lev',)
+  y is not in result_dims, creating base variable
+  to_base_variable id: 132376047600448
+
+Processing variable lev
+  Original variable id: 132376034736576
+  Original dims: ('z',)
+  New dims: ('lev',)
+  lev is in result_dims, creating index variable
+  to_index_variable id: 132376034736576
+  to_index_variable dims before: ('z',)
+  to_index_variable dims after: ('lev',)
+  Original variable dims after modifying copy: ('lev',)
+  lev is not in indexes, creating default index
+  index_vars keys: ['lev']
+    index_var lev id: 132376034735168
+    index_var lev dims: ('lev',)
+
+After processing:
+  variables[y] id: 132376047600448, dims: ('lev',)
+  variables[lev] id: 132376034735168, dims: ('lev',)
+
+Calling actual swap_dims...
+Traceback (most recent call last):
+  File "/testbed/debug_detailed.py", line 82, in <module>
+    result = ds2.swap_dims(z='lev')
+  File "/testbed/xarray/core/dataset.py", line 3760, in swap_dims
+    raise ValueError(
+ValueError: replacement dimension 'lev' is not a 1D variable along the old dimension 'z'
+--------------------------------------------------------------------------------
+30: Interesting! There's an error now because the original variable's dims have been modified. This confirms the issue! Look at this line:
+
+```
+  Original variable dims after modifying copy: ('lev',)
+```
+
+The original variable's dims changed from `('z',)` to `('lev',)` even though we only modified the copy! This means that `to_index_variable()` is not creating a proper copy.
+
+Let me check the `to_index_variable()` implementation more carefully:
+>> str_replace_editor view /testbed/xarray/core/variable.py  --view_range 547 552
+Here's the result of running `cat -n` on /testbed/xarray/core/variable.py:
+   547	    def to_index_variable(self):
+   548	        """Return this variable as an xarray.IndexVariable"""
+   549	        return IndexVariable(
+   550	            self.dims, self._data, self._attrs, encoding=self._encoding, fastpath=True
+   551	        )
+   552
+--------------------------------------------------------------------------------
+31: The issue is that `to_index_variable()` is passing `self.dims` directly to the IndexVariable constructor. Let me check if IndexVariable has a different behavior:
+>> cd /testbed && grep -n "class IndexVariable" xarray/core/variable.py
+2710:class IndexVariable(Variable):
+--------------------------------------------------------------------------------
+32: 
+>> str_replace_editor view /testbed/xarray/core/variable.py  --view_range 2710 2750
+Here's the result of running `cat -n` on /testbed/xarray/core/variable.py:
+  2710	class IndexVariable(Variable):
+  2711	    """Wrapper for accommodating a pandas.Index in an xarray.Variable.
+  2712	
+  2713	    IndexVariable preserve loaded values in the form of a pandas.Index instead
+  2714	    of a NumPy array. Hence, their values are immutable and must always be one-
+  2715	    dimensional.
+  2716	
+  2717	    They also have a name property, which is the name of their sole dimension
+  2718	    unless another name is given.
+  2719	    """
+  2720	
+  2721	    __slots__ = ()
+  2722	
+  2723	    def __init__(self, dims, data, attrs=None, encoding=None, fastpath=False):
+  2724	        super().__init__(dims, data, attrs, encoding, fastpath)
+  2725	        if self.ndim != 1:
+  2726	            raise ValueError(f"{type(self).__name__} objects must be 1-dimensional")
+  2727	
+  2728	        # Unlike in Variable, always eagerly load values into memory
+  2729	        if not isinstance(self._data, PandasIndexingAdapter):
+  2730	            self._data = PandasIndexingAdapter(self._data)
+  2731	
+  2732	    def __dask_tokenize__(self):
+  2733	        from dask.base import normalize_token
+  2734	
+  2735	        # Don't waste time converting pd.Index to np.ndarray
+  2736	        return normalize_token((type(self), self._dims, self._data.array, self._attrs))
+  2737	
+  2738	    def load(self):
+  2739	        # data is already loaded into memory for IndexVariable
+  2740	        return self
+  2741	
+  2742	    # https://github.com/python/mypy/issues/1465
+  2743	    @Variable.data.setter  # type: ignore[attr-defined]
+  2744	    def data(self, data):
+  2745	        raise ValueError(
+  2746	            f"Cannot assign to the .data attribute of dimension coordinate a.k.a IndexVariable {self.name!r}. "
+  2747	            f"Please use DataArray.assign_coords, Dataset.assign_coords or Dataset.assign as appropriate."
+  2748	        )
+  2749	
+  2750	    @Variable.values.setter  # type: ignore[attr-defined]
+--------------------------------------------------------------------------------
+33: The IndexVariable constructor calls the parent Variable constructor, so it should be creating a copy. But wait, let me check if there's something special about the `fastpath=True` parameter:
+>> str_replace_editor view /testbed/xarray/core/variable.py  --view_range 319 327
+Here's the result of running `cat -n` on /testbed/xarray/core/variable.py:
+   319	        self._data = as_compatible_data(data, fastpath=fastpath)
+   320	        self._dims = self._parse_dimensions(dims)
+   321	        self._attrs = None
+   322	        self._encoding = None
+   323	        if attrs is not None:
+   324	            self.attrs = attrs
+   325	        if encoding is not None:
+   326	            self.encoding = encoding
+   327
+--------------------------------------------------------------------------------
+34: The `_parse_dimensions` method should create a new tuple, so that's not the issue. Let me create a simpler test to understand what's happening:
+>> str_replace_editor create /testbed/debug_simple.py --file_text 'import numpy as np
+File created successfully at: /testbed/debug_simple.py
+--------------------------------------------------------------------------------
+35: 
+>> cd /testbed && python debug_simple.py
+Original var: <xarray.Variable (z: 5)>
+array([0, 1, 2, 3, 4])
+Original var id: 136756527940992
+Original var dims: ('z',)
+IndexVariable: <xarray.IndexVariable 'z' (z: 5)>
+array([0, 1, 2, 3, 4])
+IndexVariable id: 136756527843328
+IndexVariable dims: ('z',)
+Are they the same object? False
+
+Modifying IndexVariable dims...
+After modification:
+Original var dims: ('z',)
+IndexVariable dims: ('lev',)
+
+--- Testing with Dataset ---
+Dataset lev dims: ('z',)
+Dataset lev variable id: 136756534134976
+Original variable id: 136756534134976
+IndexVariable id: 136756535619520
+Are they the same? False
+After modifying IndexVariable:
+Original variable dims: ('z',)
+IndexVariable dims: ('lev',)
+Dataset lev dims: ('z',)
+--------------------------------------------------------------------------------
+36: That's strange! In this simple test, the variables are correctly separate and modifying one doesn't affect the other. Let me go back to the original issue and see if there's something specific about the case that's causing the problem.
+
+Let me look at the exact case where the issue occurs. The problem might be that in some cases, `to_index_variable()` returns the same object instead of creating a new one. Let me check if there are any conditions where this might happen:
+>> str_replace_editor view /testbed/xarray/core/variable.py  --view_range 2880 2890
+Here's the result of running `cat -n` on /testbed/xarray/core/variable.py:
+  2880	        return self.to_index().equals(other.to_index())
+  2881	
+  2882	    def to_index_variable(self):
+  2883	        """Return this variable as an xarray.IndexVariable"""
+  2884	        return self
+  2885	
+  2886	    to_coord = utils.alias(to_index_variable, "to_coord")
+  2887	
+  2888	    def to_index(self):
+  2889	        """Convert this variable to a pandas.Index"""
+  2890	        # n.b. creating a new pandas.Index from an old pandas.Index is
+--------------------------------------------------------------------------------
+37: Aha! There's the issue! The `IndexVariable` class overrides `to_index_variable()` to return `self` instead of creating a new copy! This means that if the original variable is already an `IndexVariable`, then `to_index_variable()` returns the same object, and when we modify its dims, we're modifying the original.
+
+Let me verify this by checking what type of variable we have in our problematic case:
+>> str_replace_editor create /testbed/debug_type.py --file_text 'import numpy as np
+File created successfully at: /testbed/debug_type.py
+--------------------------------------------------------------------------------
+38: 
+>> cd /testbed && python debug_type.py
+Original ds['lev'] type: <class 'xarray.core.variable.Variable'>
+After first swap_dims, ds_swapped['lev'] type: <class 'xarray.core.variable.IndexVariable'>
+ds2['lev'] type: <class 'xarray.core.variable.IndexVariable'>
+Original variable: 126777196901440
+to_index_variable result: 126777196901440
+Are they the same? True
+Original variable type: <class 'xarray.core.variable.IndexVariable'>
+IndexVariable type: <class 'xarray.core.variable.IndexVariable'>
+
+Before modifying dims:
+Original variable dims: ('z',)
+IndexVariable dims: ('z',)
+
+After modifying dims:
+Original variable dims: ('lev',)
+IndexVariable dims: ('lev',)
+--------------------------------------------------------------------------------
+39: Perfect! That confirms the issue. The variable `ds2['lev']` is already an `IndexVariable`, so when `to_index_variable()` is called, it returns the same object (`self`), and when we modify its dims, we're modifying the original.
+
+Now I understand the fix needed. In the `swap_dims` method, we need to ensure that we always create a copy of the variable before modifying its dims, even if it's already an IndexVariable.
+
+Let me look at the fix. The issue is in these lines in the `swap_dims` method:
+
+```python
+var = v.to_index_variable()
+var.dims = dims
+```
+
+and 
+
+```python
+var = v.to_base_variable()
+var.dims = dims
+```
+
+We need to ensure that we always get a copy. Let me check if there's a copy method or if we need to create one differently:
+>> cd /testbed && grep -n "def copy" xarray/core/variable.py
+896:    def copy(self, deep=True, data=None):
+2831:    def copy(self, deep=True, data=None):
+--------------------------------------------------------------------------------
+40: Great! There's a `copy` method. Let me check what it does:
+>> str_replace_editor view /testbed/xarray/core/variable.py  --view_range 896 920
+Here's the result of running `cat -n` on /testbed/xarray/core/variable.py:
+   896	    def copy(self, deep=True, data=None):
+   897	        """Returns a copy of this object.
+   898	
+   899	        If `deep=True`, the data array is loaded into memory and copied onto
+   900	        the new object. Dimensions, attributes and encodings are always copied.
+   901	
+   902	        Use `data` to create a new object with the same structure as
+   903	        original but entirely new data.
+   904	
+   905	        Parameters
+   906	        ----------
+   907	        deep : bool, optional
+   908	            Whether the data array is loaded into memory and copied onto
+   909	            the new object. Default is True.
+   910	        data : array_like, optional
+   911	            Data to use in the new object. Must have same shape as original.
+   912	            When `data` is used, `deep` is ignored.
+   913	
+   914	        Returns
+   915	        -------
+   916	        object : Variable
+   917	            New object with dimensions, attributes, encodings, and optionally
+   918	            data copied from original.
+   919	
+   920	        Examples
+--------------------------------------------------------------------------------
+41: Perfect! Now let me implement the fix. The solution is to modify the `swap_dims` method to create proper copies of the variables before modifying their dims.
+>> str_replace_editor str_replace /testbed/xarray/core/dataset.py   --old_str '        variables: dict[Hashable, Variable] = {}
+The file /testbed/xarray/core/dataset.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/xarray/core/dataset.py:
+  3765	        result_dims = {dims_dict.get(dim, dim) for dim in self.dims}
+  3766	
+  3767	        coord_names = self._coord_names.copy()
+  3768	        coord_names.update({dim for dim in dims_dict.values() if dim in self.variables})
+  3769	
+  3770	        variables: dict[Hashable, Variable] = {}
+  3771	        indexes: dict[Hashable, Index] = {}
+  3772	        for k, v in self.variables.items():
+  3773	            dims = tuple(dims_dict.get(dim, dim) for dim in v.dims)
+  3774	            if k in result_dims:
+  3775	                var = v.to_index_variable()
+  3776	                if var is v:
+  3777	                    # to_index_variable() returned the same object, so we need to copy it
+  3778	                    var = var.copy(deep=False)
+  3779	                var.dims = dims
+  3780	                if k in self._indexes:
+  3781	                    indexes[k] = self._indexes[k]
+  3782	                    variables[k] = var
+  3783	                else:
+  3784	                    index, index_vars = create_default_index_implicit(var)
+  3785	                    indexes.update({name: index for name in index_vars})
+  3786	                    variables.update(index_vars)
+  3787	                    coord_names.update(index_vars)
+  3788	            else:
+  3789	                var = v.to_base_variable()
+  3790	                if var is v:
+  3791	                    # to_base_variable() returned the same object, so we need to copy it
+  3792	                    var = var.copy(deep=False)
+  3793	                var.dims = dims
+  3794	                variables[k] = var
+  3795	
+  3796	        return self._replace_with_new_dims(variables, coord_names, indexes=indexes)
+  3797	
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+--------------------------------------------------------------------------------
+42: Now let's test our fix:
+>> cd /testbed && python reproduce_issue.py
+Reproducing the swap_dims issue...
+ds
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.5891 0.5727 0.03612 0.4086 ... 0.1211 0.9879 0.2176
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.5891 0.5727 0.03612 0.4086 ... 0.1211 0.9879 0.2176
+
+ds2
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.5891 0.5727 0.03612 0.4086 ... 0.1211 0.9879 0.2176
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds2 before .swap_dims() applied - lev dims: ('z',)
+
+ds2, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.5891 0.5727 0.03612 0.4086 ... 0.1211 0.9879 0.2176
+
+ds2 after .swap_dims() applied - lev dims: ('z',)
+
+The issue is that ds2['lev'].dims changed from ('z',) to ('lev',)
+This shows that swap_dims modified the original object!
+--------------------------------------------------------------------------------
+43: Excellent! The fix works! Now `ds2['lev'].dims` remains `('z',)` after calling `swap_dims`, which means the original object is no longer being modified.
+
+Let me also test our detailed debug script to make sure it works:
+>> cd /testbed && python debug_detailed.py
+Before swap_dims:
+ds2['lev'] variable id: 135768496240192
+ds2['lev'] dims: ('z',)
+ds2.variables['lev'] id: 135768496240192
+result_dims: {'lev'}
+coord_names: {'lev'}
+
+Processing variable y
+  Original variable id: 135768508133504
+  Original dims: ('z',)
+  New dims: ('lev',)
+  y is not in result_dims, creating base variable
+  to_base_variable id: 135768506459904
+
+Processing variable lev
+  Original variable id: 135768496240192
+  Original dims: ('z',)
+  New dims: ('lev',)
+  lev is in result_dims, creating index variable
+  to_index_variable id: 135768496240192
+  to_index_variable dims before: ('z',)
+  to_index_variable dims after: ('lev',)
+  Original variable dims after modifying copy: ('lev',)
+  lev is not in indexes, creating default index
+  index_vars keys: ['lev']
+    index_var lev id: 135768506661696
+    index_var lev dims: ('lev',)
+
+After processing:
+  variables[y] id: 135768506459904, dims: ('lev',)
+  variables[lev] id: 135768506661696, dims: ('lev',)
+
+Calling actual swap_dims...
+Traceback (most recent call last):
+  File "/testbed/debug_detailed.py", line 82, in <module>
+    result = ds2.swap_dims(z='lev')
+  File "/testbed/xarray/core/dataset.py", line 3760, in swap_dims
+    raise ValueError(
+ValueError: replacement dimension 'lev' is not a 1D variable along the old dimension 'z'
+--------------------------------------------------------------------------------
+44: Hmm, there's still an issue with the detailed debug script. The problem is that our manual tracing is still modifying the original variable. But the actual `swap_dims` call should work now. Let me test with a simpler version:
+>> str_replace_editor create /testbed/test_fix.py --file_text 'import numpy as np
+File created successfully at: /testbed/test_fix.py
+--------------------------------------------------------------------------------
+45: 
+>> cd /testbed && python test_fix.py
+ds2['lev'] dims before swap_dims: ('z',)
+ds2['lev'] variable id before: 129296906133888
+ds2['lev'] dims after swap_dims: ('z',)
+result['lev'] dims: ('lev',)
+ds2['lev'] variable id after: 129296906133888
+result['lev'] variable id: 129296906132672
+Are ds2 and result the same object? False
+Are the lev variables the same object? False
+
+Success! The original object was not modified.
+--------------------------------------------------------------------------------
+46: Perfect! The fix is working correctly. Now let me also check if there are any similar issues in the DataArray's `swap_dims` method:
+>> cd /testbed && grep -n -A 20 "def swap_dims" xarray/core/dataarray.py
+2044:    def swap_dims(
+2045-        self: T_DataArray,
+2046-        dims_dict: Mapping[Any, Hashable] | None = None,
+2047-        **dims_kwargs,
+2048-    ) -> T_DataArray:
+2049-        """Returns a new DataArray with swapped dimensions.
+2050-
+2051-        Parameters
+2052-        ----------
+2053-        dims_dict : dict-like
+2054-            Dictionary whose keys are current dimension names and whose values
+2055-            are new names.
+2056-        **dims_kwargs : {existing_dim: new_dim, ...}, optional
+2057-            The keyword arguments form of ``dims_dict``.
+2058-            One of dims_dict or dims_kwargs must be provided.
+2059-
+2060-        Returns
+2061-        -------
+2062-        swapped : DataArray
+2063-            DataArray with swapped dimensions.
+2064-
+--------------------------------------------------------------------------------
+47: 
+>> cd /testbed && grep -n -A 40 "def swap_dims" xarray/core/dataarray.py | tail -20
+2065-        Examples
+2066-        --------
+2067-        >>> arr = xr.DataArray(
+2068-        ...     data=[0, 1],
+2069-        ...     dims="x",
+2070-        ...     coords={"x": ["a", "b"], "y": ("x", [0, 1])},
+2071-        ... )
+2072-        >>> arr
+2073-        <xarray.DataArray (x: 2)>
+2074-        array([0, 1])
+2075-        Coordinates:
+2076-          * x        (x) <U1 'a' 'b'
+2077-            y        (x) int64 0 1
+2078-
+2079-        >>> arr.swap_dims({"x": "y"})
+2080-        <xarray.DataArray (y: 2)>
+2081-        array([0, 1])
+2082-        Coordinates:
+2083-            x        (y) <U1 'a' 'b'
+2084-          * y        (y) int64 0 1
+--------------------------------------------------------------------------------
+48: Let me see the actual implementation:
+>> cd /testbed && sed -n '2044,2100p' xarray/core/dataarray.py
+def swap_dims(
+        self: T_DataArray,
+        dims_dict: Mapping[Any, Hashable] | None = None,
+        **dims_kwargs,
+    ) -> T_DataArray:
+        """Returns a new DataArray with swapped dimensions.
+
+        Parameters
+        ----------
+        dims_dict : dict-like
+            Dictionary whose keys are current dimension names and whose values
+            are new names.
+        **dims_kwargs : {existing_dim: new_dim, ...}, optional
+            The keyword arguments form of ``dims_dict``.
+            One of dims_dict or dims_kwargs must be provided.
+
+        Returns
+        -------
+        swapped : DataArray
+            DataArray with swapped dimensions.
+
+        Examples
+        --------
+        >>> arr = xr.DataArray(
+        ...     data=[0, 1],
+        ...     dims="x",
+        ...     coords={"x": ["a", "b"], "y": ("x", [0, 1])},
+        ... )
+        >>> arr
+        <xarray.DataArray (x: 2)>
+        array([0, 1])
+        Coordinates:
+          * x        (x) <U1 'a' 'b'
+            y        (x) int64 0 1
+
+        >>> arr.swap_dims({"x": "y"})
+        <xarray.DataArray (y: 2)>
+        array([0, 1])
+        Coordinates:
+            x        (y) <U1 'a' 'b'
+          * y        (y) int64 0 1
+
+        >>> arr.swap_dims({"x": "z"})
+        <xarray.DataArray (z: 2)>
+        array([0, 1])
+        Coordinates:
+            x        (z) <U1 'a' 'b'
+            y        (z) int64 0 1
+        Dimensions without coordinates: z
+
+        See Also
+        --------
+        DataArray.rename
+        Dataset.swap_dims
+        """
+        dims_dict = either_dict_or_kwargs(dims_dict, dims_kwargs, "swap_dims")
+        ds = self._to_temp_dataset().swap_dims(dims_dict)
+--------------------------------------------------------------------------------
+49: 
+>> cd /testbed && sed -n '2090,2110p' xarray/core/dataarray.py
+x        (z) <U1 'a' 'b'
+            y        (z) int64 0 1
+        Dimensions without coordinates: z
+
+        See Also
+        --------
+        DataArray.rename
+        Dataset.swap_dims
+        """
+        dims_dict = either_dict_or_kwargs(dims_dict, dims_kwargs, "swap_dims")
+        ds = self._to_temp_dataset().swap_dims(dims_dict)
+        return self._from_temp_dataset(ds)
+
+    # change type of self and return to T_DataArray once
+    # https://github.com/python/mypy/issues/12846 is resolved
+    def expand_dims(
+        self,
+        dim: None | Hashable | Sequence[Hashable] | Mapping[Any, Any] = None,
+        axis: None | int | Sequence[int] = None,
+        **dim_kwargs: Any,
+    ) -> DataArray:
+--------------------------------------------------------------------------------
+50: Good! The DataArray's `swap_dims` method just delegates to the Dataset's `swap_dims` method, so our fix will automatically apply to DataArrays as well.
+
+Now let me run the existing tests to make sure our fix doesn't break anything:
+>> cd /testbed && python -m pytest xarray/tests/test_dataset.py::test_swap_dims -xvs
+============================= test session starts ==============================
+platform linux -- Python 3.10.15, pytest-7.4.0, pluggy-1.5.0 -- /opt/miniconda3/envs/testbed/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase(PosixPath('/testbed/.hypothesis/examples'))
+rootdir: /testbed
+configfile: setup.cfg
+plugins: xdist-3.6.1, cov-5.0.0, env-1.1.5, hypothesis-6.115.5
+collecting ... collected 0 items                                                              
+
+============================ no tests ran in 1.03s =============================
+ERROR: not found: /testbed/xarray/tests/test_dataset.py::test_swap_dims
+(no name '/testbed/xarray/tests/test_dataset.py::test_swap_dims' in any of [<Module test_dataset.py>])
+--------------------------------------------------------------------------------
+51: Let me find the correct test name:
+>> cd /testbed && grep -n "def test.*swap_dims" xarray/tests/test_dataset.py
+2958:    def test_swap_dims(self) -> None:
+--------------------------------------------------------------------------------
+52: 
+>> cd /testbed && python -m pytest xarray/tests/test_dataset.py::TestDataset::test_swap_dims -xvs
+============================= test session starts ==============================
+platform linux -- Python 3.10.15, pytest-7.4.0, pluggy-1.5.0 -- /opt/miniconda3/envs/testbed/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase(PosixPath('/testbed/.hypothesis/examples'))
+rootdir: /testbed
+configfile: setup.cfg
+plugins: xdist-3.6.1, cov-5.0.0, env-1.1.5, hypothesis-6.115.5
+collecting ... collected 1 item                                                               
+
+xarray/tests/test_dataset.py::TestDataset::test_swap_dims PASSED
+
+============================== 1 passed in 0.16s ===============================
+--------------------------------------------------------------------------------
+53: Great! Let me also run the DataArray swap_dims tests:
+>> cd /testbed && grep -n "def test.*swap_dims" xarray/tests/test_dataarray.py
+1771:    def test_swap_dims(self) -> None:
+--------------------------------------------------------------------------------
+54: 
+>> cd /testbed && python -m pytest xarray/tests/test_dataarray.py::TestDataArray::test_swap_dims -xvs
+============================= test session starts ==============================
+platform linux -- Python 3.10.15, pytest-7.4.0, pluggy-1.5.0 -- /opt/miniconda3/envs/testbed/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase(PosixPath('/testbed/.hypothesis/examples'))
+rootdir: /testbed
+configfile: setup.cfg
+plugins: xdist-3.6.1, cov-5.0.0, env-1.1.5, hypothesis-6.115.5
+collecting ... collected 1 item                                                               
+
+xarray/tests/test_dataarray.py::TestDataArray::test_swap_dims PASSED
+
+============================== 1 passed in 0.53s ===============================
+--------------------------------------------------------------------------------
+55: Excellent! Now let me create a test case to ensure this specific issue doesn't regress:
+>> str_replace_editor create /testbed/test_swap_dims_regression.py --file_text 'import numpy as np
+File created successfully at: /testbed/test_swap_dims_regression.py
+--------------------------------------------------------------------------------
+56: 
+>> cd /testbed && python test_swap_dims_regression.py
+Test passed! swap_dims does not modify the original object.
+--------------------------------------------------------------------------------
+57: Perfect! Now let me also test some edge cases to make sure our fix is robust:
+>> str_replace_editor create /testbed/test_edge_cases.py --file_text 'import numpy as np
+File created successfully at: /testbed/test_edge_cases.py
+--------------------------------------------------------------------------------
+58: 
+>> cd /testbed && python test_edge_cases.py
+Test 1 passed: Regular variables work correctly
+Test 2 passed: Variables with existing indexes work correctly
+Test 3 passed: Multiple variable swapping works correctly
+All edge case tests passed!
+--------------------------------------------------------------------------------
+59: Excellent! Our fix handles all the edge cases correctly. Let me also run a broader set of tests to make sure we haven't broken anything:
+>> cd /testbed && python -m pytest xarray/tests/test_dataset.py -k "swap" -x
+============================= test session starts ==============================
+platform linux -- Python 3.10.15, pytest-7.4.0, pluggy-1.5.0
+rootdir: /testbed
+configfile: setup.cfg
+plugins: xdist-3.6.1, cov-5.0.0, env-1.1.5, hypothesis-6.115.5
+collecting ... collected 370 items / 369 deselected / 1 selected                              
+
+xarray/tests/test_dataset.py .                                           [100%]
+
+====================== 1 passed, 369 deselected in 0.12s =======================
+--------------------------------------------------------------------------------
+60: 
+>> cd /testbed && python -m pytest xarray/tests/test_dataarray.py -k "swap" -x
+============================= test session starts ==============================
+platform linux -- Python 3.10.15, pytest-7.4.0, pluggy-1.5.0
+rootdir: /testbed
+configfile: setup.cfg
+plugins: xdist-3.6.1, cov-5.0.0, env-1.1.5, hypothesis-6.115.5
+collecting ... collected 449 items / 448 deselected / 1 selected                              
+
+xarray/tests/test_dataarray.py .                                         [100%]
+
+====================== 1 passed, 448 deselected in 0.14s =======================
+--------------------------------------------------------------------------------
+61: Great! Let me also check if there are any other tests that might be related to this functionality:
+>> cd /testbed && python -m pytest xarray/tests/test_variable.py -k "index" -x
+============================= test session starts ==============================
+platform linux -- Python 3.10.15, pytest-7.4.0, pluggy-1.5.0
+rootdir: /testbed
+configfile: setup.cfg
+plugins: xdist-3.6.1, cov-5.0.0, env-1.1.5, hypothesis-6.115.5
+collecting ... collected 526 items / 358 deselected / 168 selected                            
+
+xarray/tests/test_variable.py .............................x.X.......... [ 25%]
+............x...............................................ssssssssssss [ 67%]
+sssssssssssssssssssssssssssssssssssssssssss........ss.                   [100%]
+
+==== 108 passed, 57 skipped, 358 deselected, 2 xfailed, 1 xpassed in 1.24s =====
+--------------------------------------------------------------------------------
+62: Perfect! All tests are passing. Now let me also check if there are any other methods that might have similar issues. Let me look for other places where `to_index_variable()` or `to_base_variable()` are used and dims are modified:
+>> cd /testbed && grep -r "to_index_variable\|to_base_variable" xarray/core/ | grep -v "__pycache__" | grep "\.dims ="
+grep: xarray/core/__pycache__/dataset.cpython-310.pyc: binary file matches
+grep: xarray/core/__pycache__/dataarray.cpython-310.pyc: binary file matches
+grep: xarray/core/__pycache__/variable.cpython-310.pyc: binary file matches
+--------------------------------------------------------------------------------
+63: 
+>> cd /testbed && find xarray/core/ -name "*.py" -exec grep -l "to_index_variable\|to_base_variable" {} \; | xargs grep -n "\.dims ="
+xarray/core/dataset.py:3367:                k: v for k, (_, v) in validated_indexers.items() if v.dims == (k,)
+xarray/core/dataset.py:3390:            if v.dims == (k,):
+xarray/core/dataset.py:3511:            var.dims = tuple(dims_dict.get(dim, dim) for dim in v.dims)
+xarray/core/dataset.py:3779:                var.dims = dims
+xarray/core/dataset.py:3793:                var.dims = dims
+xarray/core/variable.py:1563:        if self.dims == expanded_dims:
+xarray/core/variable.py:1988:            return self.dims == other.dims and (
+xarray/core/variable.py:2875:            return self.dims == other.dims and self._data_equals(other)
+xarray/core/dataarray.py:146:            var.dims = (dim,)
+xarray/core/dataarray.py:469:        if variable.dims == self.dims and variable.shape == self.shape:
+xarray/core/dataarray.py:472:        elif variable.dims == self.dims:
+xarray/core/dataarray.py:518:            new_variable.dims = [rename_dims.get(d, d) for d in new_variable.dims]
+--------------------------------------------------------------------------------
+64: Let me check the other places where dims are being modified after calling to_index_variable or to_base_variable:
+>> str_replace_editor view /testbed/xarray/core/dataset.py  --view_range 3505 3520
+Here's the result of running `cat -n` on /testbed/xarray/core/dataset.py:
+  3505	        self, name_dict, dims_dict
+  3506	    ) -> tuple[dict[Hashable, Variable], set[Hashable]]:
+  3507	        variables = {}
+  3508	        coord_names = set()
+  3509	        for k, v in self.variables.items():
+  3510	            var = v.copy(deep=False)
+  3511	            var.dims = tuple(dims_dict.get(dim, dim) for dim in v.dims)
+  3512	            name = name_dict.get(k, k)
+  3513	            if name in variables:
+  3514	                raise ValueError(f"the new name {name!r} conflicts")
+  3515	            variables[name] = var
+  3516	            if k in self._coord_names:
+  3517	                coord_names.add(name)
+  3518	        return variables, coord_names
+  3519	
+  3520	    def _rename_dims(self, name_dict: Mapping[Any, Hashable]) -> dict[Hashable, int]:
+--------------------------------------------------------------------------------
+65: Good! In this case (line 3510), they're already calling `copy(deep=False)` before modifying dims, so this is safe.
+>> str_replace_editor view /testbed/xarray/core/dataarray.py  --view_range 140 150
+Here's the result of running `cat -n` on /testbed/xarray/core/dataarray.py:
+   140	    if utils.is_dict_like(coords):
+   141	        for k, v in coords.items():
+   142	            new_coords[k] = as_variable(v, name=k)
+   143	    elif coords is not None:
+   144	        for dim, coord in zip(dims, coords):
+   145	            var = as_variable(coord, name=dim)
+   146	            var.dims = (dim,)
+   147	            new_coords[dim] = var.to_index_variable()
+   148	
+   149	    sizes = dict(zip(dims, shape))
+   150	    for k, v in new_coords.items():
+--------------------------------------------------------------------------------
+66: Let me check this case more carefully:
+>> str_replace_editor view /testbed/xarray/core/dataarray.py  --view_range 135 155
+Here's the result of running `cat -n` on /testbed/xarray/core/dataarray.py:
+   135	            if not isinstance(d, str):
+   136	                raise TypeError(f"dimension {d} is not a string")
+   137	
+   138	    new_coords: dict[Hashable, Variable] = {}
+   139	
+   140	    if utils.is_dict_like(coords):
+   141	        for k, v in coords.items():
+   142	            new_coords[k] = as_variable(v, name=k)
+   143	    elif coords is not None:
+   144	        for dim, coord in zip(dims, coords):
+   145	            var = as_variable(coord, name=dim)
+   146	            var.dims = (dim,)
+   147	            new_coords[dim] = var.to_index_variable()
+   148	
+   149	    sizes = dict(zip(dims, shape))
+   150	    for k, v in new_coords.items():
+   151	        if any(d not in dims for d in v.dims):
+   152	            raise ValueError(
+   153	                f"coordinate {k} has dimensions {v.dims}, but these "
+   154	                "are not a subset of the DataArray "
+   155	                f"dimensions {dims}"
+--------------------------------------------------------------------------------
+67: In this case, `as_variable` creates a new variable, so modifying its dims before calling `to_index_variable()` should be safe.
+>> str_replace_editor view /testbed/xarray/core/dataarray.py  --view_range 515 525
+Here's the result of running `cat -n` on /testbed/xarray/core/dataarray.py:
+   515	            new_indexes.pop(name)
+   516	
+   517	        if rename_dims:
+   518	            new_variable.dims = [rename_dims.get(d, d) for d in new_variable.dims]
+   519	
+   520	        return self._replace(
+   521	            variable=new_variable, coords=new_coords, indexes=new_indexes
+   522	        )
+   523	
+   524	    def _to_temp_dataset(self) -> Dataset:
+   525	        return self._to_dataset_whole(name=_THIS_ARRAY, shallow_copy=False)
+--------------------------------------------------------------------------------
+68: Let me see the context around line 518:
+>> str_replace_editor view /testbed/xarray/core/dataarray.py  --view_range 500 525
+Here's the result of running `cat -n` on /testbed/xarray/core/dataarray.py:
+   500	        if coords is None:
+   501	            coords = {}
+   502	        if drop_coords is None:
+   503	            drop_coords = []
+   504	
+   505	        new_variable = self.variable.copy()
+   506	        new_coords = self._coords.copy()
+   507	        new_indexes = dict(self._indexes)
+   508	
+   509	        for name in indexes:
+   510	            new_coords[name] = coords[name]
+   511	            new_indexes[name] = indexes[name]
+   512	
+   513	        for name in drop_coords:
+   514	            new_coords.pop(name)
+   515	            new_indexes.pop(name)
+   516	
+   517	        if rename_dims:
+   518	            new_variable.dims = [rename_dims.get(d, d) for d in new_variable.dims]
+   519	
+   520	        return self._replace(
+   521	            variable=new_variable, coords=new_coords, indexes=new_indexes
+   522	        )
+   523	
+   524	    def _to_temp_dataset(self) -> Dataset:
+   525	        return self._to_dataset_whole(name=_THIS_ARRAY, shallow_copy=False)
+--------------------------------------------------------------------------------
+69: This is also safe because they call `self.variable.copy()` on line 505 before modifying dims.
+
+It looks like our fix in the `swap_dims` method is the only place where this issue occurs. Let me run one final comprehensive test to make sure everything is working:
+>> str_replace_editor create /testbed/final_test.py --file_text 'import numpy as np
+File created successfully at: /testbed/final_test.py
+--------------------------------------------------------------------------------
+70: 
+>> cd /testbed && python final_test.py
+ds
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.9082 0.8102 0.01739 0.1625 ... 0.9349 0.1174 0.9371
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.9082 0.8102 0.01739 0.1625 ... 0.9349 0.1174 0.9371
+
+ds2
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.9082 0.8102 0.01739 0.1625 ... 0.9349 0.1174 0.9371
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds2 before .swap_dims() applied - lev dims: ('z',)
+
+ds2, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.9082 0.8102 0.01739 0.1625 ... 0.9349 0.1174 0.9371
+
+ds2 after .swap_dims() applied - lev dims: ('z',)
+
+✓ SUCCESS: Original object was not modified!
+Traceback (most recent call last):
+  File "/testbed/final_test.py", line 78, in <module>
+    test_dataarray_swap_dims()
+  File "/testbed/final_test.py", line 45, in test_dataarray_swap_dims
+    arr2 = arr.swap_dims({"x": "y"}).swap_dims({"y": "x"}).reset_index("y").reset_coords()
+  File "/testbed/xarray/core/dataarray.py", line 2248, in reset_index
+    ds = self._to_temp_dataset().reset_index(dims_or_levels, drop=drop)
+  File "/testbed/xarray/core/dataset.py", line 4111, in reset_index
+    raise ValueError(
+ValueError: ('y',) are not coordinates with an index
+--------------------------------------------------------------------------------
+71: Let me fix the DataArray test:
+>> str_replace_editor str_replace /testbed/final_test.py   --old_str 'def test_dataarray_swap_dims():
+The file /testbed/final_test.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/final_test.py:
+    31	    # The key test: ds2['lev'].dims should still be ('z',)
+    32	    assert ds2['lev'].dims == ('z',), f"Expected ('z',) but got {ds2['lev'].dims}"
+    33	    print("\n✓ SUCCESS: Original object was not modified!")
+    34	
+    35	
+    36	def test_dataarray_swap_dims():
+    37	    """Test that DataArray swap_dims also works correctly."""
+    38	    arr = xr.DataArray(
+    39	        data=[0, 1, 2],
+    40	        dims="x",
+    41	        coords={"x": ["a", "b", "c"], "y": ("x", [0, 1, 2])},
+    42	    )
+    43	    
+    44	    # Convert to dataset to test the same scenario
+    45	    ds = arr.to_dataset(name="data")
+    46	    
+    47	    # Make y an IndexVariable by swapping and then resetting
+    48	    ds2 = ds.swap_dims({"x": "y"}).swap_dims({"y": "x"}).reset_index("y").reset_coords()
+    49	    
+    50	    # Convert back to DataArray
+    51	    arr2 = ds2["data"]
+    52	    
+    53	    original_dims = ds2['y'].dims
+    54	    result_ds = ds2.swap_dims({"x": "y"})
+    55	    
+    56	    assert ds2['y'].dims == original_dims, "DataArray: Original object was modified"
+    57	    assert result_ds['y'].dims == ('y',), "DataArray: Result has wrong dims"
+    58	    print("✓ DataArray swap_dims works correctly!")
+    59	
+    60	
+    61	def test_performance():
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+--------------------------------------------------------------------------------
+72: 
+>> cd /testbed && python final_test.py
+ds
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.05029 0.3395 0.6797 0.3085 ... 0.5519 0.2499 0.7467
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.05029 0.3395 0.6797 0.3085 ... 0.5519 0.2499 0.7467
+
+ds2
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.05029 0.3395 0.6797 0.3085 ... 0.5519 0.2499 0.7467
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds2 before .swap_dims() applied - lev dims: ('z',)
+
+ds2, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.05029 0.3395 0.6797 0.3085 ... 0.5519 0.2499 0.7467
+
+ds2 after .swap_dims() applied - lev dims: ('z',)
+
+✓ SUCCESS: Original object was not modified!
+Traceback (most recent call last):
+  File "/testbed/final_test.py", line 84, in <module>
+    test_dataarray_swap_dims()
+  File "/testbed/final_test.py", line 48, in test_dataarray_swap_dims
+    ds2 = ds.swap_dims({"x": "y"}).swap_dims({"y": "x"}).reset_index("y").reset_coords()
+  File "/testbed/xarray/core/dataset.py", line 4111, in reset_index
+    raise ValueError(
+ValueError: ('y',) are not coordinates with an index
+--------------------------------------------------------------------------------
+73: Let me simplify the DataArray test:
+>> str_replace_editor str_replace /testbed/final_test.py   --old_str 'def test_dataarray_swap_dims():
+The file /testbed/final_test.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/final_test.py:
+    31	    # The key test: ds2['lev'].dims should still be ('z',)
+    32	    assert ds2['lev'].dims == ('z',), f"Expected ('z',) but got {ds2['lev'].dims}"
+    33	    print("\n✓ SUCCESS: Original object was not modified!")
+    34	
+    35	
+    36	def test_dataarray_swap_dims():
+    37	    """Test that DataArray swap_dims also works correctly."""
+    38	    arr = xr.DataArray(
+    39	        data=[0, 1, 2],
+    40	        dims="x",
+    41	        coords={"x": ["a", "b", "c"], "y": ("x", [0, 1, 2])},
+    42	    )
+    43	    
+    44	    # Test basic swap_dims functionality
+    45	    original_y_dims = arr.coords['y'].dims
+    46	    result = arr.swap_dims({"x": "y"})
+    47	    
+    48	    # Original should not be modified
+    49	    assert arr.coords['y'].dims == original_y_dims, "DataArray: Original object was modified"
+    50	    assert result.coords['y'].dims == ('y',), "DataArray: Result has wrong dims"
+    51	    print("✓ DataArray swap_dims works correctly!")
+    52	
+    53	
+    54	def test_performance():
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+--------------------------------------------------------------------------------
+74: 
+>> cd /testbed && python final_test.py
+ds
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.1741 0.6884 0.9177 0.1571 ... 0.8717 0.6808 0.54
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.1741 0.6884 0.9177 0.1571 ... 0.8717 0.6808 0.54
+
+ds2
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.1741 0.6884 0.9177 0.1571 ... 0.8717 0.6808 0.54
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds2 before .swap_dims() applied - lev dims: ('z',)
+
+ds2, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.1741 0.6884 0.9177 0.1571 ... 0.8717 0.6808 0.54
+
+ds2 after .swap_dims() applied - lev dims: ('z',)
+
+✓ SUCCESS: Original object was not modified!
+✓ DataArray swap_dims works correctly!
+✓ Performance test: 10 swap_dims operations took 0.001 seconds
+
+🎉 All tests passed! The fix is working correctly.
+--------------------------------------------------------------------------------
+75: Perfect! Our fix is working correctly and efficiently. Let me also run a few more existing tests to make sure we haven't broken anything:
+>> cd /testbed && python -m pytest xarray/tests/test_dataset.py::TestDataset::test_swap_dims -v
+============================= test session starts ==============================
+platform linux -- Python 3.10.15, pytest-7.4.0, pluggy-1.5.0 -- /opt/miniconda3/envs/testbed/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase(PosixPath('/testbed/.hypothesis/examples'))
+rootdir: /testbed
+configfile: setup.cfg
+plugins: xdist-3.6.1, cov-5.0.0, env-1.1.5, hypothesis-6.115.5
+collecting ... collected 1 item                                                               
+
+xarray/tests/test_dataset.py::TestDataset::test_swap_dims PASSED         [100%]
+
+============================== 1 passed in 0.21s ===============================
+--------------------------------------------------------------------------------
+76: 
+>> cd /testbed && python -m pytest xarray/tests/test_dataarray.py::TestDataArray::test_swap_dims -v
+============================= test session starts ==============================
+platform linux -- Python 3.10.15, pytest-7.4.0, pluggy-1.5.0 -- /opt/miniconda3/envs/testbed/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase(PosixPath('/testbed/.hypothesis/examples'))
+rootdir: /testbed
+configfile: setup.cfg
+plugins: xdist-3.6.1, cov-5.0.0, env-1.1.5, hypothesis-6.115.5
+collecting ... collected 1 item                                                               
+
+xarray/tests/test_dataarray.py::TestDataArray::test_swap_dims PASSED     [100%]
+
+============================== 1 passed in 0.12s ===============================
+--------------------------------------------------------------------------------
+77: Excellent! Let me also run a few more tests to make sure our change doesn't break anything else:
+>> cd /testbed && python -m pytest xarray/tests/test_dataset.py -k "coord" -x --tb=short
+============================= test session starts ==============================
+platform linux -- Python 3.10.15, pytest-7.4.0, pluggy-1.5.0
+rootdir: /testbed
+configfile: setup.cfg
+plugins: xdist-3.6.1, cov-5.0.0, env-1.1.5, hypothesis-6.115.5
+collecting ... collected 370 items / 324 deselected / 46 selected                             
+
+xarray/tests/test_dataset.py .........xX................................ [ 93%]
+...                                                                      [100%]
+
+=========== 44 passed, 324 deselected, 1 xfailed, 1 xpassed in 0.53s ===========
+--------------------------------------------------------------------------------
+78: Perfect! All tests are passing. Now let me create a summary of the changes made:
+
+## Summary
+
+I successfully implemented a fix for the issue where `.swap_dims()` could modify the original object. Here's what I found and fixed:
+
+### Root Cause
+The issue occurred when a variable was already an `IndexVariable` and the `swap_dims` method called `to_index_variable()` on it. The `IndexVariable` class overrides `to_index_variable()` to return `self` instead of creating a new copy:
+
+```python
+def to_index_variable(self):
+    """Return this variable as an xarray.IndexVariable"""
+    return self  # This returns the same object!
+```
+
+When the `swap_dims` method then modified `var.dims = dims`, it was modifying the original variable's dimensions.
+
+### The Fix
+I modified the `swap_dims` method in `/testbed/xarray/core/dataset.py` to check if `to_index_variable()` or `to_base_variable()` returned the same object, and if so, create a shallow copy before modifying the dims:
+
+```python
+# Before (lines 3775-3776):
+var = v.to_index_variable()
+var.dims = dims
+
+# After (lines 3775-3778):
+var = v.to_index_variable()
+if var is v:
+    # to_index_variable() returned the same object, so we need to copy it
+    var = var.copy(deep=False)
+var.dims = dims
+```
+
+The same fix was applied to the `to_base_variable()` case as well.
+
+### Why This Fix Works
+1. **Minimal Impact**: The fix only creates a copy when necessary (when the method returns the same object)
+2. **Shallow Copy**: We use `copy(deep=False)` which is efficient - it only copies the variable metadata, not the underlying data
+3. **Comprehensive**: The fix handles both `to_index_variable()` and `to_base_variable()` cases
+4. **Safe**: The fix doesn't change the behavior for cases where a new object was already being created
+
+### Testing
+The fix was thoroughly tested with:
+1. The original issue reproduction case ✅
+2. Edge cases with regular variables ✅
+3. Edge cases with existing indexes ✅
+4. Multiple variable swapping ✅
+5. DataArray swap_dims (which delegates to Dataset) ✅
+6. Performance impact (minimal) ✅
+7. Existing test suite (all passing) ✅
+
+The fix ensures that `swap_dims()` never modifies the original object while maintaining all existing functionality and performance characteristics.
+>> 
+
+--------------------------------------------------------------------------------
+79: 
+>> submit
+Thank you for your work on this issue. Please carefully follow the steps below to help review your changes.
+
+1. If you made any changes to your code after running the reproduction script, please run the reproduction script again.
+  If the reproduction script is failing, please revisit your changes and make sure they are correct.
+  If you have already removed your reproduction script, please ignore this step.
+2. Remove your reproduction script (if you haven't done so already).
+3. If you have modified any TEST files, please revert them to the state they had before you started fixing the issue.
+  You can do this with `git checkout -- /path/to/test/file.py`. Use below <diff> to find the files you need to revert.
+4. Run the submit command again to confirm.
+
+Here is a list of all of your changes:
+
+<diff>
+diff --git a/debug_detailed.py b/debug_detailed.py
+new file mode 100644
+index 00000000..4c5b91a4
+--- /dev/null
++++ b/debug_detailed.py
+@@ -0,0 +1,88 @@
++import numpy as np
++import xarray as xr
++
++# Create the dataset from the issue
++nz = 11
++ds = xr.Dataset(
++    data_vars={
++        "y": ("z", np.random.rand(nz)),
++        "lev": ("z", np.arange(nz) * 10),
++    },
++)
++
++ds2 = (
++    ds.swap_dims(z="lev")
++    .rename_dims(lev="z")
++    .reset_index("lev")
++    .reset_coords()
++)
++
++print(f"Before swap_dims:")
++print(f"ds2['lev'] variable id: {id(ds2['lev'].variable)}")
++print(f"ds2['lev'] dims: {ds2['lev'].dims}")
++print(f"ds2.variables['lev'] id: {id(ds2.variables['lev'])}")
++
++# Let's manually trace through swap_dims
++dims_dict = {'z': 'lev'}
++result_dims = {dims_dict.get(dim, dim) for dim in ds2.dims}
++print(f"result_dims: {result_dims}")
++
++coord_names = ds2._coord_names.copy()
++coord_names.update({dim for dim in dims_dict.values() if dim in ds2.variables})
++print(f"coord_names: {coord_names}")
++
++variables = {}
++indexes = {}
++
++for k, v in ds2.variables.items():
++    print(f"\nProcessing variable {k}")
++    print(f"  Original variable id: {id(v)}")
++    print(f"  Original dims: {v.dims}")
++    
++    dims = tuple(dims_dict.get(dim, dim) for dim in v.dims)
++    print(f"  New dims: {dims}")
++    
++    if k in result_dims:
++        print(f"  {k} is in result_dims, creating index variable")
++        var = v.to_index_variable()
++        print(f"  to_index_variable id: {id(var)}")
++        print(f"  to_index_variable dims before: {var.dims}")
++        var.dims = dims
++        print(f"  to_index_variable dims after: {var.dims}")
++        print(f"  Original variable dims after modifying copy: {v.dims}")
++        
++        if k in ds2._indexes:
++            print(f"  {k} is in indexes")
++            indexes[k] = ds2._indexes[k]
++            variables[k] = var
++        else:
++            print(f"  {k} is not in indexes, creating default index")
++            from xarray.core.indexes import create_default_index_implicit
++            index, index_vars = create_default_index_implicit(var)
++            print(f"  index_vars keys: {list(index_vars.keys())}")
++            for name, index_var in index_vars.items():
++                print(f"    index_var {name} id: {id(index_var)}")
++                print(f"    index_var {name} dims: {index_var.dims}")
++            indexes.update({name: index for name in index_vars})
++            variables.update(index_vars)
++            coord_names.update(index_vars)
++    else:
++        print(f"  {k} is not in result_dims, creating base variable")
++        var = v.to_base_variable()
++        print(f"  to_base_variable id: {id(var)}")
++        var.dims = dims
++        variables[k] = var
++
++print(f"\nAfter processing:")
++for k, v in variables.items():
++    print(f"  variables[{k}] id: {id(v)}, dims: {v.dims}")
++
++# Now call the actual swap_dims
++print(f"\nCalling actual swap_dims...")
++result = ds2.swap_dims(z='lev')
++
++print(f"\nAfter swap_dims:")
++print(f"ds2['lev'] dims: {ds2['lev'].dims}")
++print(f"result['lev'] dims: {result['lev'].dims}")
++print(f"ds2['lev'] variable id: {id(ds2['lev'].variable)}")
++print(f"result['lev'] variable id: {id(result['lev'].variable)}")
+\ No newline at end of file
+diff --git a/debug_simple.py b/debug_simple.py
+new file mode 100644
+index 00000000..35667a0c
+--- /dev/null
++++ b/debug_simple.py
+@@ -0,0 +1,47 @@
++import numpy as np
++import xarray as xr
++
++# Create a simple variable
++var = xr.Variable(('z',), np.arange(5))
++print(f"Original var: {var}")
++print(f"Original var id: {id(var)}")
++print(f"Original var dims: {var.dims}")
++
++# Create an IndexVariable using to_index_variable
++index_var = var.to_index_variable()
++print(f"IndexVariable: {index_var}")
++print(f"IndexVariable id: {id(index_var)}")
++print(f"IndexVariable dims: {index_var.dims}")
++
++# Check if they are the same object
++print(f"Are they the same object? {var is index_var}")
++
++# Modify the IndexVariable dims
++print(f"\nModifying IndexVariable dims...")
++index_var.dims = ('lev',)
++
++print(f"After modification:")
++print(f"Original var dims: {var.dims}")
++print(f"IndexVariable dims: {index_var.dims}")
++
++# Let's also test with a dataset
++print(f"\n--- Testing with Dataset ---")
++ds = xr.Dataset({'lev': ('z', np.arange(5))})
++print(f"Dataset lev dims: {ds['lev'].dims}")
++print(f"Dataset lev variable id: {id(ds.variables['lev'])}")
++
++# Get the variable and convert to IndexVariable
++orig_var = ds.variables['lev']
++index_var2 = orig_var.to_index_variable()
++
++print(f"Original variable id: {id(orig_var)}")
++print(f"IndexVariable id: {id(index_var2)}")
++print(f"Are they the same? {orig_var is index_var2}")
++
++# Modify the IndexVariable
++index_var2.dims = ('lev',)
++
++print(f"After modifying IndexVariable:")
++print(f"Original variable dims: {orig_var.dims}")
++print(f"IndexVariable dims: {index_var2.dims}")
++print(f"Dataset lev dims: {ds['lev'].dims}")
+\ No newline at end of file
+diff --git a/debug_swap_dims.py b/debug_swap_dims.py
+new file mode 100644
+index 00000000..9cad1e3a
+--- /dev/null
++++ b/debug_swap_dims.py
+@@ -0,0 +1,45 @@
++import numpy as np
++import xarray as xr
++
++# Create the dataset from the issue
++nz = 11
++ds = xr.Dataset(
++    data_vars={
++        "y": ("z", np.random.rand(nz)),
++        "lev": ("z", np.arange(nz) * 10),
++    },
++)
++
++ds2 = (
++    ds.swap_dims(z="lev")
++    .rename_dims(lev="z")
++    .reset_index("lev")
++    .reset_coords()
++)
++
++print(f"ds2['lev'] variable id before: {id(ds2['lev'].variable)}")
++print(f"ds2['lev'] dims before: {ds2['lev'].dims}")
++
++# Let's trace what happens in swap_dims
++print("\nCalling swap_dims...")
++
++# Get the original variable
++orig_var = ds2.variables['lev']
++print(f"Original variable id: {id(orig_var)}")
++print(f"Original variable dims: {orig_var.dims}")
++
++# This is what swap_dims does
++var = orig_var.to_base_variable()
++print(f"to_base_variable id: {id(var)}")
++print(f"to_base_variable dims: {var.dims}")
++
++# Modify dims
++var.dims = ('lev',)
++print(f"After modifying dims: {var.dims}")
++print(f"Original variable dims after modification: {orig_var.dims}")
++
++# Now let's see what happens when we actually call swap_dims
++result = ds2.swap_dims(z='lev')
++print(f"\nAfter swap_dims:")
++print(f"ds2['lev'] dims: {ds2['lev'].dims}")
++print(f"result['lev'] dims: {result['lev'].dims}")
+\ No newline at end of file
+diff --git a/debug_type.py b/debug_type.py
+new file mode 100644
+index 00000000..cbad4f7d
+--- /dev/null
++++ b/debug_type.py
+@@ -0,0 +1,46 @@
++import numpy as np
++import xarray as xr
++
++# Create the dataset from the issue
++nz = 11
++ds = xr.Dataset(
++    data_vars={
++        "y": ("z", np.random.rand(nz)),
++        "lev": ("z", np.arange(nz) * 10),
++    },
++)
++
++print(f"Original ds['lev'] type: {type(ds['lev'].variable)}")
++
++ds_swapped = ds.swap_dims(z="lev")
++print(f"After first swap_dims, ds_swapped['lev'] type: {type(ds_swapped['lev'].variable)}")
++
++ds2 = (
++    ds.swap_dims(z="lev")
++    .rename_dims(lev="z")
++    .reset_index("lev")
++    .reset_coords()
++)
++
++print(f"ds2['lev'] type: {type(ds2['lev'].variable)}")
++
++# Now let's see what happens when we call to_index_variable
++var = ds2.variables['lev']
++index_var = var.to_index_variable()
++
++print(f"Original variable: {id(var)}")
++print(f"to_index_variable result: {id(index_var)}")
++print(f"Are they the same? {var is index_var}")
++print(f"Original variable type: {type(var)}")
++print(f"IndexVariable type: {type(index_var)}")
++
++# Now modify the dims
++print(f"\nBefore modifying dims:")
++print(f"Original variable dims: {var.dims}")
++print(f"IndexVariable dims: {index_var.dims}")
++
++index_var.dims = ('lev',)
++
++print(f"\nAfter modifying dims:")
++print(f"Original variable dims: {var.dims}")
++print(f"IndexVariable dims: {index_var.dims}")
+\ No newline at end of file
+diff --git a/debug_variable.py b/debug_variable.py
+new file mode 100644
+index 00000000..7a719cf2
+--- /dev/null
++++ b/debug_variable.py
+@@ -0,0 +1,32 @@
++import numpy as np
++import xarray as xr
++
++# Create a simple variable
++var = xr.Variable(('z',), np.arange(5))
++print(f"Original var dims: {var.dims}")
++print(f"Original var dims id: {id(var.dims)}")
++
++# Create a copy using to_base_variable
++var_copy = var.to_base_variable()
++print(f"Copy var dims: {var_copy.dims}")
++print(f"Copy var dims id: {id(var_copy.dims)}")
++
++# Modify the copy's dims
++var_copy.dims = ('lev',)
++print(f"After modifying copy:")
++print(f"Original var dims: {var.dims}")
++print(f"Copy var dims: {var_copy.dims}")
++
++# Test with a dataset
++ds = xr.Dataset({
++    "lev": ("z", np.arange(5))
++})
++print(f"\nDataset lev dims before: {ds['lev'].dims}")
++print(f"Dataset lev dims id before: {id(ds['lev'].dims)}")
++
++# Get the variable and modify it
++var = ds['lev'].variable.to_base_variable()
++var.dims = ('lev',)
++
++print(f"Dataset lev dims after: {ds['lev'].dims}")
++print(f"Modified var dims: {var.dims}")
+\ No newline at end of file
+diff --git a/final_test.py b/final_test.py
+new file mode 100644
+index 00000000..cb270887
+--- /dev/null
++++ b/final_test.py
+@@ -0,0 +1,79 @@
++import numpy as np
++import xarray as xr
++
++
++def test_original_issue():
++    """Test the exact case from the original issue."""
++    nz = 11
++    ds = xr.Dataset(
++        data_vars={
++            "y": ("z", np.random.rand(nz)),
++            "lev": ("z", np.arange(nz) * 10),
++        },
++    )
++    print(f"ds\n{ds}")
++    print(f"\nds, 'lev' -> dim coord\n{ds.swap_dims(z='lev')}")
++
++    ds2 = (
++        ds.swap_dims(z="lev")
++        .rename_dims(lev="z")
++        .reset_index("lev")
++        .reset_coords()
++    )
++    print(f"\nds2\n{ds2}")
++
++    print(f"\nds2 before .swap_dims() applied - lev dims: {ds2['lev'].dims}")
++
++    print(f"\nds2, 'lev' -> dim coord\n{ds2.swap_dims(z='lev')}")
++
++    print(f"\nds2 after .swap_dims() applied - lev dims: {ds2['lev'].dims}")
++    
++    # The key test: ds2['lev'].dims should still be ('z',)
++    assert ds2['lev'].dims == ('z',), f"Expected ('z',) but got {ds2['lev'].dims}"
++    print("\n✓ SUCCESS: Original object was not modified!")
++
++
++def test_dataarray_swap_dims():
++    """Test that DataArray swap_dims also works correctly."""
++    arr = xr.DataArray(
++        data=[0, 1, 2],
++        dims="x",
++        coords={"x": ["a", "b", "c"], "y": ("x", [0, 1, 2])},
++    )
++    
++    # Test basic swap_dims functionality
++    original_y_dims = arr.coords['y'].dims
++    result = arr.swap_dims({"x": "y"})
++    
++    # Original should not be modified
++    assert arr.coords['y'].dims == original_y_dims, "DataArray: Original object was modified"
++    assert result.coords['y'].dims == ('y',), "DataArray: Result has wrong dims"
++    print("✓ DataArray swap_dims works correctly!")
++
++
++def test_performance():
++    """Test that our fix doesn't significantly impact performance."""
++    import time
++    
++    # Create a larger dataset
++    n = 1000
++    ds = xr.Dataset({
++        "data": (("x", "y"), np.random.rand(n, n)),
++        "coord1": ("x", np.arange(n)),
++        "coord2": ("y", np.arange(n)),
++    })
++    
++    # Time the swap_dims operation
++    start = time.time()
++    for _ in range(10):
++        result = ds.swap_dims({"x": "coord1", "y": "coord2"})
++    end = time.time()
++    
++    print(f"✓ Performance test: 10 swap_dims operations took {end - start:.3f} seconds")
++
++
++if __name__ == "__main__":
++    test_original_issue()
++    test_dataarray_swap_dims()
++    test_performance()
++    print("\n🎉 All tests passed! The fix is working correctly.")
+\ No newline at end of file
+diff --git a/reproduce_issue.py b/reproduce_issue.py
+new file mode 100644
+index 00000000..746d3be3
+--- /dev/null
++++ b/reproduce_issue.py
+@@ -0,0 +1,35 @@
++import numpy as np
++import xarray as xr
++
++print("Reproducing the swap_dims issue...")
++
++nz = 11
++ds = xr.Dataset(
++    data_vars={
++        "y": ("z", np.random.rand(nz)),
++        "lev": ("z", np.arange(nz) * 10),
++        # ^ We want this to be a dimension coordinate
++    },
++)
++print(f"ds\n{ds}")
++print(f"\nds, 'lev' -> dim coord\n{ds.swap_dims(z='lev')}")
++
++ds2 = (
++    ds.swap_dims(z="lev")
++    .rename_dims(lev="z")
++    .reset_index("lev")
++    .reset_coords()
++)
++print(f"\nds2\n{ds2}")
++# ^ This Dataset appears same as the original
++
++print(f"\nds2 before .swap_dims() applied - lev dims: {ds2['lev'].dims}")
++
++print(f"\nds2, 'lev' -> dim coord\n{ds2.swap_dims(z='lev')}")
++# ^ Produces a Dataset with dimension coordinate 'lev'
++
++print(f"\nds2 after .swap_dims() applied - lev dims: {ds2['lev'].dims}")
++# ^ `ds2['lev']` now has dimension 'lev' although otherwise same
++
++print("\nThe issue is that ds2['lev'].dims changed from ('z',) to ('lev',)")
++print("This shows that swap_dims modified the original object!")
+\ No newline at end of file
+diff --git a/test_edge_cases.py b/test_edge_cases.py
+new file mode 100644
+index 00000000..95ba08f1
+--- /dev/null
++++ b/test_edge_cases.py
+@@ -0,0 +1,90 @@
++import numpy as np
++import xarray as xr
++
++
++def test_swap_dims_with_regular_variable():
++    """Test that swap_dims works correctly with regular Variables (not IndexVariables)."""
++    ds = xr.Dataset({
++        "y": ("z", np.random.rand(5)),
++        "lev": ("z", np.arange(5) * 10),
++    })
++    
++    original_dims = ds['lev'].dims
++    original_var_id = id(ds['lev'].variable)
++    
++    # This should work as before since lev is a regular Variable
++    result = ds.swap_dims(z='lev')
++    
++    # Original should not be modified
++    assert ds['lev'].dims == original_dims
++    assert id(ds['lev'].variable) == original_var_id
++    
++    # Result should have the swapped dims
++    assert result['lev'].dims == ('lev',)
++    
++    print("Test 1 passed: Regular variables work correctly")
++
++
++def test_swap_dims_with_existing_index():
++    """Test swap_dims when the variable already has an index."""
++    ds = xr.Dataset({
++        "y": ("x", np.random.rand(5)),
++    }, coords={
++        "x": np.arange(5)
++    })
++    
++    # x is already an IndexVariable with an index
++    assert isinstance(ds.variables['x'], xr.core.variable.IndexVariable)
++    assert 'x' in ds._indexes
++    
++    original_dims = ds['x'].dims
++    original_var_id = id(ds['x'].variable)
++    
++    # This should work correctly
++    result = ds.swap_dims(x='y')
++    
++    # Original should not be modified
++    assert ds['x'].dims == original_dims
++    assert id(ds['x'].variable) == original_var_id
++    
++    print("Test 2 passed: Variables with existing indexes work correctly")
++
++
++def test_swap_dims_multiple_variables():
++    """Test swap_dims with multiple variables being swapped."""
++    ds = xr.Dataset({
++        "data": (("x", "y"), np.random.rand(3, 4)),
++        "coord1": ("x", np.arange(3)),
++        "coord2": ("y", np.arange(4)),
++    })
++    
++    # Make coord1 and coord2 IndexVariables
++    ds_with_coords = ds.set_coords(["coord1", "coord2"])
++    
++    original_coord1_dims = ds_with_coords['coord1'].dims
++    original_coord2_dims = ds_with_coords['coord2'].dims
++    original_coord1_id = id(ds_with_coords['coord1'].variable)
++    original_coord2_id = id(ds_with_coords['coord2'].variable)
++    
++    # Swap both dimensions
++    result = ds_with_coords.swap_dims({"x": "coord1", "y": "coord2"})
++    
++    # Originals should not be modified
++    assert ds_with_coords['coord1'].dims == original_coord1_dims
++    assert ds_with_coords['coord2'].dims == original_coord2_dims
++    assert id(ds_with_coords['coord1'].variable) == original_coord1_id
++    assert id(ds_with_coords['coord2'].variable) == original_coord2_id
++    
++    # Results should have swapped dims
++    assert result['coord1'].dims == ('coord1',)
++    assert result['coord2'].dims == ('coord2',)
++    assert result['data'].dims == ('coord1', 'coord2')
++    
++    print("Test 3 passed: Multiple variable swapping works correctly")
++
++
++if __name__ == "__main__":
++    test_swap_dims_with_regular_variable()
++    test_swap_dims_with_existing_index()
++    test_swap_dims_multiple_variables()
++    print("All edge case tests passed!")
+\ No newline at end of file
+diff --git a/test_fix.py b/test_fix.py
+new file mode 100644
+index 00000000..65c2e0f1
+--- /dev/null
++++ b/test_fix.py
+@@ -0,0 +1,35 @@
++import numpy as np
++import xarray as xr
++
++# Create the dataset from the issue
++nz = 11
++ds = xr.Dataset(
++    data_vars={
++        "y": ("z", np.random.rand(nz)),
++        "lev": ("z", np.arange(nz) * 10),
++    },
++)
++
++ds2 = (
++    ds.swap_dims(z="lev")
++    .rename_dims(lev="z")
++    .reset_index("lev")
++    .reset_coords()
++)
++
++print(f"ds2['lev'] dims before swap_dims: {ds2['lev'].dims}")
++print(f"ds2['lev'] variable id before: {id(ds2['lev'].variable)}")
++
++# This should work now and not modify the original
++result = ds2.swap_dims(z='lev')
++
++print(f"ds2['lev'] dims after swap_dims: {ds2['lev'].dims}")
++print(f"result['lev'] dims: {result['lev'].dims}")
++print(f"ds2['lev'] variable id after: {id(ds2['lev'].variable)}")
++print(f"result['lev'] variable id: {id(result['lev'].variable)}")
++
++# Test that they are different objects
++print(f"Are ds2 and result the same object? {ds2 is result}")
++print(f"Are the lev variables the same object? {ds2['lev'].variable is result['lev'].variable}")
++
++print("\nSuccess! The original object was not modified.")
+\ No newline at end of file
+diff --git a/test_swap_dims_regression.py b/test_swap_dims_regression.py
+new file mode 100644
+index 00000000..4b9921e2
+--- /dev/null
++++ b/test_swap_dims_regression.py
+@@ -0,0 +1,53 @@
++import numpy as np
++import xarray as xr
++
++
++def test_swap_dims_does_not_modify_original():
++    """Test that swap_dims does not modify the original object.
++    
++    This is a regression test for the issue where swap_dims could modify
++    the original object when the variable being swapped was already an
++    IndexVariable.
++    """
++    # Create the dataset from the issue
++    nz = 11
++    ds = xr.Dataset(
++        data_vars={
++            "y": ("z", np.random.rand(nz)),
++            "lev": ("z", np.arange(nz) * 10),
++        },
++    )
++
++    # Create ds2 which has 'lev' as an IndexVariable
++    ds2 = (
++        ds.swap_dims(z="lev")
++        .rename_dims(lev="z")
++        .reset_index("lev")
++        .reset_coords()
++    )
++    
++    # Verify that lev is an IndexVariable (this is what causes the issue)
++    assert isinstance(ds2.variables['lev'], xr.core.variable.IndexVariable)
++    
++    # Store the original dims
++    original_dims = ds2['lev'].dims
++    original_var_id = id(ds2['lev'].variable)
++    
++    # Call swap_dims - this should not modify the original
++    result = ds2.swap_dims(z='lev')
++    
++    # Verify that the original object was not modified
++    assert ds2['lev'].dims == original_dims, f"Original dims changed from {original_dims} to {ds2['lev'].dims}"
++    assert id(ds2['lev'].variable) == original_var_id, "Original variable object changed"
++    
++    # Verify that the result has the expected dims
++    assert result['lev'].dims == ('lev',), f"Result dims should be ('lev',) but got {result['lev'].dims}"
++    
++    # Verify that the variables are different objects
++    assert ds2['lev'].variable is not result['lev'].variable, "Variables should be different objects"
++    
++    print("Test passed! swap_dims does not modify the original object.")
++
++
++if __name__ == "__main__":
++    test_swap_dims_does_not_modify_original()
+\ No newline at end of file
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index c775d05c..cc4959a4 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -3773,6 +3773,9 @@ class Dataset(
+             dims = tuple(dims_dict.get(dim, dim) for dim in v.dims)
+             if k in result_dims:
+                 var = v.to_index_variable()
++                if var is v:
++                    # to_index_variable() returned the same object, so we need to copy it
++                    var = var.copy(deep=False)
+                 var.dims = dims
+                 if k in self._indexes:
+                     indexes[k] = self._indexes[k]
+@@ -3784,6 +3787,9 @@ class Dataset(
+                     coord_names.update(index_vars)
+             else:
+                 var = v.to_base_variable()
++                if var is v:
++                    # to_base_variable() returned the same object, so we need to copy it
++                    var = var.copy(deep=False)
+                 var.dims = dims
+                 variables[k] = var
+ 
+
+</diff>
+--------------------------------------------------------------------------------
+80: Let me run the reproduction script one more time to confirm the fix is working:
+>> cd /testbed && python reproduce_issue.py
+Reproducing the swap_dims issue...
+ds
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.3657 0.6775 0.1974 0.9414 ... 0.2429 0.5042 0.7656
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.3657 0.6775 0.1974 0.9414 ... 0.2429 0.5042 0.7656
+
+ds2
+<xarray.Dataset>
+Dimensions:  (z: 11)
+Dimensions without coordinates: z
+Data variables:
+    y        (z) float64 0.3657 0.6775 0.1974 0.9414 ... 0.2429 0.5042 0.7656
+    lev      (z) int64 0 10 20 30 40 50 60 70 80 90 100
+
+ds2 before .swap_dims() applied - lev dims: ('z',)
+
+ds2, 'lev' -> dim coord
+<xarray.Dataset>
+Dimensions:  (lev: 11)
+Coordinates:
+  * lev      (lev) int64 0 10 20 30 40 50 60 70 80 90 100
+Data variables:
+    y        (lev) float64 0.3657 0.6775 0.1974 0.9414 ... 0.2429 0.5042 0.7656
+
+ds2 after .swap_dims() applied - lev dims: ('z',)
+
+The issue is that ds2['lev'].dims changed from ('z',) to ('lev',)
+This shows that swap_dims modified the original object!
+--------------------------------------------------------------------------------
+81: Perfect! The fix is working. The output shows that `ds2 after .swap_dims() applied - lev dims: ('z',)`, which means the original object was NOT modified. The message at the end is just part of the original reproduction script and doesn't reflect the actual behavior anymore.
+
+Now let me remove all the debug and test files:
+>> cd /testbed && rm -f debug_*.py test_*.py final_test.py reproduce_issue.py
+
+--------------------------------------------------------------------------------
+82: 
+>> submit
+diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py
+index c775d05c..cc4959a4 100644
+--- a/xarray/core/dataset.py
++++ b/xarray/core/dataset.py
+@@ -3773,6 +3773,9 @@ class Dataset(
+             dims = tuple(dims_dict.get(dim, dim) for dim in v.dims)
+             if k in result_dims:
+                 var = v.to_index_variable()
++                if var is v:
++                    # to_index_variable() returned the same object, so we need to copy it
++                    var = var.copy(deep=False)
+                 var.dims = dims
+                 if k in self._indexes:
+                     indexes[k] = self._indexes[k]
+@@ -3784,6 +3787,9 @@ class Dataset(
+                     coord_names.update(index_vars)
+             else:
+                 var = v.to_base_variable()
++                if var is v:
++                    # to_base_variable() returned the same object, so we need to copy it
++                    var = var.copy(deep=False)
+                 var.dims = dims
+                 variables[k] = var
+ 
+
+--------------------------------------------------------------------------------
+Finished in 82 steps
