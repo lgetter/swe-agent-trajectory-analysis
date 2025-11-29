@@ -28,7 +28,7 @@ id_to_path_map = {
 def locate_reproduction_code(id: str):
     trajectory = load_trajectory(id)
 
-    log_file = open('locate_reproduction_code.log', 'a', encoding='utf-8')
+    log_file = open('locate_reproduction_code.log', 'w', encoding='utf-8')
     original_stdout = sys.stdout
     sys.stdout = log_file
     
@@ -59,22 +59,76 @@ def locate_reproduction_code(id: str):
     
     return repro_steps
 
-def locate_search():
-    return
+def locate_search(id: str):
+    trajectory = load_trajectory(id)
 
-def locate_tool_usage():
-    return
+    log_file = open('locate_search.log', 'w', encoding='utf-8')
+    original_stdout = sys.stdout
+    sys.stdout = log_file
 
-def print_trajectory_steps(trajectory):
-    for (i, step) in enumerate(trajectory):
-        print(str(i+1) + ": " + step["thought"])
-        print(">> " + step["action"])
-        print(step["observation"])
-        print(step["action"])
-        print('-' * 80)
+    print(f"\n{'='*80}")
+    print(f"ID: {id}")
+    print(f"{'='*80}")
 
-    print("Finished in " + str(len(trajectory)) + " steps")
+    search_steps = []
+    keywords = ["find_file", "search_file", "search_dir", "grep ", "cat ", "ls ", "cd "]
+    for i, step in enumerate(trajectory):
+        action = step["action"].split("\n")[0]
+        if any(keyword in action for keyword in keywords):
+            search_steps.append(i)
+            print(f"Found search action at step {i} for ID {id}")
+            print(f"Action: {action}")
+            print("-" * 80)
 
+    print(f"Result: {search_steps}")
+    sys.stdout = original_stdout
+    log_file.close()
+    
+    return search_steps
+
+def locate_tool_usage(id: str):
+    trajectory = load_trajectory(id)
+
+    log_file = open('locate_tool_use.log', 'w', encoding='utf-8')
+    original_stdout = sys.stdout
+    sys.stdout = log_file
+
+    print(f"\n{'='*80}")
+    print(f"ID: {id}")
+    print(f"{'='*80}")
+
+    tool_map = {}
+    tools = ["str_replace_editor", "filemap ", "exit_forfeit", "view_image ", "submit", "find_file ", 
+             "goto ", "open ", "create ", "scroll_up", "scroll_down", "edit ", "insert ", "search_dir ", 
+             "search_file ", "end_of_edit", "grep ", "ls ", "cd ", "find ", "python ", "do_nothing"]
+    
+    for tool in tools:
+        tool_map[tool.strip()] = 0
+
+    for i, step in enumerate(trajectory):
+        action = step["action"].split("\n")[0]
+        print(f"Action: {action}")
+        for tool in tools:
+            if tool in action:
+                if tool == "create " and "str_replace_editor " in action:
+                    continue  # skip str_replace_editor command option
+
+                tool_map[tool.strip()] += 1
+                print(f"Found tool '{tool.strip()}' usage at step {i} for ID {id}")
+
+        print("-" * 80)
+
+    for tool in list(tool_map.keys()):
+        if tool_map[tool] == 0:
+            del tool_map[tool]
+
+    print(f"Result: {tool_map}")
+    sys.stdout = original_stdout
+    log_file.close()
+    
+    return tool_map
+
+# helper function to load trajectory array from file
 def load_trajectory(id: str):
     dir_path = id_to_path_map[id]
     folder_name = Path(dir_path).name
@@ -86,6 +140,22 @@ def load_trajectory(id: str):
     
     return data["trajectory"]
 
+# helper function to print trajectory steps
+def print_trajectory_steps(trajectory):
+    for (i, step) in enumerate(trajectory):
+        print(str(i+1) + ": " + step["thought"])
+        action = step["action"].split("\n")[0]
+        print(">> " + action)
+        print(step["observation"])
+        print('-' * 80)
+
+    print("Finished in " + str(len(trajectory)) + " steps")
+
 for id in id_to_path_map.keys():
-    result = locate_reproduction_code(id)
-    print(f"{id} => {result}")
+    print(f"\nProcessing ID: {id}")
+    repro_steps = locate_reproduction_code(id)
+    print(f"Steps with reproduction code => {repro_steps}")
+    search_steps = locate_search(id)
+    print(f"Steps with search actions => {search_steps}")
+    tool_usage = locate_tool_usage(id)
+    print(f"Tool usage frequency map => {tool_usage}")
