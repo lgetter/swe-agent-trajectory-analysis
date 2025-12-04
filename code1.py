@@ -5,23 +5,26 @@ from pathlib import Path
 # Folder that contains all the .traj files
 BASE_DIR = Path("trajectories")
 
+# "7454": "20250511_sweagent_lm_32b\\trajs\\sphinx-doc__sphinx-7454",
+# "16792": "20250511_sweagent_lm_32b\\trajs\\sympy__sympy-16792"
+
 # Map from numeric ID to actual .traj filename
 id_to_filename = {
     # YOUR 10 (you analyse these)
     "10554": "django__django-10554.traj",
-    "11138": "django__django-11138.traj",
-    "12308": "django__django-12308.traj",
-    "12774": "django__django-12774.traj",
-    "15127": "django__django-15127.traj",
-    "16631": "django__django-16631.traj",
-    "16950": "django__django-16950.traj",
-    "26113": "matplotlib__matplotlib-26113.traj",
-    "4687":  "pydata__xarray-4687.traj",
-    "6938":  "pydata__xarray-6938.traj",
+    # "11138": "django__django-11138.traj",
+    ## "12308": "django__django-12308.traj",
+    ## "12774": "django__django-12774.traj",
+    # "15127": "django__django-15127.traj",
+    # "16631": "django__django-16631.traj",
+    # "16950": "django__django-16950.traj",
+    # "26113": "matplotlib__matplotlib-26113.traj",
+    # "4687":  "pydata__xarray-4687.traj",
+    # "6938":  "pydata__xarray-6938.traj",
 
     # Lukas's 10 (11–20) – fine to leave here
     "4970":  "pylint-dev__pylint-4970.traj",
-    "8898":  "pylint-dev__pylint-8898.traj",
+    # "8898":  "pylint-dev__pylint-8898.traj",
     "15100": "scikit-learn__scikit-learn-15100.traj",
     "9461":  "sphinx-doc__sphinx-9461.traj",
     "14976": "sympy__sympy-14976.traj",
@@ -30,6 +33,29 @@ id_to_filename = {
     "21612": "sympy__sympy-21612.traj",
     "22080": "sympy__sympy-22080.traj",
     "23950": "sympy__sympy-23950.traj",
+}
+
+id_to_path_map = {
+    "18698": "20250522_sweagent_claude-4-sonnet-20250514\\trajs\\sympy__sympy-18698",
+    "23950": "20250522_sweagent_claude-4-sonnet-20250514\\trajs\\sympy__sympy-23950",
+    # "16950": "20250522_sweagent_claude-4-sonnet-20250514\\trajs\\django__django-16950",
+    "9461": "20250522_sweagent_claude-4-sonnet-20250514\\trajs\\sphinx-doc__sphinx-9461",
+    "14976": "20250522_sweagent_claude-4-sonnet-20250514\\trajs\\sympy__sympy-14976",
+    # "10554": "20250511_sweagent_lm_32b\\trajs\\django__django-10554",
+    # "4687": "20250511_sweagent_lm_32b\\trajs\\pydata__xarray-4687",
+    # "16631": "20250511_sweagent_lm_32b\\trajs\\django__django-16631",
+    "4970": "20250511_sweagent_lm_32b\\trajs\\pylint-dev__pylint-4970",
+    # "15127": "20250511_sweagent_lm_32b\\trajs\\django__django-15127",
+    # "11138": "20250511_sweagent_lm_32b\\trajs\\django__django-11138",
+    "15100": "20250511_sweagent_lm_32b\\trajs\\scikit-learn__scikit-learn-15100",
+    "22080": "20250511_sweagent_lm_32b\\trajs\\sympy__sympy-22080",
+    # "6938": "20250511_sweagent_lm_32b\\trajs\\pydata__xarray-6938",
+    "21612": "20250511_sweagent_lm_32b\\trajs\\sympy__sympy-21612",
+    # "26113": "20250511_sweagent_lm_32b\\trajs\\matplotlib__matplotlib-26113",
+    "21379": "20250511_sweagent_lm_32b\\trajs\\sympy__sympy-21379",
+    "2931": "20250511_sweagent_lm_32b\\trajs\\psf__requests-2931",
+    "7454": "20250511_sweagent_lm_32b\\trajs\\sphinx-doc__sphinx-7454",
+    "16792": "20250511_sweagent_lm_32b\\trajs\\sympy__sympy-16792"
 }
 
 # -------------------------------------------------------------------
@@ -174,12 +200,12 @@ def locate_tool_usage(id: str):
 def export_pretty_trajs():
     print("Exporting pretty trajectory files...")
 
-    for tid in ids_you_analyze:  # uses the IDs already defined below
-        filename = id_to_filename[tid]
-        traj_path = BASE_DIR / filename
-
+    for tid in id_to_path_map:  # uses the IDs already defined below
+        path = id_to_path_map[tid]
+        # traj_path = BASE_DIR / filename
+        print(path)
         # Load JSON
-        with open(traj_path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         trajectory = data["trajectory"]
 
@@ -201,8 +227,8 @@ def export_pretty_trajs():
 # -------------------------------------------------------------------
 if __name__ == "__main__":
     ids_you_analyze = [
-        "10554", "11138", "12308", "12774", "15127",
-        "16631", "16950", "26113", "4687", "6938",
+        "4970", "15100", "9461", "14976", "2931",
+        "18698", "21379", "21612", "22080", "23950",
     ]
     export_pretty_trajs()
     
