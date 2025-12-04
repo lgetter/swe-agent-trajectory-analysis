@@ -1,0 +1,23 @@
+{
+  "Traj ID": "sympy__sympy-9461",
+  "Issue Summary": "",
+  "Interaction Summary": "",
+  "Reproduction Code": "Reproduction code is created around trajectory steps: [17].",
+  "1.1": "YES",
+  "1.2": "",
+  "Search for the issue": "The agent runs search/navigation commands in steps: [7, 10, 15, 18, 19, 21, 24, 26, 29, 31, 36, 38, 43, 45, 47, 49, 51, 55, 56, 58, 59, 61, 63, 67, 68, 71, 72, 73, 74, 75, 76, 77, 78, 80, 82, 84, 85, 87, 90, 91, 92, 93, 94, 96].",
+  "2.1": "YES",
+  "2.2": "",
+  "Edit the Code": "",
+  "Test changes on the reproduction code": "",
+  "4.1": "NO",
+  "4.2": "",
+  "Tool-use analysis": {
+    "str_replace_editor": 51, 
+    "submit": 2, 
+    "grep": 7, 
+    "cd": 37, 
+    "find": 2, 
+    "python": 34
+  }
+}
