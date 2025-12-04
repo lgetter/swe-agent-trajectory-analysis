@@ -1,0 +1,3621 @@
+====================================================================================================
+TRAJECTORY ANALYSIS: sympy__sympy-14976.traj
+====================================================================================================
+Total Steps: 76
+Generated: 2025-12-03 22:44:29
+====================================================================================================
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 1 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+I'll help you implement the necessary changes to fix the issue where `lambdify(modules='mpmath')` doesn't wrap rationals properly. Let's start by understanding the problem and exploring the codebase.
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the files and directories up to 2 levels deep in /testbed, excluding hidden items:
+/testbed
+/testbed/AUTHORS
+/testbed/README.rst
+/testbed/sympy
+/testbed/sympy/functions
+/testbed/sympy/liealgebras
+/testbed/sympy/abc.py
+/testbed/sympy/holonomic
+/testbed/sympy/sets
+/testbed/sympy/stats
+/testbed/sympy/series
+/testbed/sympy/discrete
+/testbed/sympy/logic
+/testbed/sympy/ntheory
+/testbed/sympy/solvers
+/testbed/sympy/tensor
+/testbed/sympy/concrete
+/testbed/sympy/core
+/testbed/sympy/this.py
+/testbed/sympy/parsing
+/testbed/sympy/simplify
+/testbed/sympy/crypto
+/testbed/sympy/release.py
+/testbed/sympy/vector
+/testbed/sympy/multipledispatch
+/testbed/sympy/algebras
+/testbed/sympy/matrices
+/testbed/sympy/sandbox
+/testbed/sympy/assumptions
+/testbed/sympy/calculus
+/testbed/sympy/codegen
+/testbed/sympy/__init__.py
+/testbed/sympy/printing
+/testbed/sympy/benchmarks
+/testbed/sympy/combinatorics
+/testbed/sympy/utilities
+/testbed/sympy/geometry
+/testbed/sympy/external
+/testbed/sympy/polys
+/testbed/sympy/categories
+/testbed/sympy/interactive
+/testbed/sympy/plotting
+/testbed/sympy/strategies
+/testbed/sympy/unify
+/testbed/sympy/conftest.py
+/testbed/sympy/physics
+/testbed/sympy/integrals
+/testbed/sympy/deprecated
+/testbed/sympy/diffgeom
+/testbed/sympy/galgebra.py
+/testbed/github_deploy_key.enc
+/testbed/MANIFEST.in
+/testbed/release
+/testbed/release/rever.xsh
+/testbed/release/Dockerfile
+/testbed/release/pull_and_run_rever.sh
+/testbed/release/release.sh
+/testbed/release/fabfile.py
+/testbed/release/README.md
+/testbed/setup.py
+/testbed/data
+/testbed/data/TeXmacs
+/testbed/tox.ini.sample
+/testbed/PULL_REQUEST_TEMPLATE.md
+/testbed/bin
+/testbed/bin/coverage_doctest.py
+/testbed/bin/test
+/testbed/bin/sympy_time.py
+/testbed/bin/test_import.py
+/testbed/bin/generate_module_list.py
+/testbed/bin/test_isolated
+/testbed/bin/test_setup.py
+/testbed/bin/py.bench
+/testbed/bin/ask_update.py
+/testbed/bin/test_import
+/testbed/bin/diagno
+
+... [Output truncated - 3187 total characters] ...
+
+⏱️  Execution Time: 0.1467 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 2 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's first understand the issue by looking at the lambdify functionality:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/utilities
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the files and directories up to 2 levels deep in /testbed/sympy/utilities, excluding hidden items:
+/testbed/sympy/utilities
+/testbed/sympy/utilities/decorator.py
+/testbed/sympy/utilities/exceptions.py
+/testbed/sympy/utilities/source.py
+/testbed/sympy/utilities/_compilation
+/testbed/sympy/utilities/_compilation/runners.py
+/testbed/sympy/utilities/_compilation/util.py
+/testbed/sympy/utilities/_compilation/availability.py
+/testbed/sympy/utilities/_compilation/tests
+/testbed/sympy/utilities/_compilation/__init__.py
+/testbed/sympy/utilities/_compilation/compilation.py
+/testbed/sympy/utilities/memoization.py
+/testbed/sympy/utilities/lambdify.py
+/testbed/sympy/utilities/autowrap.py
+/testbed/sympy/utilities/timeutils.py
+/testbed/sympy/utilities/randtest.py
+/testbed/sympy/utilities/iterables.py
+/testbed/sympy/utilities/pytest.py
+/testbed/sympy/utilities/magic.py
+/testbed/sympy/utilities/runtests.py
+/testbed/sympy/utilities/codegen.py
+/testbed/sympy/utilities/misc.py
+/testbed/sympy/utilities/tests
+/testbed/sympy/utilities/tests/test_codegen_rust.py
+/testbed/sympy/utilities/tests/test_timeutils.py
+/testbed/sympy/utilities/tests/test_source.py
+/testbed/sympy/utilities/tests/test_iterables.py
+/testbed/sympy/utilities/tests/test_misc.py
+/testbed/sympy/utilities/tests/test_pickling.py
+/testbed/sympy/utilities/tests/test_pytest.py
+/testbed/sympy/utilities/tests/test_codegen_julia.py
+/testbed/sympy/utilities/tests/test_wester.py
+/testbed/sympy/utilities/tests/test_codegen.py
+/testbed/sympy/utilities/tests/test_module_imports.py
+/testbed/sympy/utilities/tests/test_autowrap.py
+/testbed/sympy/utilities/tests/__init__.py
+/testbed/sympy/utilities/tests/test_enumerative.py
+/testbed/sympy/utilities/tests/diagnose_imports.py
+/testbed/sympy/utilities/tests/test_codegen_octave.py
+/testbed/sympy/utilities/tests/test_code_quality.py
+/testbed/sympy/utilities/tests/test_decorator.py
+/testbed/sympy/utilities/tests/test_lambdify.py
+/testbed/sympy/ut
+
+... [Output truncated - 2255 total characters] ...
+
+⏱️  Execution Time: 0.1513 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 3 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's look at the lambdify.py file since that's where the issue is:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/utilities/lambdify.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/sympy/utilities/lambdify.py:
+     1	"""
+     2	This module provides convenient functions to transform sympy expressions to
+     3	lambda functions which can be used to calculate numerical values very fast.
+     4	"""
+     5	
+     6	from __future__ import print_function, division
+     7	
+     8	from functools import wraps
+     9	import inspect
+    10	import keyword
+    11	import re
+    12	import textwrap
+    13	import linecache
+    14	
+    15	from sympy.core.compatibility import (exec_, is_sequence, iterable,
+    16	    NotIterable, string_types, range, builtins, integer_types, PY3)
+    17	from sympy.utilities.decorator import doctest_depends_on
+    18	
+    19	# These are the namespaces the lambda functions will use.
+    20	MATH = {}
+    21	MPMATH = {}
+    22	NUMPY = {}
+    23	TENSORFLOW = {}
+    24	SYMPY = {}
+    25	NUMEXPR = {}
+    26	
+    27	# Default namespaces, letting us define translations that can't be defined
+    28	# by simple variable maps, like I => 1j
+    29	# These are separate from the names above because the above names are modified
+    30	# throughout this file, whereas these should remain unmodified.
+    31	MATH_DEFAULT = {}
+    32	MPMATH_DEFAULT = {}
+    33	NUMPY_DEFAULT = {"I": 1j}
+    34	TENSORFLOW_DEFAULT = {}
+    35	SYMPY_DEFAULT = {}
+    36	NUMEXPR_DEFAULT = {}
+    37	
+    38	# Mappings between sympy and other modules function names.
+    39	MATH_TRANSLATIONS = {
+    40	    "ceiling": "ceil",
+    41	    "E": "e",
+    42	    "ln": "log",
+    43	}
+    44	
+    45	MPMATH_TRANSLATIONS = {
+    46	    "Abs": "fabs",
+    47	    "elliptic_k": "ellipk",
+    48	    "elliptic_f": "ellipf",
+    49	    "elliptic_e": "ellipe",
+    50	    "elliptic_pi": "ellippi",
+    51	    "ceiling": "ceil",
+    52	    "chebyshevt": "chebyt",
+    53	    "chebyshevu": "chebyu",
+    54	    "E": "e",
+    55	    "I": "j",
+    56	    "ln": "log",
+    57	    #"lowergamma":"lo
+
+... [Output truncated - 19951 total characters] ...
+
+⏱️  Execution Time: 0.1470 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 4 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me search for the specific part of the code that handles rational numbers:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && grep -n "Rational\|rational" sympy/utilities/lambdify.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+
+
+⏱️  Execution Time: 0.1099 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 5 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me look at the printing modules that are used for lambdify:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/printing
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the files and directories up to 2 levels deep in /testbed/sympy/printing, excluding hidden items:
+/testbed/sympy/printing
+/testbed/sympy/printing/llvmjitcode.py
+/testbed/sympy/printing/printer.py
+/testbed/sympy/printing/str.py
+/testbed/sympy/printing/mathml.py
+/testbed/sympy/printing/glsl.py
+/testbed/sympy/printing/rust.py
+/testbed/sympy/printing/conventions.py
+/testbed/sympy/printing/repr.py
+/testbed/sympy/printing/tree.py
+/testbed/sympy/printing/lambdarepr.py
+/testbed/sympy/printing/tableform.py
+/testbed/sympy/printing/julia.py
+/testbed/sympy/printing/python.py
+/testbed/sympy/printing/octave.py
+/testbed/sympy/printing/defaults.py
+/testbed/sympy/printing/preview.py
+/testbed/sympy/printing/jscode.py
+/testbed/sympy/printing/tests
+/testbed/sympy/printing/tests/test_theanocode.py
+/testbed/sympy/printing/tests/test_cxxcode.py
+/testbed/sympy/printing/tests/test_repr.py
+/testbed/sympy/printing/tests/test_jscode.py
+/testbed/sympy/printing/tests/test_lambdarepr.py
+/testbed/sympy/printing/tests/test_tableform.py
+/testbed/sympy/printing/tests/test_octave.py
+/testbed/sympy/printing/tests/test_ccode.py
+/testbed/sympy/printing/tests/test_mathematica.py
+/testbed/sympy/printing/tests/test_pycode.py
+/testbed/sympy/printing/tests/test_str.py
+/testbed/sympy/printing/tests/test_rcode.py
+/testbed/sympy/printing/tests/test_python.py
+/testbed/sympy/printing/tests/test_conventions.py
+/testbed/sympy/printing/tests/test_llvmjit.py
+/testbed/sympy/printing/tests/test_julia.py
+/testbed/sympy/printing/tests/test_mathml.py
+/testbed/sympy/printing/tests/__init__.py
+/testbed/sympy/printing/tests/test_preview.py
+/testbed/sympy/printing/tests/test_codeprinter.py
+/testbed/sympy/printing/tests/test_numpy.py
+/testbed/sympy/printing/tests/test_glsl.py
+/testbed/sympy/printing/tests/test_dot.py
+/testbed/sympy/printing/tests/test_rust.py
+/testbed/sympy/printing/tests/test_precedence.py
+/testbed/sympy/printing/tests/test_gtk.py
+/testbed/sympy/printing/tes
+
+... [Output truncated - 2781 total characters] ...
+
+⏱️  Execution Time: 0.1473 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 6 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me look at the pycode.py file since that's where the MpmathPrinter is defined:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/printing/pycode.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/sympy/printing/pycode.py:
+     1	"""
+     2	Python code printers
+     3	
+     4	This module contains python code printers for plain python as well as NumPy & SciPy enabled code.
+     5	"""
+     6	
+     7	
+     8	from collections import defaultdict
+     9	from functools import wraps
+    10	from itertools import chain
+    11	from sympy.core import sympify, S
+    12	from .precedence import precedence
+    13	from .codeprinter import CodePrinter
+    14	
+    15	_kw_py2and3 = {
+    16	    'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
+    17	    'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in',
+    18	    'is', 'lambda', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while',
+    19	    'with', 'yield', 'None'  # 'None' is actually not in Python 2's keyword.kwlist
+    20	}
+    21	_kw_only_py2 = {'exec', 'print'}
+    22	_kw_only_py3 = {'False', 'nonlocal', 'True'}
+    23	
+    24	_known_functions = {
+    25	    'Abs': 'abs',
+    26	}
+    27	_known_functions_math = {
+    28	    'acos': 'acos',
+    29	    'acosh': 'acosh',
+    30	    'asin': 'asin',
+    31	    'asinh': 'asinh',
+    32	    'atan': 'atan',
+    33	    'atan2': 'atan2',
+    34	    'atanh': 'atanh',
+    35	    'ceiling': 'ceil',
+    36	    'cos': 'cos',
+    37	    'cosh': 'cosh',
+    38	    'erf': 'erf',
+    39	    'erfc': 'erfc',
+    40	    'exp': 'exp',
+    41	    'expm1': 'expm1',
+    42	    'factorial': 'factorial',
+    43	    'floor': 'floor',
+    44	    'gamma': 'gamma',
+    45	    'hypot': 'hypot',
+    46	    'loggamma': 'lgamma',
+    47	    'log': 'log',
+    48	    'log10': 'log10',
+    49	    'log1p': 'log1p',
+    50	    'log2': 'log2',
+    51	    'sin': 'sin',
+    52	    'sinh': 'sinh',
+    53	    'Sqrt': 'sqrt',
+    54	    'tan': 'tan',
+    55	    'tanh': 'tanh'
+    56	}  # Not used from ``math``: [copysign isclose isfinite isinf isnan ldexp frexp
+
+... [Output truncated - 20108 total characters] ...
+
+⏱️  Execution Time: 0.1582 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 7 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Now let me search for how rational numbers are handled:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && grep -n "Rational\|rational" sympy/printing/pycode.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+
+
+⏱️  Execution Time: 0.1092 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 8 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me check the base CodePrinter class:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && grep -n "Rational\|rational" sympy/printing/codeprinter.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+464:            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
+
+⏱️  Execution Time: 0.1159 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 9 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me look at the codeprinter.py file:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/printing/codeprinter.py  --view_range 450 480
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/sympy/printing/codeprinter.py:
+   450	
+   451	        a = []  # items in the numerator
+   452	        b = []  # items that are in the denominator (if any)
+   453	
+   454	        pow_paren = []  # Will collect all pow with more than one base element and exp = -1
+   455	
+   456	        if self.order not in ('old', 'none'):
+   457	            args = expr.as_ordered_factors()
+   458	        else:
+   459	            # use make_args in case expr was something like -x -> x
+   460	            args = Mul.make_args(expr)
+   461	
+   462	        # Gather args for numerator/denominator
+   463	        for item in args:
+   464	            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
+   465	                if item.exp != -1:
+   466	                    b.append(Pow(item.base, -item.exp, evaluate=False))
+   467	                else:
+   468	                    if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
+   469	                        pow_paren.append(item)
+   470	                    b.append(Pow(item.base, -item.exp))
+   471	            else:
+   472	                a.append(item)
+   473	
+   474	        a = a or [S.One]
+   475	
+   476	        a_str = [self.parenthesize(x, prec) for x in a]
+   477	        b_str = [self.parenthesize(x, prec) for x in b]
+   478	
+   479	        # To parenthesize Pow with exp = -1 and having more than one Symbol
+   480	        for item in pow_paren:
+
+⏱️  Execution Time: 0.1817 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 10 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me search for how rational numbers are printed in the base printer:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && find . -name "*.py" -exec grep -l "_print_Rational" {} \;
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+./sympy/printing/printer.py
+./sympy/printing/str.py
+./sympy/printing/mathml.py
+./sympy/printing/glsl.py
+./sympy/printing/rust.py
+./sympy/printing/repr.py
+./sympy/printing/jscode.py
+./sympy/printing/pretty/pretty.py
+./sympy/printing/ccode.py
+./sympy/printing/fcode.py
+./sympy/printing/theanocode.py
+./sympy/printing/rcode.py
+./sympy/printing/latex.py
+./sympy/utilities/tests/test_lambdify.py
+./sympy/polys/numberfields.py
+
+⏱️  Execution Time: 3.5946 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 11 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me check the str.py printer to see how rationals are handled by default:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && grep -n "_print_Rational" sympy/printing/str.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+594:    def _print_Rational(self, expr):
+
+⏱️  Execution Time: 0.1084 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 12 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/printing/str.py  --view_range 590 610
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/sympy/printing/str.py:
+   590	
+   591	    def _print_mpz(self, expr):
+   592	        return str(expr)
+   593	
+   594	    def _print_Rational(self, expr):
+   595	        if expr.q == 1:
+   596	            return str(expr.p)
+   597	        else:
+   598	            if self._settings.get("sympy_integers", False):
+   599	                return "S(%s)/%s" % (expr.p, expr.q)
+   600	            return "%s/%s" % (expr.p, expr.q)
+   601	
+   602	    def _print_PythonRational(self, expr):
+   603	        if expr.q == 1:
+   604	            return str(expr.p)
+   605	        else:
+   606	            return "%d/%d" % (expr.p, expr.q)
+   607	
+   608	    def _print_Fraction(self, expr):
+   609	        if expr.denominator == 1:
+   610	            return str(expr.numerator)
+
+⏱️  Execution Time: 0.1446 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 13 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Now let me create a script to reproduce the issue:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/reproduce_issue.py --file_text '#!/usr/bin/env python
+  
+  import inspect
+  from sympy import *
+  from sympy.utilities.lambdify import lambdify
+  
+  # Reproduce the issue from the PR description
+  x = Symbol('"'"'x'"'"')
+  eqn = Eq(rf(18, x), 77 + S(1)/3)
+  f = lambdify(x, eqn.lhs - eqn.rhs, '"'"'mpmath'"'"')
+  
+  print("Generated function source:")
+  print(inspect.getsource(f))
+  
+  print("\nThe issue is that 232/3 is not wrapped with mpmath.mpf()")
+  print("This results in reduced precision when using nsolve")
+  
+  # Let'"'"'s also test with a simple rational
+  simple_rational = S(1)/3
+  f_simple = lambdify(x, simple_rational, '"'"'mpmath'"'"')
+  print("\nSimple rational S(1)/3 with mpmath:")
+  print(inspect.getsource(f_simple))
+  
+  # Test with numpy for comparison
+  f_numpy = lambdify(x, simple_rational, '"'"'numpy'"'"')
+  print("\nSimple rational S(1)/3 with numpy:")
+  print(inspect.getsource(f_numpy))'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/reproduce_issue.py
+
+⏱️  Execution Time: 0.1598 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 14 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python reproduce_issue.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+/testbed/sympy/solvers/diophantine.py:3188: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if feasible is 1:  # it's prime and k == 2
+Generated function source:
+def _lambdifygenerated(x):
+    return (  # Not supported in Python:
+  # RisingFactorial
+RisingFactorial(18, x) - 232/3)
+
+
+The issue is that 232/3 is not wrapped with mpmath.mpf()
+This results in reduced precision when using nsolve
+
+Simple rational S(1)/3 with mpmath:
+def _lambdifygenerated(x):
+    return (1/3)
+
+Traceback (most recent call last):
+  File "/testbed/reproduce_issue.py", line 25, in <module>
+    f_numpy = lambdify(x, simple_rational, 'numpy')
+  File "/testbed/sympy/utilities/lambdify.py", line 388, in lambdify
+    buf = _get_namespace(m)
+  File "/testbed/sympy/utilities/lambdify.py", line 503, in _get_namespace
+    _import(m)
+  File "/testbed/sympy/utilities/lambdify.py", line 143, in _import
+    raise ImportError(
+ImportError: can't import 'numpy' with 'import numpy; from numpy import *' command
+
+⏱️  Execution Time: 1.2719 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 15 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Good! I can see the issue. The rational `232/3` and `1/3` are not being wrapped with `mpmath.mpf()` when using the mpmath module. Let me check if the MpmathPrinter has a `_print_Rational` method:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && grep -n "_print_Rational" sympy/printing/pycode.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+
+
+⏱️  Execution Time: 0.1087 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 16 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+So the MpmathPrinter doesn't have a `_print_Rational` method, which means it inherits the default behavior from the parent class. Let me check what the parent class does:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/printing/pycode.py  --view_range 314 360
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/sympy/printing/pycode.py:
+   314	class MpmathPrinter(PythonCodePrinter):
+   315	    """
+   316	    Lambda printer for mpmath which maintains precision for floats
+   317	    """
+   318	    printmethod = "_mpmathcode"
+   319	
+   320	    _kf = dict(chain(
+   321	        _known_functions.items(),
+   322	        [(k, 'mpmath.' + v) for k, v in _known_functions_mpmath.items()]
+   323	    ))
+   324	
+   325	    def _print_Float(self, e):
+   326	        # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
+   327	        # the caller of the lambdified function will have set it to sufficient
+   328	        # precision to match the Floats in the expression.
+   329	
+   330	        # Remove 'mpz' if gmpy is installed.
+   331	        args = str(tuple(map(int, e._mpf_)))
+   332	        return '{func}({args})'.format(func=self._module_format('mpmath.mpf'), args=args)
+   333	
+   334	
+   335	    def _print_uppergamma(self, e):
+   336	        return "{0}({1}, {2}, {3})".format(
+   337	            self._module_format('mpmath.gammainc'),
+   338	            self._print(e.args[0]),
+   339	            self._print(e.args[1]),
+   340	            self._module_format('mpmath.inf'))
+   341	
+   342	    def _print_lowergamma(self, e):
+   343	        return "{0}({1}, 0, {2})".format(
+   344	            self._module_format('mpmath.gammainc'),
+   345	            self._print(e.args[0]),
+   346	            self._print(e.args[1]))
+   347	
+   348	    def _print_log2(self, e):
+   349	        return '{0}({1})/{0}(2)'.format(
+   350	            self._module_format('mpmath.log'), self._print(e.args[0]))
+   351	
+   352	    def _print_log1p(self, e):
+   353	        return '{0}({1}+1)'.format(
+   354	            self._module_format('mpmath.log'), self._print(e.args[0]))
+   355	
+   356	for k in MpmathPrinter._kf:
+   357	    setattr(MpmathPrinter, '_print_%s' % k, _print_known_func)
+   358	
+   359	for 
+
+... [Output truncated - 2101 total characters] ...
+
+⏱️  Execution Time: 0.1476 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 17 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+I can see that the MpmathPrinter has a `_print_Float` method that wraps floats with `mpmath.mpf()`, but it doesn't have a `_print_Rational` method. This means rational numbers are printed using the default behavior from the parent class, which just prints them as Python fractions like `232/3`.
+
+Let me check what the parent class does for rationals by looking at the inheritance chain:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/printing/codeprinter.py  --view_range 1 50
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/sympy/printing/codeprinter.py:
+     1	from __future__ import print_function, division
+     2	
+     3	from functools import wraps
+     4	
+     5	from sympy.core import Add, Mul, Pow, S, sympify, Float
+     6	from sympy.core.basic import Basic
+     7	from sympy.core.containers import Tuple
+     8	from sympy.core.compatibility import default_sort_key, string_types
+     9	from sympy.core.function import Lambda
+    10	from sympy.core.mul import _keep_coeff
+    11	from sympy.core.symbol import Symbol
+    12	from sympy.printing.str import StrPrinter
+    13	from sympy.printing.precedence import precedence
+    14	
+    15	# Backwards compatibility
+    16	from sympy.codegen.ast import Assignment
+    17	
+    18	
+    19	class requires(object):
+    20	    """ Decorator for registering requirements on print methods. """
+    21	    def __init__(self, **kwargs):
+    22	        self._req = kwargs
+    23	
+    24	    def __call__(self, method):
+    25	        def _method_wrapper(self_, *args, **kwargs):
+    26	            for k, v in self._req.items():
+    27	                getattr(self_, k).update(v)
+    28	            return method(self_, *args, **kwargs)
+    29	        return wraps(method)(_method_wrapper)
+    30	
+    31	
+    32	class AssignmentError(Exception):
+    33	    """
+    34	    Raised if an assignment variable for a loop is missing.
+    35	    """
+    36	    pass
+    37	
+    38	
+    39	class CodePrinter(StrPrinter):
+    40	    """
+    41	    The base class for code-printing subclasses.
+    42	    """
+    43	
+    44	    _operators = {
+    45	        'and': '&&',
+    46	        'or': '||',
+    47	        'not': '!',
+    48	    }
+    49	
+    50	    _default_settings = {
+
+⏱️  Execution Time: 0.1720 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 18 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+So `CodePrinter` inherits from `StrPrinter`. Let me check if `CodePrinter` has a `_print_Rational` method:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && grep -n "_print_Rational" sympy/printing/codeprinter.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+
+
+⏱️  Execution Time: 0.1100 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 19 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+So `CodePrinter` doesn't override `_print_Rational`, which means it uses the one from `StrPrinter`. Let me check what `StrPrinter._print_Rational` does:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/printing/str.py  --view_range 594 601
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/sympy/printing/str.py:
+   594	    def _print_Rational(self, expr):
+   595	        if expr.q == 1:
+   596	            return str(expr.p)
+   597	        else:
+   598	            if self._settings.get("sympy_integers", False):
+   599	                return "S(%s)/%s" % (expr.p, expr.q)
+   600	            return "%s/%s" % (expr.p, expr.q)
+   601
+
+⏱️  Execution Time: 0.1527 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 20 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! So the issue is that `StrPrinter._print_Rational` just returns `"%s/%s" % (expr.p, expr.q)`, which produces Python fractions like `232/3`. For mpmath, we need to wrap these with `mpmath.mpf()` to maintain precision.
+
+Now I need to add a `_print_Rational` method to the `MpmathPrinter` class. Let me look at how mpmath handles rationals. First, let me check if there are any tests for this:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && grep -n "mpmath.*rational\|rational.*mpmath" sympy/utilities/tests/test_lambdify.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+
+
+⏱️  Execution Time: 0.1093 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 21 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && grep -n "MpmathPrinter" sympy/utilities/tests/test_lambdify.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+
+
+⏱️  Execution Time: 0.1124 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 22 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me check the test file for lambdify:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && grep -n "mpmath" sympy/utilities/tests/test_lambdify.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+6:import mpmath
+16:from sympy.utilities.decorator import conserve_mpmath_dps
+113:@conserve_mpmath_dps
+115:    mpmath.mp.dps = 50
+116:    sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+125:@conserve_mpmath_dps
+127:    mpmath.mp.dps = 50
+128:    sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+136:@conserve_mpmath_dps
+137:def test_mpmath_lambda():
+138:    mpmath.mp.dps = 50
+139:    sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+140:    f = lambdify(x, sin(x), "mpmath")
+141:    prec = 1e-49  # mpmath precision is around 50 decimal places
+142:    assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
+144:           # if this succeeds, it can't be a mpmath function
+147:@conserve_mpmath_dps
+149:    mpmath.mp.dps = 50
+150:    sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+151:    f = lambdify(x, sin02, "mpmath")
+152:    prec = 1e-49  # mpmath precision is around 50 decimal places
+155:@conserve_mpmath_dps
+156:def test_mpmath_precision():
+157:    mpmath.mp.dps = 100
+158:    assert str(lambdify((), pi.evalf(100), 'mpmath')()) == str(pi.evalf(100))
+172:def test_mpmath_transl():
+176:        assert mat in mpmath.__dict__
+404:    if mpmath:
+405:        mods.append('mpmath')
+780:    func0 = lambdify((), expr, modules="mpmath", printer=intervalrepr)
+781:    func1 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter)
+782:    func2 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter())
+784:    mpi = type(mpmath.mpi(1, 2))
+826:    exp1 = lambdify((x, y), uppergamma(x, y),"mpmath")(1, 2)
+827:    exp2 = lambdify((x, y), lowergamma(x, y),"mpmath")(1, 2)
+837:def test_sinc_mpmath():
+838:    f = lambdify(x, sinc(x), "mpmath")
+
+⏱️  Execution Time: 0.1102 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 23 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me look at the test for mpmath precision:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/utilities/tests/test_lambdify.py  --view_range 155 165
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/sympy/utilities/tests/test_lambdify.py:
+   155	@conserve_mpmath_dps
+   156	def test_mpmath_precision():
+   157	    mpmath.mp.dps = 100
+   158	    assert str(lambdify((), pi.evalf(100), 'mpmath')()) == str(pi.evalf(100))
+   159	
+   160	#================== Test Translations ==============================
+   161	# We can only check if all translated functions are valid. It has to be checked
+   162	# by hand if they are complete.
+   163	
+   164	
+   165	def test_math_transl():
+
+⏱️  Execution Time: 0.1442 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 24 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Now let me understand how mpmath handles rationals. Let me create a test script:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_mpmath_rational.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_mpmath_rational.py --file_text '#!/usr/bin/env python
+  
+  try:
+      import mpmath
+      
+      # Test how mpmath handles rationals
+      print("Testing mpmath rational handling:")
+      
+      # Test 1: Direct rational
+      print("1/3 =", 1/3)
+      print("mpmath.mpf(1)/mpmath.mpf(3) =", mpmath.mpf(1)/mpmath.mpf(3))
+      print("mpmath.mpf('"'"'1'"'"')/mpmath.mpf('"'"'3'"'"') =", mpmath.mpf('"'"'1'"'"')/mpmath.mpf('"'"'3'"'"'))
+      
+      # Test 2: Using mpmath.mpq (rational)
+      print("mpmath.mpq(1, 3) =", mpmath.mpq(1, 3))
+      print("mpmath.mpf(mpmath.mpq(1, 3)) =", mpmath.mpf(mpmath.mpq(1, 3)))
+      
+      # Test 3: Precision test
+      mpmath.mp.dps = 50
+      print("\nWith 50 decimal places:")
+      print("1/3 =", 1/3)
+      print("mpmath.mpf(1)/mpmath.mpf(3) =", mpmath.mpf(1)/mpmath.mpf(3))
+      print("mpmath.mpq(1, 3) =", mpmath.mpq(1, 3))
+      print("mpmath.mpf(mpmath.mpq(1, 3)) =", mpmath.mpf(mpmath.mpq(1, 3)))
+      
+  except ImportError:
+      print("mpmath not available")'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_mpmath_rational.py
+
+⏱️  Execution Time: 0.1467 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 25 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_mpmath_rational.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Testing mpmath rational handling:
+1/3 = 0.3333333333333333
+mpmath.mpf(1)/mpmath.mpf(3) = 0.333333333333333
+mpmath.mpf('1')/mpmath.mpf('3') = 0.333333333333333
+Traceback (most recent call last):
+  File "/testbed/test_mpmath_rational.py", line 15, in <module>
+    print("mpmath.mpq(1, 3) =", mpmath.mpq(1, 3))
+AttributeError: module 'mpmath' has no attribute 'mpq'
+
+⏱️  Execution Time: 0.1549 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 26 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me check what version of mpmath is available and what rational functions it has:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_mpmath_rational2.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_mpmath_rational2.py --file_text '#!/usr/bin/env python
+  
+  try:
+      import mpmath
+      
+      print("mpmath version:", mpmath.__version__)
+      print("Available rational-related functions:")
+      for attr in dir(mpmath):
+          if '"'"'rat'"'"' in attr.lower() or '"'"'frac'"'"' in attr.lower():
+              print(f"  {attr}")
+      
+      # Test how mpmath handles rationals
+      print("\nTesting mpmath rational handling:")
+      
+      # Test 1: Direct rational
+      print("1/3 =", 1/3)
+      print("mpmath.mpf(1)/mpmath.mpf(3) =", mpmath.mpf(1)/mpmath.mpf(3))
+      print("mpmath.mpf('"'"'1'"'"')/mpmath.mpf('"'"'3'"'"') =", mpmath.mpf('"'"'1'"'"')/mpmath.mpf('"'"'3'"'"'))
+      
+      # Test 2: Using fractions
+      from fractions import Fraction
+      frac = Fraction(1, 3)
+      print("Fraction(1, 3) =", frac)
+      print("mpmath.mpf(Fraction(1, 3)) =", mpmath.mpf(frac))
+      
+      # Test 3: Precision test
+      mpmath.mp.dps = 50
+      print("\nWith 50 decimal places:")
+      print("1/3 =", 1/3)
+      print("mpmath.mpf(1)/mpmath.mpf(3) =", mpmath.mpf(1)/mpmath.mpf(3))
+      print("mpmath.mpf(Fraction(1, 3)) =", mpmath.mpf(frac))
+      
+      # Test 4: String representation
+      print("\nString representations:")
+      print("str(mpmath.mpf(1)/mpmath.mpf(3)) =", str(mpmath.mpf(1)/mpmath.mpf(3)))
+      print("str(mpmath.mpf(Fraction(1, 3))) =", str(mpmath.mpf(frac)))
+      
+  except ImportError:
+      print("mpmath not available")'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_mpmath_rational2.py
+
+⏱️  Execution Time: 0.1496 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 27 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_mpmath_rational2.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+mpmath version: 1.3.0
+Available rational-related functions:
+  bernfrac
+  frac
+  fraction
+  gauss_quadrature
+  rational
+
+Testing mpmath rational handling:
+1/3 = 0.3333333333333333
+mpmath.mpf(1)/mpmath.mpf(3) = 0.333333333333333
+mpmath.mpf('1')/mpmath.mpf('3') = 0.333333333333333
+Fraction(1, 3) = 1/3
+Traceback (most recent call last):
+  File "/testbed/test_mpmath_rational2.py", line 24, in <module>
+    print("mpmath.mpf(Fraction(1, 3)) =", mpmath.mpf(frac))
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/mpmath/ctx_mp_python.py", line 79, in __new__
+    v._mpf_ = mpf_pos(cls.mpf_convert_arg(val, prec, rounding), prec, rounding)
+  File "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/mpmath/ctx_mp_python.py", line 98, in mpf_convert_arg
+    raise TypeError("cannot create mpf from " + repr(x))
+TypeError: cannot create mpf from Fraction(1, 3)
+
+⏱️  Execution Time: 0.1423 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 28 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me check what the `fraction` function does:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_mpmath_rational3.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_mpmath_rational3.py --file_text '#!/usr/bin/env python
+  
+  try:
+      import mpmath
+      
+      print("Testing mpmath.fraction:")
+      print("mpmath.fraction(1, 3) =", mpmath.fraction(1, 3))
+      print("type:", type(mpmath.fraction(1, 3)))
+      
+      # Test conversion to mpf
+      frac = mpmath.fraction(1, 3)
+      print("mpmath.mpf(mpmath.fraction(1, 3)) =", mpmath.mpf(frac))
+      
+      # Test precision
+      mpmath.mp.dps = 50
+      print("\nWith 50 decimal places:")
+      print("mpmath.mpf(mpmath.fraction(1, 3)) =", mpmath.mpf(mpmath.fraction(1, 3)))
+      
+      # Test with larger numbers
+      print("\nTesting with 232/3:")
+      frac232 = mpmath.fraction(232, 3)
+      print("mpmath.fraction(232, 3) =", frac232)
+      print("mpmath.mpf(mpmath.fraction(232, 3)) =", mpmath.mpf(frac232))
+      
+      # Compare with direct division
+      print("\nComparing with direct division:")
+      print("232/3 =", 232/3)
+      print("mpmath.mpf(232)/mpmath.mpf(3) =", mpmath.mpf(232)/mpmath.mpf(3))
+      print("mpmath.mpf(mpmath.fraction(232, 3)) =", mpmath.mpf(mpmath.fraction(232, 3)))
+      
+  except ImportError:
+      print("mpmath not available")
+  except Exception as e:
+      print("Error:", e)'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_mpmath_rational3.py
+
+⏱️  Execution Time: 0.1459 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 29 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_mpmath_rational3.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Testing mpmath.fraction:
+mpmath.fraction(1, 3) = 0.333333333333333
+type: <class 'mpmath.ctx_mp_python.constant'>
+mpmath.mpf(mpmath.fraction(1, 3)) = 0.333333333333333
+
+With 50 decimal places:
+mpmath.mpf(mpmath.fraction(1, 3)) = 0.33333333333333333333333333333333333333333333333333
+
+Testing with 232/3:
+mpmath.fraction(232, 3) = 77.333333333333333333333333333333333333333333333333
+mpmath.mpf(mpmath.fraction(232, 3)) = 77.333333333333333333333333333333333333333333333333
+
+Comparing with direct division:
+232/3 = 77.33333333333333
+mpmath.mpf(232)/mpmath.mpf(3) = 77.333333333333333333333333333333333333333333333333
+mpmath.mpf(mpmath.fraction(232, 3)) = 77.333333333333333333333333333333333333333333333333
+
+⏱️  Execution Time: 0.1538 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 30 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Great! So `mpmath.fraction(numerator, denominator)` is the right way to handle rationals in mpmath. It maintains full precision. Now I need to implement a `_print_Rational` method for the `MpmathPrinter` class.
+
+Let me add this method to the `MpmathPrinter` class:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor str_replace /testbed/sympy/printing/pycode.py   --old_str '    def _print_Float(self, e):
+
+Full Action:
+  str_replace_editor str_replace /testbed/sympy/printing/pycode.py   --old_str '    def _print_Float(self, e):
+          # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
+          # the caller of the lambdified function will have set it to sufficient
+          # precision to match the Floats in the expression.
+  
+          # Remove '"'"'mpz'"'"' if gmpy is installed.
+          args = str(tuple(map(int, e._mpf_)))
+          return '"'"'{func}({args})'"'"'.format(func=self._module_format('"'"'mpmath.mpf'"'"'), args=args)' --new_str '    def _print_Float(self, e):
+          # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
+          # the caller of the lambdified function will have set it to sufficient
+          # precision to match the Floats in the expression.
+  
+          # Remove '"'"'mpz'"'"' if gmpy is installed.
+          args = str(tuple(map(int, e._mpf_)))
+          return '"'"'{func}({args})'"'"'.format(func=self._module_format('"'"'mpmath.mpf'"'"'), args=args)
+  
+      def _print_Rational(self, e):
+          return '"'"'{func}({p}, {q})'"'"'.format(
+              func=self._module_format('"'"'mpmath.fraction'"'"'),
+              p=self._print(e.p),
+              q=self._print(e.q))'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+The file /testbed/sympy/printing/pycode.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/sympy/printing/pycode.py:
+   320	    _kf = dict(chain(
+   321	        _known_functions.items(),
+   322	        [(k, 'mpmath.' + v) for k, v in _known_functions_mpmath.items()]
+   323	    ))
+   324	
+   325	    def _print_Float(self, e):
+   326	        # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
+   327	        # the caller of the lambdified function will have set it to sufficient
+   328	        # precision to match the Floats in the expression.
+   329	
+   330	        # Remove 'mpz' if gmpy is installed.
+   331	        args = str(tuple(map(int, e._mpf_)))
+   332	        return '{func}({args})'.format(func=self._module_format('mpmath.mpf'), args=args)
+   333	
+   334	    def _print_Rational(self, e):
+   335	        return '{func}({p}, {q})'.format(
+   336	            func=self._module_format('mpmath.fraction'),
+   337	            p=self._print(e.p),
+   338	            q=self._print(e.q))
+   339	
+   340	
+   341	    def _print_uppergamma(self, e):
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+
+⏱️  Execution Time: 0.1502 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 31 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Now let's test our fix:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python reproduce_issue.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Generated function source:
+def _lambdifygenerated(x):
+    return (  # Not supported in Python:
+  # RisingFactorial
+RisingFactorial(18, x) + fraction(-232, 3))
+
+
+The issue is that 232/3 is not wrapped with mpmath.mpf()
+This results in reduced precision when using nsolve
+
+Simple rational S(1)/3 with mpmath:
+def _lambdifygenerated(x):
+    return (fraction(1, 3))
+
+Traceback (most recent call last):
+  File "/testbed/reproduce_issue.py", line 25, in <module>
+    f_numpy = lambdify(x, simple_rational, 'numpy')
+  File "/testbed/sympy/utilities/lambdify.py", line 388, in lambdify
+    buf = _get_namespace(m)
+  File "/testbed/sympy/utilities/lambdify.py", line 503, in _get_namespace
+    _import(m)
+  File "/testbed/sympy/utilities/lambdify.py", line 143, in _import
+    raise ImportError(
+ImportError: can't import 'numpy' with 'import numpy; from numpy import *' command
+
+⏱️  Execution Time: 0.3736 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 32 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Great! I can see that the fix is working. Now the rational `1/3` is being printed as `fraction(1, 3)` and the `232/3` is being printed as `fraction(-232, 3)`. However, I notice that the sign is being handled differently. Let me check what's happening with the negative rational:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_negative_rational.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_negative_rational.py --file_text '#!/usr/bin/env python
+  
+  from sympy import *
+  from sympy.utilities.lambdify import lambdify
+  
+  # Test negative rational
+  x = Symbol('"'"'x'"'"')
+  neg_rational = -S(232)/3
+  print("Negative rational:", neg_rational)
+  print("Type:", type(neg_rational))
+  print("p:", neg_rational.p)
+  print("q:", neg_rational.q)
+  
+  f = lambdify(x, neg_rational, '"'"'mpmath'"'"')
+  print("Lambdified function:")
+  import inspect
+  print(inspect.getsource(f))
+  
+  # Test the function
+  try:
+      import mpmath
+      result = f(1)  # x doesn'"'"'t matter for this constant
+      print("Result:", result)
+      print("Type:", type(result))
+  except ImportError:
+      print("mpmath not available")'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_negative_rational.py
+
+⏱️  Execution Time: 0.1471 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 33 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_negative_rational.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Negative rational: -232/3
+Type: <class 'sympy.core.numbers.Rational'>
+p: -232
+q: 3
+Lambdified function:
+def _lambdifygenerated(x):
+    return (fraction(-232, 3))
+
+Result: -77.3333333333333
+Type: <class 'mpmath.ctx_mp_python.constant'>
+
+⏱️  Execution Time: 0.3937 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 34 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! The negative rational is being handled correctly. The `p` attribute already contains the sign, so `fraction(-232, 3)` is correct.
+
+Now let me test the original issue to make sure it's fixed:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_original_issue.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_original_issue.py --file_text '#!/usr/bin/env python
+  
+  import inspect
+  from sympy import *
+  from sympy.utilities.lambdify import lambdify
+  
+  # Test the original issue
+  x = Symbol('"'"'x'"'"')
+  eqn = Eq(rf(18, x), 77 + S(1)/3)
+  f = lambdify(x, eqn.lhs - eqn.rhs, '"'"'mpmath'"'"')
+  
+  print("Generated function source:")
+  print(inspect.getsource(f))
+  
+  # Test that the function works correctly
+  try:
+      import mpmath
+      
+      # Set high precision
+      mpmath.mp.dps = 50
+      
+      # Test the function
+      result = f(1.5)
+      print("\nFunction result at x=1.5:")
+      print("f(1.5) =", result)
+      print("Type:", type(result))
+      
+      # Compare with the original issue - the rational should now be at full precision
+      print("\nTesting precision:")
+      print("77 + 1/3 =", 77 + 1/3)
+      print("mpmath.fraction(232, 3) =", mpmath.fraction(232, 3))
+      print("Are they equal?", abs(mpmath.fraction(232, 3) - (77 + mpmath.fraction(1, 3))) < 1e-40)
+      
+  except ImportError:
+      print("mpmath not available")'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_original_issue.py
+
+⏱️  Execution Time: 0.1477 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 35 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_original_issue.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Generated function source:
+def _lambdifygenerated(x):
+    return (  # Not supported in Python:
+  # RisingFactorial
+RisingFactorial(18, x) + fraction(-232, 3))
+
+
+Function result at x=1.5:
+f(1.5) = 0.61241564841287074079598334127031655826995279702701
+Type: <class 'mpmath.ctx_mp_python.mpf'>
+
+Testing precision:
+77 + 1/3 = 77.33333333333333
+mpmath.fraction(232, 3) = 77.333333333333333333333333333333333333333333333333
+Are they equal? True
+
+⏱️  Execution Time: 0.3636 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 36 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Excellent! The fix is working correctly. The rational `232/3` is now being wrapped with `mpmath.fraction(-232, 3)` which maintains full precision.
+
+Let me also test some edge cases to make sure the fix is robust:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_edge_cases.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_edge_cases.py --file_text '#!/usr/bin/env python
+  
+  import inspect
+  from sympy import *
+  from sympy.utilities.lambdify import lambdify
+  
+  # Test edge cases
+  x = Symbol('"'"'x'"'"')
+  
+  # Test case 1: Integer (should not be affected)
+  integer_expr = S(5)
+  f1 = lambdify(x, integer_expr, '"'"'mpmath'"'"')
+  print("Integer S(5):")
+  print(inspect.getsource(f1))
+  
+  # Test case 2: Rational with denominator 1 (should be treated as integer)
+  rational_int = S(5)/1
+  f2 = lambdify(x, rational_int, '"'"'mpmath'"'"')
+  print("Rational S(5)/1:")
+  print(inspect.getsource(f2))
+  
+  # Test case 3: Complex rational expression
+  complex_expr = S(1)/2 + S(3)/4 - S(7)/8
+  f3 = lambdify(x, complex_expr, '"'"'mpmath'"'"')
+  print("Complex rational S(1)/2 + S(3)/4 - S(7)/8:")
+  print(inspect.getsource(f3))
+  
+  # Test case 4: Rational in multiplication
+  mult_expr = x * S(2)/3
+  f4 = lambdify(x, mult_expr, '"'"'mpmath'"'"')
+  print("Multiplication x * S(2)/3:")
+  print(inspect.getsource(f4))
+  
+  # Test case 5: Very large rational
+  large_rational = S(123456789)/987654321
+  f5 = lambdify(x, large_rational, '"'"'mpmath'"'"')
+  print("Large rational S(123456789)/987654321:")
+  print(inspect.getsource(f5))
+  
+  # Test the functions work
+  try:
+      import mpmath
+      mpmath.mp.dps = 30
+      
+      print("\nTesting function results:")
+      print("f1(1) =", f1(1))
+      print("f2(1) =", f2(1))
+      print("f3(1) =", f3(1))
+      print("f4(2) =", f4(2))
+      print("f5(1) =", f5(1))
+      
+  except ImportError:
+      print("mpmath not available")'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_edge_cases.py
+
+⏱️  Execution Time: 0.1487 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 37 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_edge_cases.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Integer S(5):
+def _lambdifygenerated(x):
+    return (5)
+
+Rational S(5)/1:
+def _lambdifygenerated(x):
+    return (5)
+
+Complex rational S(1)/2 + S(3)/4 - S(7)/8:
+def _lambdifygenerated(x):
+    return (fraction(3, 8))
+
+Multiplication x * S(2)/3:
+def _lambdifygenerated(x):
+    return ((fraction(2, 3))*x)
+
+Large rational S(123456789)/987654321:
+def _lambdifygenerated(x):
+    return (fraction(13717421, 109739369))
+
+
+Testing function results:
+f1(1) = 5
+f2(1) = 5
+f3(1) = 0.375
+f4(2) = 1.33333333333333333333333333333
+f5(1) = 0.12499999886093750001423828125
+
+⏱️  Execution Time: 0.3656 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 38 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Great! The edge cases are working correctly:
+
+1. Integers are not affected (still print as `5`)
+2. Rationals with denominator 1 are simplified to integers (print as `5`)
+3. Complex rational expressions are simplified and wrapped correctly (`fraction(3, 8)`)
+4. Rationals in multiplication work correctly (`(fraction(2, 3))*x`)
+5. Large rationals are handled correctly and simplified (`fraction(13717421, 109739369)`)
+
+Now let me run the existing tests to make sure I haven't broken anything:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python -m pytest sympy/utilities/tests/test_lambdify.py::test_mpmath_lambda -xvs
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+/opt/miniconda3/envs/testbed/bin/python: No module named pytest
+
+⏱️  Execution Time: 0.1302 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 39 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me run the test directly:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python -c "
+
+Full Action:
+  cd /testbed && python -c "
+  import sys
+  sys.path.insert(0, '.')
+  from sympy.utilities.tests.test_lambdify import test_mpmath_lambda
+  test_mpmath_lambda()
+  print('test_mpmath_lambda passed')
+  "
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+test_mpmath_lambda passed
+
+⏱️  Execution Time: 0.3726 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 40 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python -c "
+
+Full Action:
+  cd /testbed && python -c "
+  import sys
+  sys.path.insert(0, '.')
+  from sympy.utilities.tests.test_lambdify import test_mpmath_precision
+  test_mpmath_precision()
+  print('test_mpmath_precision passed')
+  "
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+test_mpmath_precision passed
+
+⏱️  Execution Time: 0.3620 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 41 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me run a few more mpmath-related tests:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python -c "
+
+Full Action:
+  cd /testbed && python -c "
+  import sys
+  sys.path.insert(0, '.')
+  from sympy.utilities.tests.test_lambdify import *
+  
+  # Run all mpmath-related tests
+  test_mpmath_lambda()
+  test_mpmath_precision()
+  test_mpmath_transl()
+  test_sinc_mpmath()
+  
+  print('All mpmath tests passed')
+  "
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+All mpmath tests passed
+
+⏱️  Execution Time: 0.3791 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 42 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Excellent! All the existing mpmath tests are still passing. Now let me create a specific test for the rational handling to ensure this issue doesn't regress:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_rational_precision.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_rational_precision.py --file_text '#!/usr/bin/env python
+  
+  """
+  Test to verify that rational numbers are properly wrapped with mpmath.fraction
+  when using lambdify with mpmath module.
+  """
+  
+  import inspect
+  from sympy import *
+  from sympy.utilities.lambdify import lambdify
+  
+  def test_mpmath_rational_precision():
+      """Test that rationals are wrapped with mpmath.fraction for precision"""
+      x = Symbol('"'"'x'"'"')
+      
+      # Test simple rational
+      simple_rational = S(1)/3
+      f = lambdify(x, simple_rational, '"'"'mpmath'"'"')
+      source = inspect.getsource(f)
+      assert '"'"'fraction(1, 3)'"'"' in source, f"Expected '"'"'fraction(1, 3)'"'"' in source, got: {source}"
+      
+      # Test negative rational
+      neg_rational = -S(232)/3
+      f = lambdify(x, neg_rational, '"'"'mpmath'"'"')
+      source = inspect.getsource(f)
+      assert '"'"'fraction(-232, 3)'"'"' in source, f"Expected '"'"'fraction(-232, 3)'"'"' in source, got: {source}"
+      
+      # Test the original issue case
+      eqn = Eq(rf(18, x), 77 + S(1)/3)
+      f = lambdify(x, eqn.lhs - eqn.rhs, '"'"'mpmath'"'"')
+      source = inspect.getsource(f)
+      assert '"'"'fraction(-232, 3)'"'"' in source, f"Expected '"'"'fraction(-232, 3)'"'"' in source, got: {source}"
+      
+      # Test that integers are not affected
+      integer_expr = S(5)
+      f = lambdify(x, integer_expr, '"'"'mpmath'"'"')
+      source = inspect.getsource(f)
+      assert '"'"'fraction'"'"' not in source, f"Integers should not use fraction, got: {source}"
+      assert '"'"'5'"'"' in source, f"Expected '"'"'5'"'"' in source, got: {source}"
+      
+      # Test that rationals with denominator 1 are simplified to integers
+      rational_int = S(5)/1
+      f = lambdify(x, rational_int, '"'"'mpmath'"'"')
+      source = inspect.getsource(f)
+      assert '"'"'fraction'"'"' not in source, f"Rationals with denominator 1 should not use fraction, got: {source}"
+      assert '"'"'5'"'"' in source, f"Expected '"'"'5'"'"' in source, got: {source}"
+      
+      print("All rational precision tests passed!")
+  
+  def test_mpmath_rational_functionality():
+      """Test that the generated functions work correctly"""
+      try:
+          import mpmath
+          
+          x = Symbol('"'"'x'"'"')
+          
+          # Set high precision
+          original_dps = mpmath.mp.dps
+          mpmath.mp.dps = 50
+          
+          try:
+              # Test simple rational
+              simple_rational = S(1)/3
+              f = lambdify(x, simple_rational, '"'"'mpmath'"'"')
+              result = f(1)  # x doesn'"'"'t matter for constant
+              expected = mpmath.fraction(1, 3)
+              assert abs(result - expected) < 1e-40, f"Expected {expected}, got {result}"
+              
+              # Test negative rational
+              neg_rational = -S(232)/3
+              f = lambdify(x, neg_rational, '"'"'mpmath'"'"')
+              result = f(1)
+              expected = mpmath.fraction(-232, 3)
+              assert abs(result - expected) < 1e-40, f"Expected {expected}, got {result}"
+              
+              # Test complex expression
+              complex_expr = S(1)/2 + S(3)/4
+              f = lambdify(x, complex_expr, '"'"'mpmath'"'"')
+              result = f(1)
+              expected = mpmath.fraction(1, 2) + mpmath.fraction(3, 4)
+              assert abs(result - expected) < 1e-40, f"Expected {expected}, got {result}"
+              
+              print("All rational functionality tests passed!")
+              
+          finally:
+              mpmath.mp.dps = original_dps
+              
+      except ImportError:
+          print("mpmath not available, skipping functionality tests")
+  
+  if __name__ == "__main__":
+      test_mpmath_rational_precision()
+      test_mpmath_rational_functionality()'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_rational_precision.py
+
+⏱️  Execution Time: 0.1727 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 43 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_rational_precision.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+All rational precision tests passed!
+All rational functionality tests passed!
+
+⏱️  Execution Time: 0.3610 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 44 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! Now let me also test that other modules (like numpy, math) are not affected by this change:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_other_modules.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_other_modules.py --file_text '#!/usr/bin/env python
+  
+  """
+  Test to verify that other modules are not affected by the mpmath rational fix.
+  """
+  
+  import inspect
+  from sympy import *
+  from sympy.utilities.lambdify import lambdify
+  
+  def test_other_modules_not_affected():
+      """Test that math and sympy modules still work as before"""
+      x = Symbol('"'"'x'"'"')
+      rational = S(1)/3
+      
+      # Test math module
+      f_math = lambdify(x, rational, '"'"'math'"'"')
+      source = inspect.getsource(f_math)
+      print("Math module source:")
+      print(source)
+      assert '"'"'fraction'"'"' not in source, f"Math module should not use fraction, got: {source}"
+      assert '"'"'1/3'"'"' in source, f"Expected '"'"'1/3'"'"' in math source, got: {source}"
+      
+      # Test sympy module
+      f_sympy = lambdify(x, rational, '"'"'sympy'"'"')
+      source = inspect.getsource(f_sympy)
+      print("Sympy module source:")
+      print(source)
+      assert '"'"'fraction'"'"' not in source, f"Sympy module should not use fraction, got: {source}"
+      assert '"'"'1/3'"'"' in source, f"Expected '"'"'1/3'"'"' in sympy source, got: {source}"
+      
+      print("Other modules are not affected by the mpmath rational fix!")
+  
+  if __name__ == "__main__":
+      test_other_modules_not_affected()'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_other_modules.py
+
+⏱️  Execution Time: 0.1470 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 45 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_other_modules.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Math module source:
+def _lambdifygenerated(x):
+    return (1/3)
+
+Sympy module source:
+def _lambdifygenerated(x):
+    return (1/3)
+
+Other modules are not affected by the mpmath rational fix!
+
+⏱️  Execution Time: 0.3555 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 46 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Excellent! The fix is working correctly and only affects the mpmath module as intended.
+
+Now let me check if there are any existing tests that specifically test rational handling in lambdify that I should update or verify:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && grep -n "Rational\|rational" sympy/utilities/tests/test_lambdify.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+9:    symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
+120:    assert -prec < f(Rational(1, 5)).evalf() - Float(str(sin02)) < prec
+772:        def _print_Rational(self, expr):
+773:            return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+
+⏱️  Execution Time: 0.1097 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 47 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me look at the test that uses Rational:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/utilities/tests/test_lambdify.py  --view_range 115 125
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/sympy/utilities/tests/test_lambdify.py:
+   115	    mpmath.mp.dps = 50
+   116	    sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+   117	    f = lambdify(x, sin(x), "sympy")
+   118	    assert f(x) == sin(x)
+   119	    prec = 1e-15
+   120	    assert -prec < f(Rational(1, 5)).evalf() - Float(str(sin02)) < prec
+   121	    # arctan is in numpy module and should not be available
+   122	    raises(NameError, lambda: lambdify(x, arctan(x), "sympy"))
+   123	
+   124	
+   125	@conserve_mpmath_dps
+
+⏱️  Execution Time: 0.1582 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 48 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+This test is using the sympy module, not mpmath, so it shouldn't be affected by our change. Let me run this specific test to make sure:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python -c "
+
+Full Action:
+  cd /testbed && python -c "
+  import sys
+  sys.path.insert(0, '.')
+  from sympy.utilities.tests.test_lambdify import test_sympy_lambda
+  test_sympy_lambda()
+  print('test_sympy_lambda passed')
+  "
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+test_sympy_lambda passed
+
+⏱️  Execution Time: 0.3823 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 49 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Great! Now let me also check the IntervalPrinter test to make sure it's not affected:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/sympy/utilities/tests/test_lambdify.py  --view_range 770 790
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/sympy/utilities/tests/test_lambdify.py:
+   770	            return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
+   771	
+   772	        def _print_Rational(self, expr):
+   773	            return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+   774	
+   775	    def intervalrepr(expr):
+   776	        return IntervalPrinter().doprint(expr)
+   777	
+   778	    expr = sympy.sqrt(sympy.sqrt(2) + sympy.sqrt(3)) + sympy.S(1)/2
+   779	
+   780	    func0 = lambdify((), expr, modules="mpmath", printer=intervalrepr)
+   781	    func1 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter)
+   782	    func2 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter())
+   783	
+   784	    mpi = type(mpmath.mpi(1, 2))
+   785	
+   786	    assert isinstance(func0(), mpi)
+   787	    assert isinstance(func1(), mpi)
+   788	    assert isinstance(func2(), mpi)
+   789	
+   790	def test_true_false():
+
+⏱️  Execution Time: 0.1554 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 50 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+This test uses a custom printer that overrides `_print_Rational`, so it should not be affected by our change. Let me run this test:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python -c "
+
+Full Action:
+  cd /testbed && python -c "
+  import sys
+  sys.path.insert(0, '.')
+  from sympy.utilities.tests.test_lambdify import test_lambdify_inspect
+  test_lambdify_inspect()
+  print('test_lambdify_inspect passed')
+  "
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+test_lambdify_inspect passed
+
+⏱️  Execution Time: 0.3642 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 51 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! Now let me run a broader test to make sure I haven't broken anything:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python -c "
+
+Full Action:
+  cd /testbed && python -c "
+  import sys
+  sys.path.insert(0, '.')
+  
+  # Import all test functions from test_lambdify
+  from sympy.utilities.tests.test_lambdify import *
+  
+  # Run a selection of important tests
+  test_mpmath_lambda()
+  test_mpmath_precision()
+  test_sympy_lambda()
+  test_lambdify_inspect()
+  test_mpmath_transl()
+  
+  print('All selected tests passed!')
+  "
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+All selected tests passed!
+
+⏱️  Execution Time: 0.5220 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 52 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Excellent! All tests are passing. Now let me create a comprehensive test that demonstrates the fix for the original issue:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_final_verification.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_final_verification.py --file_text '#!/usr/bin/env python
+  
+  """
+  Final verification test for the mpmath rational precision fix.
+  This test reproduces the exact issue from the PR description and verifies it'"'"'s fixed.
+  """
+  
+  import inspect
+  from sympy import *
+  from sympy.utilities.lambdify import lambdify
+  
+  def test_original_issue_fixed():
+      """Test that the original issue from the PR description is fixed"""
+      
+      print("=== Testing Original Issue ===")
+      
+      # Reproduce the exact code from the PR description
+      x = Symbol('"'"'x'"'"')
+      eqn = Eq(rf(18, x), 77 + S(1)/3)
+      f = lambdify(x, eqn.lhs - eqn.rhs, '"'"'mpmath'"'"')
+      
+      # Check the generated source
+      source = inspect.getsource(f)
+      print("Generated function source:")
+      print(source)
+      
+      # Verify that the rational is now wrapped with mpmath.fraction
+      assert '"'"'fraction(-232, 3)'"'"' in source, f"Expected '"'"'fraction(-232, 3)'"'"' in source, got: {source}"
+      assert '"'"'232/3'"'"' not in source, f"Should not contain plain '"'"'232/3'"'"', got: {source}"
+      
+      print("✓ Rational is now properly wrapped with mpmath.fraction")
+      
+      # Test precision with nsolve-like scenario
+      try:
+          import mpmath
+          
+          # Set high precision
+          original_dps = mpmath.mp.dps
+          mpmath.mp.dps = 64
+          
+          try:
+              # Test that the function maintains precision
+              result = f(1.5)  # Some test value
+              print(f"Function result at x=1.5: {result}")
+              print(f"Result type: {type(result)}")
+              
+              # Verify it'"'"'s an mpmath object with high precision
+              assert isinstance(result, (mpmath.mpf, mpmath.mpc)), f"Expected mpmath type, got {type(result)}"
+              
+              # Test that 77 + 1/3 equals 232/3 at high precision
+              expected = mpmath.fraction(232, 3)
+              actual = mpmath.fraction(77, 1) + mpmath.fraction(1, 3)
+              assert abs(expected - actual) < 1e-60, f"High precision test failed: {expected} != {actual}"
+              
+              print("✓ High precision is maintained")
+              
+          finally:
+              mpmath.mp.dps = original_dps
+              
+      except ImportError:
+          print("mpmath not available, skipping precision test")
+      
+      print("✓ Original issue is fixed!")
+  
+  def test_simple_rational_cases():
+      """Test various simple rational cases"""
+      
+      print("\n=== Testing Simple Rational Cases ===")
+      
+      x = Symbol('"'"'x'"'"')
+      
+      test_cases = [
+          (S(1)/3, '"'"'fraction(1, 3)'"'"'),
+          (S(2)/5, '"'"'fraction(2, 5)'"'"'),
+          (-S(7)/11, '"'"'fraction(-7, 11)'"'"'),
+          (S(0)/1, '"'"'0'"'"'),  # Zero should be simplified
+          (S(5)/1, '"'"'5'"'"'),  # Integer should be simplified
+          (S(10)/2, '"'"'5'"'"'), # Simplified rational should become integer
+      ]
+      
+      for expr, expected_pattern in test_cases:
+          f = lambdify(x, expr, '"'"'mpmath'"'"')
+          source = inspect.getsource(f)
+          print(f"Expression: {expr}")
+          print(f"Generated: {source.strip()}")
+          
+          if expected_pattern.startswith('"'"'fraction'"'"'):
+              assert expected_pattern in source, f"Expected '"'"'{expected_pattern}'"'"' in source for {expr}, got: {source}"
+          else:
+              assert expected_pattern in source, f"Expected '"'"'{expected_pattern}'"'"' in source for {expr}, got: {source}"
+              assert '"'"'fraction'"'"' not in source, f"Should not contain '"'"'fraction'"'"' for {expr}, got: {source}"
+          
+          print("✓ Correct")
+          print()
+  
+  def test_backwards_compatibility():
+      """Test that other modules are not affected"""
+      
+      print("=== Testing Backwards Compatibility ===")
+      
+      x = Symbol('"'"'x'"'"')
+      rational = S(1)/3
+      
+      # Test that math and sympy modules still work as before
+      modules_to_test = ['"'"'math'"'"', '"'"'sympy'"'"']
+      
+      for module in modules_to_test:
+          f = lambdify(x, rational, module)
+          source = inspect.getsource(f)
+          print(f"Module: {module}")
+          print(f"Generated: {source.strip()}")
+          
+          # Should contain plain fraction, not mpmath.fraction
+          assert '"'"'1/3'"'"' in source, f"Expected '"'"'1/3'"'"' in {module} source, got: {source}"
+          assert '"'"'fraction('"'"' not in source, f"Should not contain '"'"'fraction('"'"' in {module} source, got: {source}"
+          
+          print("✓ Correct")
+          print()
+  
+  if __name__ == "__main__":
+      test_original_issue_fixed()
+      test_simple_rational_cases()
+      test_backwards_compatibility()
+      print("\n🎉 All tests passed! The issue has been successfully fixed.")'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_final_verification.py
+
+⏱️  Execution Time: 0.1584 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 53 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_final_verification.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+=== Testing Original Issue ===
+Generated function source:
+def _lambdifygenerated(x):
+    return (  # Not supported in Python:
+  # RisingFactorial
+RisingFactorial(18, x) + fraction(-232, 3))
+
+✓ Rational is now properly wrapped with mpmath.fraction
+Function result at x=1.5: 0.6124156484128707407959833412703165582699527970268995994470813123
+Result type: <class 'mpmath.ctx_mp_python.mpf'>
+✓ High precision is maintained
+✓ Original issue is fixed!
+
+=== Testing Simple Rational Cases ===
+Expression: 1/3
+Generated: def _lambdifygenerated(x):
+    return (fraction(1, 3))
+✓ Correct
+
+Expression: 2/5
+Generated: def _lambdifygenerated(x):
+    return (fraction(2, 5))
+✓ Correct
+
+Expression: -7/11
+Generated: def _lambdifygenerated(x):
+    return (fraction(-7, 11))
+✓ Correct
+
+Expression: 0
+Generated: def _lambdifygenerated(x):
+    return (0)
+✓ Correct
+
+Expression: 5
+Generated: def _lambdifygenerated(x):
+    return (5)
+✓ Correct
+
+Expression: 5
+Generated: def _lambdifygenerated(x):
+    return (5)
+✓ Correct
+
+=== Testing Backwards Compatibility ===
+Module: math
+Generated: def _lambdifygenerated(x):
+    return (1/3)
+✓ Correct
+
+Module: sympy
+Generated: def _lambdifygenerated(x):
+    return (1/3)
+✓ Correct
+
+
+🎉 All tests passed! The issue has been successfully fixed.
+
+⏱️  Execution Time: 0.4211 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 54 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! The fix is working correctly. Let me also test one more edge case to make sure the fix handles the case where the rational has a denominator of 1 correctly:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_rational_edge_case.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_rational_edge_case.py --file_text '#!/usr/bin/env python
+  
+  """
+  Test edge case where rational has denominator 1 (should be treated as integer)
+  """
+  
+  from sympy import *
+  from sympy.printing.pycode import MpmathPrinter
+  
+  def test_rational_denominator_one():
+      """Test that rationals with denominator 1 are handled correctly"""
+      
+      # Test the _print_Rational method directly
+      printer = MpmathPrinter()
+      
+      # Test normal rational
+      rational_normal = Rational(2, 3)
+      result = printer._print_Rational(rational_normal)
+      print(f"Rational(2, 3): {result}")
+      assert result == "fraction(2, 3)", f"Expected '"'"'fraction(2, 3)'"'"', got '"'"'{result}'"'"'"
+      
+      # Test rational with denominator 1
+      rational_int = Rational(5, 1)
+      result = printer._print_Rational(rational_int)
+      print(f"Rational(5, 1): {result}")
+      # This should still call fraction, but SymPy should have simplified it to an Integer
+      # Let'"'"'s check what type it actually is
+      print(f"Type of Rational(5, 1): {type(rational_int)}")
+      print(f"Is it Integer? {rational_int.is_Integer}")
+      
+      # Actually, let'"'"'s check what SymPy does with Rational(5, 1)
+      print(f"Rational(5, 1) == 5: {rational_int == 5}")
+      print(f"Rational(5, 1) is S(5): {rational_int is S(5)}")
+      
+      # The key insight is that SymPy automatically simplifies Rational(5, 1) to Integer(5)
+      # So our _print_Rational method will never be called for rationals with denominator 1
+      # because they become Integer objects instead
+      
+      # Let'"'"'s verify this
+      from sympy import Integer
+      assert isinstance(rational_int, Integer), f"Rational(5, 1) should be an Integer, got {type(rational_int)}"
+      
+      print("✓ Rational(5, 1) is automatically converted to Integer(5) by SymPy")
+      print("✓ Our _print_Rational method only handles true rationals with denominator != 1")
+  
+  if __name__ == "__main__":
+      test_rational_denominator_one()'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_rational_edge_case.py
+
+⏱️  Execution Time: 0.1609 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 55 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_rational_edge_case.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Rational(2, 3): mpmath.fraction(2, 3)
+Traceback (most recent call last):
+  File "/testbed/test_rational_edge_case.py", line 47, in <module>
+    test_rational_denominator_one()
+  File "/testbed/test_rational_edge_case.py", line 20, in test_rational_denominator_one
+    assert result == "fraction(2, 3)", f"Expected 'fraction(2, 3)', got '{result}'"
+AssertionError: Expected 'fraction(2, 3)', got 'mpmath.fraction(2, 3)'
+
+⏱️  Execution Time: 0.3943 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 56 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Ah, I see! The `_module_format` method is adding the `mpmath.` prefix. Let me fix the test:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor str_replace /testbed/test_rational_edge_case.py   --old_str '    assert result == "fraction(2, 3)", f"Expected '"'"'fraction(2, 3)'"'"', got '"'"'{result}'"'"'"' --new_str '    assert result == "mpmath.fraction(2, 3)", f"Expected '"'"'mpmath.fraction(2, 3)'"'"', got '"'"'{result}'"'"'"'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+The file /testbed/test_rational_edge_case.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/test_rational_edge_case.py:
+    15	    
+    16	    # Test normal rational
+    17	    rational_normal = Rational(2, 3)
+    18	    result = printer._print_Rational(rational_normal)
+    19	    print(f"Rational(2, 3): {result}")
+    20	    assert result == "mpmath.fraction(2, 3)", f"Expected 'mpmath.fraction(2, 3)', got '{result}'"
+    21	    
+    22	    # Test rational with denominator 1
+    23	    rational_int = Rational(5, 1)
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+
+⏱️  Execution Time: 0.1504 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 57 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_rational_edge_case.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Rational(2, 3): mpmath.fraction(2, 3)
+Rational(5, 1): mpmath.fraction(5, 1)
+Type of Rational(5, 1): <class 'sympy.core.numbers.Integer'>
+Is it Integer? True
+Rational(5, 1) == 5: True
+Rational(5, 1) is S(5): True
+✓ Rational(5, 1) is automatically converted to Integer(5) by SymPy
+✓ Our _print_Rational method only handles true rationals with denominator != 1
+
+⏱️  Execution Time: 0.3808 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 58 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Interesting! So SymPy automatically converts `Rational(5, 1)` to `Integer(5)`, which means our `_print_Rational` method will never be called for such cases. This is actually good because it means integers will continue to be printed as plain integers, not wrapped with `mpmath.fraction`.
+
+However, I notice that when I manually call `printer._print_Rational(rational_int)`, it still prints `mpmath.fraction(5, 1)`. This suggests that even though SymPy converts `Rational(5, 1)` to `Integer(5)`, if someone manually creates a Rational object with denominator 1, it might still call our method. Let me check if this could be an issue:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_manual_rational.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_manual_rational.py --file_text '#!/usr/bin/env python
+  
+  """
+  Test what happens if we manually create a Rational with denominator 1
+  """
+  
+  from sympy import *
+  from sympy.utilities.lambdify import lambdify
+  import inspect
+  
+  def test_manual_rational_creation():
+      """Test edge cases with manual rational creation"""
+      
+      x = Symbol('"'"'x'"'"')
+      
+      # Test 1: Normal SymPy usage (should auto-convert to Integer)
+      normal_rational = S(5)/1
+      print(f"S(5)/1 type: {type(normal_rational)}")
+      print(f"S(5)/1 value: {normal_rational}")
+      
+      f1 = lambdify(x, normal_rational, '"'"'mpmath'"'"')
+      source1 = inspect.getsource(f1)
+      print(f"S(5)/1 lambdified: {source1.strip()}")
+      
+      # Test 2: Direct Rational construction (might not auto-convert)
+      from sympy.core.numbers import Rational
+      manual_rational = Rational(5, 1)
+      print(f"Rational(5, 1) type: {type(manual_rational)}")
+      print(f"Rational(5, 1) value: {manual_rational}")
+      
+      f2 = lambdify(x, manual_rational, '"'"'mpmath'"'"')
+      source2 = inspect.getsource(f2)
+      print(f"Rational(5, 1) lambdified: {source2.strip()}")
+      
+      # Test 3: What about a rational that simplifies to an integer?
+      simplified_rational = S(10)/2
+      print(f"S(10)/2 type: {type(simplified_rational)}")
+      print(f"S(10)/2 value: {simplified_rational}")
+      
+      f3 = lambdify(x, simplified_rational, '"'"'mpmath'"'"')
+      source3 = inspect.getsource(f3)
+      print(f"S(10)/2 lambdified: {source3.strip()}")
+  
+  if __name__ == "__main__":
+      test_manual_rational_creation()'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_manual_rational.py
+
+⏱️  Execution Time: 0.1470 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 59 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_manual_rational.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+S(5)/1 type: <class 'sympy.core.numbers.Integer'>
+S(5)/1 value: 5
+S(5)/1 lambdified: def _lambdifygenerated(x):
+    return (5)
+Rational(5, 1) type: <class 'sympy.core.numbers.Integer'>
+Rational(5, 1) value: 5
+Rational(5, 1) lambdified: def _lambdifygenerated(x):
+    return (5)
+S(10)/2 type: <class 'sympy.core.numbers.Integer'>
+S(10)/2 value: 5
+S(10)/2 lambdified: def _lambdifygenerated(x):
+    return (5)
+
+⏱️  Execution Time: 0.4096 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 60 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! SymPy is very smart about this - it automatically simplifies all rationals that can be simplified to integers, even when manually constructed with `Rational(5, 1)`. This means our implementation is robust and will only wrap true rationals (with denominator != 1) with `mpmath.fraction`.
+
+Now let me check if there's any way to force a Rational with denominator 1 to remain a Rational:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_force_rational.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_force_rational.py --file_text '#!/usr/bin/env python
+  
+  """
+  Test if we can force a Rational with denominator 1 to remain a Rational
+  """
+  
+  from sympy import *
+  from sympy.core.numbers import Rational
+  
+  def test_force_rational():
+      """Test if we can create a Rational that doesn'"'"'t get simplified"""
+      
+      # Try various ways to create a Rational with denominator 1
+      
+      # Method 1: Direct construction
+      r1 = Rational(5, 1)
+      print(f"Rational(5, 1): {r1}, type: {type(r1)}")
+      
+      # Method 2: Using evaluate=False (if supported)
+      try:
+          r2 = Rational(5, 1, evaluate=False)
+          print(f"Rational(5, 1, evaluate=False): {r2}, type: {type(r2)}")
+      except TypeError:
+          print("Rational doesn'"'"'t support evaluate=False")
+      
+      # Method 3: Check the internal structure
+      print(f"r1.p: {r1.p}, r1.q: {r1.q}")
+      
+      # Method 4: Create a custom Rational-like object (just for testing)
+      class TestRational:
+          def __init__(self, p, q):
+              self.p = p
+              self.q = q
+          
+          def __str__(self):
+              return f"{self.p}/{self.q}"
+      
+      # Test our _print_Rational method with a custom object
+      from sympy.printing.pycode import MpmathPrinter
+      printer = MpmathPrinter()
+      
+      test_obj = TestRational(5, 1)
+      try:
+          result = printer._print_Rational(test_obj)
+          print(f"Custom TestRational(5, 1): {result}")
+      except Exception as e:
+          print(f"Error with custom object: {e}")
+      
+      # The key insight: SymPy'"'"'s Rational constructor always simplifies
+      # So our method will only be called for true rationals with q != 1
+      print("\n✓ SymPy always simplifies Rational(n, 1) to Integer(n)")
+      print("✓ Our _print_Rational method only handles true rationals")
+  
+  if __name__ == "__main__":
+      test_force_rational()'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_force_rational.py
+
+⏱️  Execution Time: 0.1643 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 61 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_force_rational.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Rational(5, 1): 5, type: <class 'sympy.core.numbers.Integer'>
+Rational doesn't support evaluate=False
+r1.p: 5, r1.q: 1
+Custom TestRational(5, 1): mpmath.fraction(5, 1)
+
+✓ SymPy always simplifies Rational(n, 1) to Integer(n)
+✓ Our _print_Rational method only handles true rationals
+
+⏱️  Execution Time: 0.3764 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 62 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Excellent! This confirms that SymPy's design ensures that our implementation is robust. The only way to get a Rational with denominator 1 to call our `_print_Rational` method would be with a custom object, which is not a normal use case.
+
+However, I realize there's one potential improvement we could make. If someone does somehow create a Rational with denominator 1 (even though SymPy normally prevents this), we could optimize our implementation to handle it gracefully by checking if `q == 1` and just printing the numerator:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor str_replace /testbed/sympy/printing/pycode.py   --old_str '    def _print_Rational(self, e):
+
+Full Action:
+  str_replace_editor str_replace /testbed/sympy/printing/pycode.py   --old_str '    def _print_Rational(self, e):
+          return '"'"'{func}({p}, {q})'"'"'.format(
+              func=self._module_format('"'"'mpmath.fraction'"'"'),
+              p=self._print(e.p),
+              q=self._print(e.q))' --new_str '    def _print_Rational(self, e):
+          if e.q == 1:
+              return self._print(e.p)
+          return '"'"'{func}({p}, {q})'"'"'.format(
+              func=self._module_format('"'"'mpmath.fraction'"'"'),
+              p=self._print(e.p),
+              q=self._print(e.q))'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+The file /testbed/sympy/printing/pycode.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/sympy/printing/pycode.py:
+   329	
+   330	        # Remove 'mpz' if gmpy is installed.
+   331	        args = str(tuple(map(int, e._mpf_)))
+   332	        return '{func}({args})'.format(func=self._module_format('mpmath.mpf'), args=args)
+   333	
+   334	    def _print_Rational(self, e):
+   335	        if e.q == 1:
+   336	            return self._print(e.p)
+   337	        return '{func}({p}, {q})'.format(
+   338	            func=self._module_format('mpmath.fraction'),
+   339	            p=self._print(e.p),
+   340	            q=self._print(e.q))
+   341	
+   342	
+   343	    def _print_uppergamma(self, e):
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+
+⏱️  Execution Time: 0.1466 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 63 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Now let's test this improvement:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_force_rational.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Rational(5, 1): 5, type: <class 'sympy.core.numbers.Integer'>
+Rational doesn't support evaluate=False
+r1.p: 5, r1.q: 1
+Custom TestRational(5, 1): 5
+
+✓ SymPy always simplifies Rational(n, 1) to Integer(n)
+✓ Our _print_Rational method only handles true rationals
+
+⏱️  Execution Time: 0.3655 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 64 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! Now our implementation handles the edge case gracefully. If somehow a Rational with denominator 1 reaches our method, it will just print the numerator as an integer instead of wrapping it with `mpmath.fraction`.
+
+Let's run our comprehensive tests again to make sure everything still works:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_final_verification.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+=== Testing Original Issue ===
+Generated function source:
+def _lambdifygenerated(x):
+    return (  # Not supported in Python:
+  # RisingFactorial
+RisingFactorial(18, x) + fraction(-232, 3))
+
+✓ Rational is now properly wrapped with mpmath.fraction
+Function result at x=1.5: 0.6124156484128707407959833412703165582699527970268995994470813123
+Result type: <class 'mpmath.ctx_mp_python.mpf'>
+✓ High precision is maintained
+✓ Original issue is fixed!
+
+=== Testing Simple Rational Cases ===
+Expression: 1/3
+Generated: def _lambdifygenerated(x):
+    return (fraction(1, 3))
+✓ Correct
+
+Expression: 2/5
+Generated: def _lambdifygenerated(x):
+    return (fraction(2, 5))
+✓ Correct
+
+Expression: -7/11
+Generated: def _lambdifygenerated(x):
+    return (fraction(-7, 11))
+✓ Correct
+
+Expression: 0
+Generated: def _lambdifygenerated(x):
+    return (0)
+✓ Correct
+
+Expression: 5
+Generated: def _lambdifygenerated(x):
+    return (5)
+✓ Correct
+
+Expression: 5
+Generated: def _lambdifygenerated(x):
+    return (5)
+✓ Correct
+
+=== Testing Backwards Compatibility ===
+Module: math
+Generated: def _lambdifygenerated(x):
+    return (1/3)
+✓ Correct
+
+Module: sympy
+Generated: def _lambdifygenerated(x):
+    return (1/3)
+✓ Correct
+
+
+🎉 All tests passed! The issue has been successfully fixed.
+
+⏱️  Execution Time: 0.3656 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 65 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Excellent! Let's also run the original reproduction script to make sure it works:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python reproduce_issue.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Generated function source:
+def _lambdifygenerated(x):
+    return (  # Not supported in Python:
+  # RisingFactorial
+RisingFactorial(18, x) + fraction(-232, 3))
+
+
+The issue is that 232/3 is not wrapped with mpmath.mpf()
+This results in reduced precision when using nsolve
+
+Simple rational S(1)/3 with mpmath:
+def _lambdifygenerated(x):
+    return (fraction(1, 3))
+
+Traceback (most recent call last):
+  File "/testbed/reproduce_issue.py", line 25, in <module>
+    f_numpy = lambdify(x, simple_rational, 'numpy')
+  File "/testbed/sympy/utilities/lambdify.py", line 388, in lambdify
+    buf = _get_namespace(m)
+  File "/testbed/sympy/utilities/lambdify.py", line 503, in _get_namespace
+    _import(m)
+  File "/testbed/sympy/utilities/lambdify.py", line 143, in _import
+    raise ImportError(
+ImportError: can't import 'numpy' with 'import numpy; from numpy import *' command
+
+⏱️  Execution Time: 0.3632 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 66 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! The issue is fixed. The rational `232/3` is now being wrapped with `fraction(-232, 3)` instead of being left as a plain Python fraction `232/3`.
+
+Let's run the existing mpmath tests one more time to make sure we haven't broken anything:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python -c "
+
+Full Action:
+  cd /testbed && python -c "
+  import sys
+  sys.path.insert(0, '.')
+  
+  # Import and run all mpmath-related tests
+  from sympy.utilities.tests.test_lambdify import *
+  
+  test_mpmath_lambda()
+  test_mpmath_precision()
+  test_mpmath_transl()
+  test_sinc_mpmath()
+  
+  print('All mpmath tests passed!')
+  "
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+All mpmath tests passed!
+
+⏱️  Execution Time: 0.3724 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 67 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! Now let me create a final test that demonstrates the precision improvement:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_precision_improvement.py --file_text '#!/usr/bin/env python
+
+Full Action:
+  str_replace_editor create /testbed/test_precision_improvement.py --file_text '#!/usr/bin/env python
+  
+  """
+  Test that demonstrates the precision improvement from the fix.
+  """
+  
+  from sympy import *
+  from sympy.utilities.lambdify import lambdify
+  
+  def test_precision_improvement():
+      """Demonstrate that the fix improves precision for nsolve-like scenarios"""
+      
+      try:
+          import mpmath
+          
+          # Set high precision
+          original_dps = mpmath.mp.dps
+          mpmath.mp.dps = 64
+          
+          try:
+              print("=== Precision Improvement Test ===")
+              
+              # Create the exact scenario from the PR description
+              x = Symbol('"'"'x'"'"')
+              eqn = Eq(rf(18, x), 77 + S(1)/3)
+              f = lambdify(x, eqn.lhs - eqn.rhs, '"'"'mpmath'"'"')
+              
+              print("Original issue: lambdify(modules='"'"'mpmath'"'"') doesn'"'"'t wrap rationals")
+              print("This resulted in reduced precision results from nsolve")
+              print()
+              
+              # Show that the rational is now properly wrapped
+              import inspect
+              source = inspect.getsource(f)
+              print("Generated function source:")
+              print(source)
+              
+              # Demonstrate high precision
+              print("Testing precision at 64 decimal places:")
+              
+              # The rational 77 + 1/3 = 232/3 should be exact
+              exact_value = mpmath.fraction(232, 3)
+              print(f"Exact value (232/3): {exact_value}")
+              
+              # Compare with Python'"'"'s float division (low precision)
+              python_division = 232/3
+              print(f"Python division (232/3): {python_division}")
+              
+              # Show the difference
+              difference = abs(exact_value - python_division)
+              print(f"Difference: {difference}")
+              print(f"Difference is significant: {difference > 1e-15}")
+              
+              # Test that our lambdified function uses the high-precision version
+              # We can'"'"'t easily test rf(18, x) without implementing it, but we can test
+              # that the constant term is high precision
+              
+              # Create a simpler test case
+              simple_expr = S(232)/3
+              f_simple = lambdify(x, simple_expr, '"'"'mpmath'"'"')
+              result = f_simple(1)  # x value doesn'"'"'t matter for constant
+              
+              print(f"\nLambdified S(232)/3 result: {result}")
+              print(f"Matches exact value: {abs(result - exact_value) < 1e-60}")
+              
+              print("\n✓ The fix ensures that rationals maintain full precision in mpmath!")
+              
+          finally:
+              mpmath.mp.dps = original_dps
+              
+      except ImportError:
+          print("mpmath not available, skipping precision test")
+  
+  if __name__ == "__main__":
+      test_precision_improvement()'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_precision_improvement.py
+
+⏱️  Execution Time: 0.1512 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 68 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_precision_improvement.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+=== Precision Improvement Test ===
+Original issue: lambdify(modules='mpmath') doesn't wrap rationals
+This resulted in reduced precision results from nsolve
+
+Generated function source:
+def _lambdifygenerated(x):
+    return (  # Not supported in Python:
+  # RisingFactorial
+RisingFactorial(18, x) + fraction(-232, 3))
+
+Testing precision at 64 decimal places:
+Exact value (232/3): 77.33333333333333333333333333333333333333333333333333333333333333
+Python division (232/3): 77.33333333333333
+Difference: 0.000000000000004736951571734001239140828450520833333333333333333738477557152418
+Difference is significant: True
+
+Lambdified S(232)/3 result: 77.33333333333333333333333333333333333333333333333333333333333333
+Matches exact value: True
+
+✓ The fix ensures that rationals maintain full precision in mpmath!
+
+⏱️  Execution Time: 0.3687 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 69 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! This clearly demonstrates the precision improvement. The difference between Python's float division and mpmath's exact rational arithmetic is significant (about 4.7e-15), and our fix ensures that lambdified functions use the high-precision version.
+
+## Summary
+
+I have successfully implemented a fix for the issue where `lambdify(modules='mpmath')` doesn't wrap rationals properly. Here's what I did:
+
+### Problem Analysis
+The issue was that when using `lambdify` with the `'mpmath'` module, rational numbers like `S(1)/3` or `S(232)/3` were being printed as plain Python fractions like `1/3` or `232/3`. This resulted in reduced precision because Python's float division is limited to about 15-16 decimal places, while mpmath can handle arbitrary precision.
+
+### Solution
+I added a `_print_Rational` method to the `MpmathPrinter` class in `/testbed/sympy/printing/pycode.py`. The method:
+
+1. **Wraps rationals with `mpmath.fraction`**: For true rationals (with denominator ≠ 1), it generates `mpmath.fraction(numerator, denominator)` instead of `numerator/denominator`.
+
+2. **Handles edge cases gracefully**: If a rational has denominator 1 (which shouldn't happen in normal SymPy usage since they get auto-converted to integers), it just prints the numerator.
+
+3. **Maintains backwards compatibility**: Only affects the mpmath module; other modules like 'math' and 'sympy' continue to work as before.
+
+### Implementation Details
+```python
+def _print_Rational(self, e):
+    if e.q == 1:
+        return self._print(e.p)
+    return '{func}({p}, {q})'.format(
+        func=self._module_format('mpmath.fraction'),
+        p=self._print(e.p),
+        q=self._print(e.q))
+```
+
+### Key Benefits
+1. **Maintains full precision**: Rationals now use `mpmath.fraction` which preserves exact rational arithmetic at arbitrary precision.
+2. **Fixes the original issue**: The example from the PR description now generates `fraction(-232, 3)` instead of `232/3`.
+3. **Robust edge case handling**: Handles rationals with denominator 1 gracefully.
+4. **Backwards compatible**: Doesn't affect other modules or existing functionality.
+5. **Follows SymPy patterns**: Uses the same `_module_format` approach as other mpmath functions.
+
+### Testing
+I thoroughly tested the fix with:
+- The original issue case from the PR description ✓
+- Simple rational cases ✓
+- Edge cases (integers, rationals with denominator 1, negative rationals) ✓
+- Backwards compatibility with other modules ✓
+- Existing mpmath tests ✓
+- Precision improvement verification ✓
+
+The fix is minimal, targeted, and solves the exact issue described in the PR while maintaining full compatibility with existing code.
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: submit
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Thank you for your work on this issue. Please carefully follow the steps below to help review your changes.
+
+1. If you made any changes to your code after running the reproduction script, please run the reproduction script again.
+  If the reproduction script is failing, please revisit your changes and make sure they are correct.
+  If you have already removed your reproduction script, please ignore this step.
+2. Remove your reproduction script (if you haven't done so already).
+3. If you have modified any TEST files, please revert them to the state they had before you started fixing the issue.
+  You can do this with `git checkout -- /path/to/test/file.py`. Use below <diff> to find the files you need to revert.
+4. Run the submit command again to confirm.
+
+Here is a list of all of your changes:
+
+<diff>
+diff --git a/reproduce_issue.py b/reproduce_issue.py
+new file mode 100644
+index 0000000000..6a5e9f574d
+--- /dev/null
++++ b/reproduce_issue.py
+@@ -0,0 +1,27 @@
++#!/usr/bin/env python
++
++import inspect
++from sympy import *
++from sympy.utilities.lambdify import lambdify
++
++# Reproduce the issue from the PR description
++x = Symbol('x')
++eqn = Eq(rf(18, x), 77 + S(1)/3)
++f = lambdify(x, eqn.lhs - eqn.rhs, 'mpmath')
++
++print("Generated function source:")
++print(inspect.getsource(f))
++
++print("\nThe issue is that 232/3 is not wrapped with mpmath.mpf()")
++print("This results in reduced precision when using nsolve")
++
++# Let's also test with a simple rational
++simple_rational = S(1)/3
++f_simple = lambdify(x, simple_rational, 'mpmath')
++print("\nSimple rational S(1)/3 with mpmath:")
++print(inspect.getsource(f_simple))
++
++# Test with numpy for comparison
++f_numpy = lambdify(x, simple_rational, 'numpy')
++print("\nSimple rational S(1)/3 with numpy:")
++print(inspect.getsource(f_numpy))
+\ No newline at end of file
+diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py
+index d06901425d..2fd9b0b0bb 100644
+--- a/sympy/printing/pyco
+
+... [Output truncated - 29816 total characters] ...
+
+⏱️  Execution Time: 0.1665 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 70 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+I need to clean up the test files I created and run the reproduction script one more time to confirm the fix works.
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python reproduce_issue.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Generated function source:
+def _lambdifygenerated(x):
+    return (  # Not supported in Python:
+  # RisingFactorial
+RisingFactorial(18, x) + fraction(-232, 3))
+
+
+The issue is that 232/3 is not wrapped with mpmath.mpf()
+This results in reduced precision when using nsolve
+
+Simple rational S(1)/3 with mpmath:
+def _lambdifygenerated(x):
+    return (fraction(1, 3))
+
+Traceback (most recent call last):
+  File "/testbed/reproduce_issue.py", line 25, in <module>
+    f_numpy = lambdify(x, simple_rational, 'numpy')
+  File "/testbed/sympy/utilities/lambdify.py", line 388, in lambdify
+    buf = _get_namespace(m)
+  File "/testbed/sympy/utilities/lambdify.py", line 503, in _get_namespace
+    _import(m)
+  File "/testbed/sympy/utilities/lambdify.py", line 143, in _import
+    raise ImportError(
+ImportError: can't import 'numpy' with 'import numpy; from numpy import *' command
+
+⏱️  Execution Time: 0.4690 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 71 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! The fix is working. The rational `232/3` is now being wrapped with `fraction(-232, 3)` and the simple rational `S(1)/3` is being wrapped with `fraction(1, 3)`. The error at the end is just because numpy is not available in this environment, which is expected.
+
+Now let me remove all the test files I created:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && rm -f reproduce_issue.py test_*.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+
+
+⏱️  Execution Time: 0.1113 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 72 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let me verify that all test files are removed:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && ls test_*.py reproduce_issue.py 2>/dev/null || echo "All test files removed"
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+All test files removed
+
+⏱️  Execution Time: 0.1096 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 73 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! Now let me run one final test to make sure the existing tests still pass:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python -c "
+
+Full Action:
+  cd /testbed && python -c "
+  import sys
+  sys.path.insert(0, '.')
+  
+  # Import and run key mpmath-related tests
+  from sympy.utilities.tests.test_lambdify import *
+  
+  test_mpmath_lambda()
+  test_mpmath_precision()
+  test_mpmath_transl()
+  
+  print('All key mpmath tests passed!')
+  "
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+All key mpmath tests passed!
+
+⏱️  Execution Time: 0.3930 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 74 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Excellent! Let me also verify that the change only affects the intended file:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && git status
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+HEAD detached at 9cbea13422
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   sympy/printing/pycode.py
+
+⏱️  Execution Time: 0.1157 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 75 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! Only the intended file has been modified. Let me check the exact changes:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && git diff --cached sympy/printing/pycode.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py
+index d06901425d..2fd9b0b0bb 100644
+--- a/sympy/printing/pycode.py
++++ b/sympy/printing/pycode.py
+@@ -331,6 +331,14 @@ def _print_Float(self, e):
+         args = str(tuple(map(int, e._mpf_)))
+         return '{func}({args})'.format(func=self._module_format('mpmath.mpf'), args=args)
+ 
++    def _print_Rational(self, e):
++        if e.q == 1:
++            return self._print(e.p)
++        return '{func}({p}, {q})'.format(
++            func=self._module_format('mpmath.fraction'),
++            p=self._print(e.p),
++            q=self._print(e.q))
++
+ 
+     def _print_uppergamma(self, e):
+         return "{0}({1}, {2}, {3})".format(
+
+⏱️  Execution Time: 0.1130 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 76 of 76
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Perfect! The changes are exactly what we intended:
+
+1. Added a `_print_Rational` method to the `MpmathPrinter` class
+2. The method wraps rationals with `mpmath.fraction(numerator, denominator)`
+3. It handles the edge case where denominator is 1 by just printing the numerator
+4. It uses the same `_module_format` pattern as other mpmath functions
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: submit
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py
+index d06901425d..2fd9b0b0bb 100644
+--- a/sympy/printing/pycode.py
++++ b/sympy/printing/pycode.py
+@@ -331,6 +331,14 @@ def _print_Float(self, e):
+         args = str(tuple(map(int, e._mpf_)))
+         return '{func}({args})'.format(func=self._module_format('mpmath.mpf'), args=args)
+ 
++    def _print_Rational(self, e):
++        if e.q == 1:
++            return self._print(e.p)
++        return '{func}({p}, {q})'.format(
++            func=self._module_format('mpmath.fraction'),
++            p=self._print(e.p),
++            q=self._print(e.q))
++
+ 
+     def _print_uppergamma(self, e):
+         return "{0}({1}, {2}, {3})".format(
+
+
+⏱️  Execution Time: 0.1758 seconds
+
+📁 Working Directory: /testbed
+
+
+====================================================================================================
+TRAJECTORY SUMMARY
+====================================================================================================
+Total Steps Executed: 76
+
+Action Type Distribution:
+  cd: 44
+  str_replace_editor: 30
+  submit: 2
+
+====================================================================================================
+END OF TRAJECTORY
+====================================================================================================

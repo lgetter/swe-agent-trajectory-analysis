@@ -47,8 +47,8 @@ def locate_reproduction_code(id: str):
             
             # check if observation contains "reproduce"
             if "reproduce" in observation_lower and len(observation_lower) < 200:
-                repro_steps.append(i)
-                print(f"Found reproduction code at step {i} for ID {id}")
+                repro_steps.append(i+1)
+                print(f"Found reproduction code at step {i+1} for ID {id}")
                 print(f"Observation: {observation}")
                 print(f"Action: {action}")
                 print("-" * 80)
@@ -75,8 +75,8 @@ def locate_search(id: str):
     for i, step in enumerate(trajectory):
         action = step["action"].split("\n")[0]
         if any(keyword in action for keyword in keywords):
-            search_steps.append(i)
-            print(f"Found search action at step {i} for ID {id}")
+            search_steps.append(i+1)
+            print(f"Found search action at step {i+1} for ID {id}")
             print(f"Action: {action}")
             print("-" * 80)
 
@@ -114,7 +114,7 @@ def locate_tool_usage(id: str):
                     continue  # skip str_replace_editor command option
 
                 tool_map[tool.strip()] += 1
-                print(f"Found tool '{tool.strip()}' usage at step {i} for ID {id}")
+                print(f"Found tool '{tool.strip()}' usage at step {i+1} for ID {id}")
 
         print("-" * 80)
 
@@ -140,22 +140,50 @@ def load_trajectory(id: str):
     
     return data["trajectory"]
 
-# helper function to print trajectory steps
-def print_trajectory_steps(trajectory):
+# helper function to save trajectory steps to JSON file
+def print_trajectory_steps_to_json(trajectory, output_file='trajectory_steps.json'):
+    steps = []
     for (i, step) in enumerate(trajectory):
-        print(str(i+1) + ": " + step["thought"])
-        action = step["action"].split("\n")[0]
-        print(">> " + action)
-        print(step["observation"])
-        print('-' * 80)
+        action_first_line = step["action"].split("\n")[0]
+        step_data = {
+            "step_number": i+1,
+            "thought": step["thought"],
+            "action": action_first_line,
+            "full_action": step["action"],
+            "observation": step["observation"]
+        }
+        steps.append(step_data)
+    
+    output_data = {
+        "total_steps": len(trajectory),
+        "steps": steps
+    }
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(output_data, f, indent=2, ensure_ascii=False)
+    
+    print(f"Trajectory saved to {output_file} with {len(trajectory)} steps")
 
-    print("Finished in " + str(len(trajectory)) + " steps")
+def print_trajectory_steps(trajectory, output_file='trajectory_steps.txt'):
+    with open(output_file, 'w', encoding='utf-8') as f:
+        for (i, step) in enumerate(trajectory):
+            action_first_line = step["action"].split("\n")[0]
+            f.write(f"\n{'-'*80}\n")
+            f.write(f"Step {i}:\n")
+            f.write(f"Thought: {step['thought']}\n")
+            f.write(f"Action: {action_first_line}\n")
+            # f.write(f"Full Action: {step['action']}\n")
+            # f.write(f"Observation: {step['observation']}\n")
+        f.write(f"\nTotal steps: {len(trajectory)}\n")
+    
+    print(f"Trajectory saved to {output_file} with {len(trajectory)} steps")
 
-for id in id_to_path_map.keys():
-    print(f"\nProcessing ID: {id}")
-    repro_steps = locate_reproduction_code(id)
-    print(f"Steps with reproduction code => {repro_steps}")
-    search_steps = locate_search(id)
-    print(f"Steps with search actions => {search_steps}")
-    tool_usage = locate_tool_usage(id)
-    print(f"Tool usage frequency map => {tool_usage}")
+# id = "2931"
+# print(f"\nProcessing ID: {id}")
+# repro_steps = locate_reproduction_code(id)
+# print(f"Steps with reproduction code => {repro_steps}")
+# search_steps = locate_search(id)
+# print(f"Steps with search actions => {search_steps}")
+# tool_usage = locate_tool_usage(id)
+# print(f"Tool usage frequency map => {tool_usage}")
+# print_trajectory_steps(load_trajectory(id))

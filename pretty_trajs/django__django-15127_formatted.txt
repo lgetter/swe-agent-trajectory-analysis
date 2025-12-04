@@ -1,0 +1,2826 @@
+====================================================================================================
+TRAJECTORY ANALYSIS: django__django-15127.traj
+====================================================================================================
+Total Steps: 30
+Generated: 2025-12-03 22:44:29
+====================================================================================================
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                   INITIAL CONTEXT                                                ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🔧 SYSTEM PROMPT                                                                                │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+You are a helpful assistant that can interact with a computer to solve tasks.
+<IMPORTANT>
+* If user provides a path, you should NOT assume it's relative to the current working directory. Instead, you should explore the file system to find the file before working on it.
+</IMPORTANT>
+
+You have access to the following functions:
+
+---- BEGIN FUNCTION #1: bash ----
+Description: Execute a bash command in the terminal.
+
+Parameters:
+  (1) command (string, required): The bash command to execute. Can be empty to view additional logs when previous exit code is `-1`. Can be `ctrl+c` to interrupt the currently running process.
+---- END FUNCTION #1 ----
+
+---- BEGIN FUNCTION #2: submit ----
+Description: Finish the interaction when the task is complete OR if the assistant cannot proceed further with the task.
+No parameters are required for this function.
+---- END FUNCTION #2 ----
+
+---- BEGIN FUNCTION #3: str_replace_editor ----
+Description: Custom editing tool for viewing, creating and editing files
+* State is persistent across command calls and discussions with the user
+* If `path` is a file, `view` displays the result of applying `cat -n`. If `path` is a directory, `view` lists non-hidden files and directories up to 2 levels deep
+* The `create` command cannot be used if the specified `path` already exists as a file
+* If a `command` generates a long output, it will be truncated and marked with `<response clipped>`
+* The `undo_edit` command will revert the last edit made to the file at `path`
+
+Notes for using the `str_replace` command:
+* The `old_str` parameter should match EXACTLY one or more consecutive lines from the original file. Be mindful of whitespaces!
+* If the `old_str` parameter is not unique in the file, the replacement will not be performed. Make sure to include enough context in `old_str` to make it unique
+* The `new_str` parameter should contain the edited lines that should replace the `old_str`
+
+Parameters:
+  (1) command (string, required): The commands to run. Allowed options are: `view`, `create`, `str_replace`, `insert`, `undo_edit`.
+Allowed values: [`view`, `create`, `str_replace`, `insert`, `undo_edit`]
+  (2) path (string, required): Absolute path to file or directory, e.g. `/repo/file.py` or `/repo`.
+  (3) file_text (string, optional): Required parameter of `create` command, with the content of the file to be created.
+  (4) old_str (string, optional): Required parameter of `str_replace` command containing the string in `path` to replace.
+  (5) new_str (string, optional): Optional parameter of `str_replace` command containing the new string (if not given, no string will be added). Required parameter of `insert` command containing the string to insert.
+  (6) insert_line (integer, optional): Required parameter of `insert` command. The `new_str` will be inserted AFTER the line `insert_line` of `path`.
+  (7) view_range (array, optional): Optional parameter of `view` command when `path` points to a file. If none is given, the full file is shown. If provided, the file will be shown in the indicated line number range, e.g. [11, 12] will show lines 11 and 12. Indexing at 1 to start. Setting `[start_line, -1]` shows all lines from `start_line` to the end of the file.
+---- END FUNCTION #3 ----
+
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+Provide any reasoning for the function call here.
+<function=example_function_name>
+<parameter=example_parameter_1>value_1</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format, start with <function= and end with </function>
+- Required parameters MUST be specified
+- Only call one function at a time
+- Always provide reasoning for your function call in natural language BEFORE the function call (not after)
+</IMPORTANT>
+
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 📋 PROBLEM DESCRIPTION / INITIAL OBSERVATION                                                    │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+<uploaded_files>
+/testbed
+</uploaded_files>
+I've uploaded a python code repository in the directory /testbed. Consider the following PR description:
+
+<pr_description>
+LEVEL_TAGS not updated when using @override_settings
+Description
+	
+When reading messages inside tests, new message tags created using @override_settings is not updated.
+That causes the django.contrib.messages.storage.base.Message.level_tag property results to be an empty string and not know the new tags.
+
+</pr_description>
+
+Can you help me implement the necessary changes to the repository so that the requirements specified in the <pr_description> are met?
+I've already taken care of all changes to any of the test files described in the <pr_description>. This means you DON'T have to modify the testing logic or any of the tests in any way!
+Your task is to make the minimal changes to non-tests files in the /testbed directory to ensure the <pr_description> is satisfied.
+Follow these steps to resolve the issue:
+1. As a first step, it might be a good idea to find and read code relevant to the <pr_description>
+2. Create a script to reproduce the error and execute it with `python <filename.py>` using the bash tool, to confirm the error
+3. Edit the source code of the repo to resolve the issue
+4. Rerun your reproduce script and confirm that the error is fixed!
+5. Think about edgecases and make sure your fix handles them as well
+Your thinking should be thorough and so it's fine if it's very long.
+
+====================================================================================================
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 1 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+I'll help you implement the necessary changes to fix the issue with `LEVEL_TAGS` not being updated when using `@override_settings`. Let's follow the steps you outlined.
+
+## Step 1: Find and read code relevant to the PR description
+
+First, let's explore the repository structure to locate the relevant files:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: find /testbed -type f -name "*.py" | grep -v "__pycache__" | sort
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+/testbed/django/__init__.py
+/testbed/django/__main__.py
+/testbed/django/apps/__init__.py
+/testbed/django/apps/config.py
+/testbed/django/apps/registry.py
+/testbed/django/conf/__init__.py
+/testbed/django/conf/global_settings.py
+/testbed/django/conf/locale/__init__.py
+/testbed/django/conf/locale/ar/__init__.py
+/testbed/django/conf/locale/ar/formats.py
+/testbed/django/conf/locale/ar_DZ/__init__.py
+/testbed/django/conf/locale/ar_DZ/formats.py
+/testbed/django/conf/locale/az/__init__.py
+/testbed/django/conf/locale/az/formats.py
+/testbed/django/conf/locale/bg/__init__.py
+/testbed/django/conf/locale/bg/formats.py
+/testbed/django/conf/locale/bn/__init__.py
+/testbed/django/conf/locale/bn/formats.py
+/testbed/django/conf/locale/bs/__init__.py
+/testbed/django/conf/locale/bs/formats.py
+/testbed/django/conf/locale/ca/__init__.py
+/testbed/django/conf/locale/ca/formats.py
+/testbed/django/conf/locale/cs/__init__.py
+/testbed/django/conf/locale/cs/formats.py
+/testbed/django/conf/locale/cy/__init__.py
+/testbed/django/conf/locale/cy/formats.py
+/testbed/django/conf/locale/da/__init__.py
+/testbed/django/conf/locale/da/formats.py
+/testbed/django/conf/locale/de/__init__.py
+/testbed/django/conf/locale/de/formats.py
+/testbed/django/conf/locale/de_CH/__init__.py
+/testbed/django/conf/locale/de_CH/formats.py
+/testbed/django/conf/locale/el/__init__.py
+/testbed/django/conf/locale/el/formats.py
+/testbed/django/conf/locale/en/__init__.py
+/testbed/django/conf/locale/en/formats.py
+/testbed/django/conf/locale/en_AU/__init__.py
+/testbed/django/conf/locale/en_AU/formats.py
+/testbed/django/conf/locale/en_GB/__init__.py
+/testbed/django/conf/locale/en_GB/formats.py
+/testbed/django/conf/locale/eo/__init__.py
+/testbed/django/conf/locale/eo/formats.py
+/testbed/django/conf/locale/es/__init__.py
+/testbed/django/conf/locale/es/formats.py
+/testbed/django/conf/locale/es_AR/__init__.py
+/testbed/django/conf/locale/es_AR/formats.py
+/testbed/django/conf/locale/es_CO/__init__.
+
+... [Output truncated - 70000 total characters] ...
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+I'll help you implement the necessary changes to fix the issue with `LEVEL_TAGS` not being updated when using `@override_settings`. Let's follow the steps you outlined.
+
+## Step 1: Find and read code relevant to the PR description
+
+First, let's explore the repository structure to locate the relevant files:
+
+<function=bash>
+<parameter=command>find /testbed -type f -name "*.py" | grep -v "__pycache__" | sort</parameter>
+</function>
+
+⏱️  Execution Time: 0.1756 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 2 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's search for files related to messages and the `LEVEL_TAGS` mentioned in the PR description:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: find /testbed -type f -name "*.py" | xargs grep -l "LEVEL_TAGS" | head -10
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+/testbed/django/contrib/messages/storage/base.py
+/testbed/tests/messages_tests/base.py
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's search for files related to messages and the `LEVEL_TAGS` mentioned in the PR description:
+
+<function=bash>
+<parameter=command>find /testbed -type f -name "*.py" | xargs grep -l "LEVEL_TAGS" | head -10</parameter>
+</function>
+
+⏱️  Execution Time: 0.1728 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 3 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's examine the content of the messages storage base file:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/django/contrib/messages/storage/base.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/django/contrib/messages/storage/base.py:
+     1	from django.conf import settings
+     2	from django.contrib.messages import constants, utils
+     3	
+     4	LEVEL_TAGS = utils.get_level_tags()
+     5	
+     6	
+     7	class Message:
+     8	    """
+     9	    Represent an actual message that can be stored in any of the supported
+    10	    storage classes (typically session- or cookie-based) and rendered in a view
+    11	    or template.
+    12	    """
+    13	
+    14	    def __init__(self, level, message, extra_tags=None):
+    15	        self.level = int(level)
+    16	        self.message = message
+    17	        self.extra_tags = extra_tags
+    18	
+    19	    def _prepare(self):
+    20	        """
+    21	        Prepare the message for serialization by forcing the ``message``
+    22	        and ``extra_tags`` to str in case they are lazy translations.
+    23	        """
+    24	        self.message = str(self.message)
+    25	        self.extra_tags = str(self.extra_tags) if self.extra_tags is not None else None
+    26	
+    27	    def __eq__(self, other):
+    28	        if not isinstance(other, Message):
+    29	            return NotImplemented
+    30	        return self.level == other.level and self.message == other.message
+    31	
+    32	    def __str__(self):
+    33	        return str(self.message)
+    34	
+    35	    @property
+    36	    def tags(self):
+    37	        return ' '.join(tag for tag in [self.extra_tags, self.level_tag] if tag)
+    38	
+    39	    @property
+    40	    def level_tag(self):
+    41	        return LEVEL_TAGS.get(self.level, '')
+    42	
+    43	
+    44	class BaseStorage:
+    45	    """
+    46	    This is the base backend for temporary message storage.
+    47	
+    48	    This is not a complete class; to be a usable storage backend, it must be
+    49	    subclassed and the two methods ``_get`` and ``_store`` overridden.
+    50	    """
+    51	
+    5
+
+... [Output truncated - 7266 total characters] ...
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's examine the content of the messages storage base file:
+
+<function=str_replace_editor>
+<parameter=command>view</parameter>
+<parameter=path>/testbed/django/contrib/messages/storage/base.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.1485 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 4 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Now let's look at the utils.py file to understand how `LEVEL_TAGS` is defined:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/django/contrib/messages/utils.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/django/contrib/messages/utils.py:
+     1	from django.conf import settings
+     2	from django.contrib.messages import constants
+     3	
+     4	
+     5	def get_level_tags():
+     6	    """
+     7	    Return the message level tags.
+     8	    """
+     9	    return {
+    10	        **constants.DEFAULT_TAGS,
+    11	        **getattr(settings, 'MESSAGE_TAGS', {}),
+    12	    }
+    13
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Now let's look at the utils.py file to understand how `LEVEL_TAGS` is defined:
+
+<function=str_replace_editor>
+<parameter=command>view</parameter>
+<parameter=path>/testbed/django/contrib/messages/utils.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.1748 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 5 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's also check the constants.py file:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/django/contrib/messages/constants.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/django/contrib/messages/constants.py:
+     1	DEBUG = 10
+     2	INFO = 20
+     3	SUCCESS = 25
+     4	WARNING = 30
+     5	ERROR = 40
+     6	
+     7	DEFAULT_TAGS = {
+     8	    DEBUG: 'debug',
+     9	    INFO: 'info',
+    10	    SUCCESS: 'success',
+    11	    WARNING: 'warning',
+    12	    ERROR: 'error',
+    13	}
+    14	
+    15	DEFAULT_LEVELS = {
+    16	    'DEBUG': DEBUG,
+    17	    'INFO': INFO,
+    18	    'SUCCESS': SUCCESS,
+    19	    'WARNING': WARNING,
+    20	    'ERROR': ERROR,
+    21	}
+    22
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's also check the constants.py file:
+
+<function=str_replace_editor>
+<parameter=command>view</parameter>
+<parameter=path>/testbed/django/contrib/messages/constants.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.1482 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 6 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's also check the test file to understand the issue better:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/tests/messages_tests/base.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/tests/messages_tests/base.py:
+     1	from django.contrib.messages import constants, get_level, set_level, utils
+     2	from django.contrib.messages.api import MessageFailure
+     3	from django.contrib.messages.constants import DEFAULT_LEVELS
+     4	from django.contrib.messages.storage import base, default_storage
+     5	from django.contrib.messages.storage.base import Message
+     6	from django.http import HttpRequest, HttpResponse
+     7	from django.test import modify_settings, override_settings
+     8	from django.urls import reverse
+     9	from django.utils.translation import gettext_lazy
+    10	
+    11	
+    12	def add_level_messages(storage):
+    13	    """
+    14	    Add 6 messages from different levels (including a custom one) to a storage
+    15	    instance.
+    16	    """
+    17	    storage.add(constants.INFO, 'A generic info message')
+    18	    storage.add(29, 'Some custom level')
+    19	    storage.add(constants.DEBUG, 'A debugging message', extra_tags='extra-tag')
+    20	    storage.add(constants.WARNING, 'A warning')
+    21	    storage.add(constants.ERROR, 'An error')
+    22	    storage.add(constants.SUCCESS, 'This was a triumph.')
+    23	
+    24	
+    25	class override_settings_tags(override_settings):
+    26	    def enable(self):
+    27	        super().enable()
+    28	        # LEVEL_TAGS is a constant defined in the
+    29	        # django.contrib.messages.storage.base module, so after changing
+    30	        # settings.MESSAGE_TAGS, update that constant also.
+    31	        self.old_level_tags = base.LEVEL_TAGS
+    32	        base.LEVEL_TAGS = utils.get_level_tags()
+    33	
+    34	    def disable(self):
+    35	        super().disable()
+    36	        base.LEVEL_TAGS = self.old_level_tags
+    37	
+    38	
+    39	class BaseTests:
+    40	    storage_class = default_storage
+    41	    levels = {
+    42	        'debug': constants.DEBUG,
+    43	        'info': const
+
+... [Output truncated - 17338 total characters] ...
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's also check the test file to understand the issue better:
+
+<function=str_replace_editor>
+<parameter=command>view</parameter>
+<parameter=path>/testbed/tests/messages_tests/base.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.1485 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 7 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Now I understand the issue. The problem is that when using `@override_settings`, the `LEVEL_TAGS` in `django.contrib.messages.storage.base` is not being updated. The test file has a custom `override_settings_tags` class that manually updates `LEVEL_TAGS` in its `enable` method, but this is not the standard behavior when using `@override_settings` directly.
+
+Let's create a script to reproduce the error:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/reproduce_error.py --file_text 'import os
+
+Full Action:
+  str_replace_editor create /testbed/reproduce_error.py --file_text 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings
+  from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+  from django.contrib.messages import constants
+  from django.contrib.messages.utils import get_level_tags
+  
+  # Set up Django
+  os.environ.setdefault('"'"'DJANGO_SETTINGS_MODULE'"'"', '"'"'django.conf.global_settings'"'"')
+  django.setup()
+  
+  # Print initial LEVEL_TAGS
+  print("Initial LEVEL_TAGS:", LEVEL_TAGS)
+  
+  # Define custom MESSAGE_TAGS
+  custom_message_tags = {
+      constants.INFO: '"'"'custom-info'"'"',
+      42: '"'"'custom-level'"'"',
+  }
+  
+  # Use override_settings to change MESSAGE_TAGS
+  with override_settings(MESSAGE_TAGS=custom_message_tags):
+      # Get updated LEVEL_TAGS using utils.get_level_tags()
+      updated_tags = get_level_tags()
+      print("Updated tags from utils.get_level_tags():", updated_tags)
+      
+      # Check if LEVEL_TAGS was updated
+      print("LEVEL_TAGS inside override_settings:", LEVEL_TAGS)
+      
+      # Create a message with a custom level
+      message = Message(42, "Test message")
+      print("Message level_tag:", message.level_tag)
+      
+      # Check if the message has the correct tag
+      print("Message tags:", message.tags)
+  
+  # Check LEVEL_TAGS after override_settings
+  print("LEVEL_TAGS after override_settings:", LEVEL_TAGS)'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/reproduce_error.py
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Now I understand the issue. The problem is that when using `@override_settings`, the `LEVEL_TAGS` in `django.contrib.messages.storage.base` is not being updated. The test file has a custom `override_settings_tags` class that manually updates `LEVEL_TAGS` in its `enable` method, but this is not the standard behavior when using `@override_settings` directly.
+
+Let's create a script to reproduce the error:
+
+<function=str_replace_editor>
+<parameter=command>create</parameter>
+<parameter=path>/testbed/reproduce_error.py</parameter>
+<parameter=file_text>
+import os
+import sys
+import django
+from django.conf import settings
+from django.test import override_settings
+from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+from django.contrib.messages import constants
+from django.contrib.messages.utils import get_level_tags
+
+# Set up Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django.conf.global_settings')
+django.setup()
+
+# Print initial LEVEL_TAGS
+print("Initial LEVEL_TAGS:
+... [Response truncated - 1863 total characters] ...
+
+⏱️  Execution Time: 0.1487 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 8 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's run the script to reproduce the error:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python reproduce_error.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/reproduce_error.py", line 6, in <module>
+    from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+  File "/testbed/django/contrib/messages/storage/base.py", line 4, in <module>
+    LEVEL_TAGS = utils.get_level_tags()
+  File "/testbed/django/contrib/messages/utils.py", line 11, in get_level_tags
+    **getattr(settings, 'MESSAGE_TAGS', {}),
+  File "/testbed/django/conf/__init__.py", line 84, in __getattr__
+    self._setup(name)
+  File "/testbed/django/conf/__init__.py", line 65, in _setup
+    raise ImproperlyConfigured(
+django.core.exceptions.ImproperlyConfigured: Requested setting MESSAGE_TAGS, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's run the script to reproduce the error:
+
+<function=bash>
+<parameter=command>cd /testbed && python reproduce_error.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.7115 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 9 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's modify our script to properly configure Django settings:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor str_replace /testbed/reproduce_error.py   --old_str 'import os
+
+Full Action:
+  str_replace_editor str_replace /testbed/reproduce_error.py   --old_str 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings
+  from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+  from django.contrib.messages import constants
+  from django.contrib.messages.utils import get_level_tags
+  
+  # Set up Django
+  os.environ.setdefault('"'"'DJANGO_SETTINGS_MODULE'"'"', '"'"'django.conf.global_settings'"'"')
+  django.setup()' --new_str 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings
+  from django.contrib.messages.storage import base
+  from django.contrib.messages import constants
+  from django.contrib.messages.utils import get_level_tags
+  
+  # Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+  )
+  
+  # Import after configuration
+  from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+  django.setup()'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+The file /testbed/reproduce_error.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/reproduce_error.py:
+     1	import os
+     2	import sys
+     3	import django
+     4	from django.conf import settings
+     5	from django.test import override_settings
+     6	from django.contrib.messages.storage import base
+     7	from django.contrib.messages import constants
+     8	from django.contrib.messages.utils import get_level_tags
+     9	
+    10	# Configure Django settings
+    11	settings.configure(
+    12	    MESSAGE_TAGS={},
+    13	    INSTALLED_APPS=[
+    14	        'django.contrib.messages',
+    15	    ],
+    16	)
+    17	
+    18	# Import after configuration
+    19	from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+    20	django.setup()
+    21	
+    22	# Print initial LEVEL_TAGS
+    23	print("Initial LEVEL_TAGS:", LEVEL_TAGS)
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's modify our script to properly configure Django settings:
+
+<function=str_replace_editor>
+<parameter=command>str_replace</parameter>
+<parameter=path>/testbed/reproduce_error.py</parameter>
+<parameter=old_str>
+import os
+import sys
+import django
+from django.conf import settings
+from django.test import override_settings
+from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+from django.contrib.messages import constants
+from django.contrib.messages.utils import get_level_tags
+
+# Set up Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django.conf.global_settings')
+django.setup()
+</parameter>
+<parameter=new_str>
+import os
+import sys
+import django
+from django.conf import settings
+from django.test import override_settings
+from django.contrib.messages.storage import base
+from django.contrib.messages import constants
+from django.contrib.messages.utils import get_level_tags
+
+# Configure Django settings
+settings.configure(
+    MESSAGE_TAGS={},
+    INSTALLED_APPS=[
+        
+... [Response truncated - 1174 total characters] ...
+
+⏱️  Execution Time: 0.1564 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 10 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's run the script again:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python reproduce_error.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/reproduce_error.py", line 6, in <module>
+    from django.contrib.messages.storage import base
+  File "/testbed/django/contrib/messages/storage/base.py", line 4, in <module>
+    LEVEL_TAGS = utils.get_level_tags()
+  File "/testbed/django/contrib/messages/utils.py", line 11, in get_level_tags
+    **getattr(settings, 'MESSAGE_TAGS', {}),
+  File "/testbed/django/conf/__init__.py", line 84, in __getattr__
+    self._setup(name)
+  File "/testbed/django/conf/__init__.py", line 65, in _setup
+    raise ImproperlyConfigured(
+django.core.exceptions.ImproperlyConfigured: Requested setting MESSAGE_TAGS, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's run the script again:
+
+<function=bash>
+<parameter=command>cd /testbed && python reproduce_error.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.2945 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 11 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's try a different approach to reproduce the issue:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/reproduce_error.py --file_text 'import os
+
+Full Action:
+  str_replace_editor create /testbed/reproduce_error.py --file_text 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings
+  from django.contrib.messages import constants
+  
+  # Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+  )
+  django.setup()
+  
+  # Import after configuration
+  from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+  from django.contrib.messages.utils import get_level_tags
+  
+  # Print initial LEVEL_TAGS
+  print("Initial LEVEL_TAGS:", LEVEL_TAGS)
+  
+  # Define custom MESSAGE_TAGS
+  custom_message_tags = {
+      constants.INFO: '"'"'custom-info'"'"',
+      42: '"'"'custom-level'"'"',
+  }
+  
+  # Manually update settings
+  settings.MESSAGE_TAGS = custom_message_tags
+  
+  # Get updated LEVEL_TAGS using utils.get_level_tags()
+  updated_tags = get_level_tags()
+  print("Updated tags from utils.get_level_tags():", updated_tags)
+  
+  # Check if LEVEL_TAGS was updated
+  print("LEVEL_TAGS after manual update:", LEVEL_TAGS)
+  
+  # Create a message with a custom level
+  message = Message(42, "Test message")
+  print("Message level_tag:", message.level_tag)
+  print("Message tags:", message.tags)
+  
+  # Now try with override_settings
+  print("\nTesting with override_settings:")
+  with override_settings(MESSAGE_TAGS=custom_message_tags):
+      # Get updated LEVEL_TAGS using utils.get_level_tags()
+      updated_tags = get_level_tags()
+      print("Updated tags from utils.get_level_tags() inside override_settings:", updated_tags)
+      
+      # Check if LEVEL_TAGS was updated
+      print("LEVEL_TAGS inside override_settings:", LEVEL_TAGS)
+      
+      # Create a message with a custom level
+      message = Message(42, "Test message inside override_settings")
+      print("Message level_tag inside override_settings:", message.level_tag)
+      print("Message tags inside override_settings:", message.tags)
+  
+  # Check LEVEL_TAGS after override_settings
+  print("LEVEL_TAGS after override_settings:", LEVEL_TAGS)'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File already exists at: /testbed/reproduce_error.py. Cannot overwrite files using command `create`.
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's try a different approach to reproduce the issue:
+
+<function=str_replace_editor>
+<parameter=command>create</parameter>
+<parameter=path>/testbed/reproduce_error.py</parameter>
+<parameter=file_text>
+import os
+import sys
+import django
+from django.conf import settings
+from django.test import override_settings
+from django.contrib.messages import constants
+
+# Configure Django settings
+settings.configure(
+    MESSAGE_TAGS={},
+    INSTALLED_APPS=[
+        'django.contrib.messages',
+    ],
+)
+django.setup()
+
+# Import after configuration
+from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+from django.contrib.messages.utils import get_level_tags
+
+# Print initial LEVEL_TAGS
+print("Initial LEVEL_TAGS:", LEVEL_TAGS)
+
+# Define custom MESSAGE_TAGS
+custom_message_tags = {
+    constants.INFO: 'custom-info',
+    42: 'custom-level',
+}
+
+# Manually update settings
+settings.MESSAGE_TAGS = custom_message_tags
+
+# Get updated LEVEL_TAGS using utils.get_level_tags()
+updated_tags = get_level_
+... [Response truncated - 2132 total characters] ...
+
+⏱️  Execution Time: 0.1496 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 12 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's remove the file first and then create it again:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: rm /testbed/reproduce_error.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's remove the file first and then create it again:
+
+<function=bash>
+<parameter=command>rm /testbed/reproduce_error.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.1095 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 13 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/reproduce_error.py --file_text 'import os
+
+Full Action:
+  str_replace_editor create /testbed/reproduce_error.py --file_text 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings
+  from django.contrib.messages import constants
+  
+  # Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+  )
+  django.setup()
+  
+  # Import after configuration
+  from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+  from django.contrib.messages.utils import get_level_tags
+  
+  # Print initial LEVEL_TAGS
+  print("Initial LEVEL_TAGS:", LEVEL_TAGS)
+  
+  # Define custom MESSAGE_TAGS
+  custom_message_tags = {
+      constants.INFO: '"'"'custom-info'"'"',
+      42: '"'"'custom-level'"'"',
+  }
+  
+  # Manually update settings
+  settings.MESSAGE_TAGS = custom_message_tags
+  
+  # Get updated LEVEL_TAGS using utils.get_level_tags()
+  updated_tags = get_level_tags()
+  print("Updated tags from utils.get_level_tags():", updated_tags)
+  
+  # Check if LEVEL_TAGS was updated
+  print("LEVEL_TAGS after manual update:", LEVEL_TAGS)
+  
+  # Create a message with a custom level
+  message = Message(42, "Test message")
+  print("Message level_tag:", message.level_tag)
+  print("Message tags:", message.tags)
+  
+  # Now try with override_settings
+  print("\nTesting with override_settings:")
+  with override_settings(MESSAGE_TAGS=custom_message_tags):
+      # Get updated LEVEL_TAGS using utils.get_level_tags()
+      updated_tags = get_level_tags()
+      print("Updated tags from utils.get_level_tags() inside override_settings:", updated_tags)
+      
+      # Check if LEVEL_TAGS was updated
+      print("LEVEL_TAGS inside override_settings:", LEVEL_TAGS)
+      
+      # Create a message with a custom level
+      message = Message(42, "Test message inside override_settings")
+      print("Message level_tag inside override_settings:", message.level_tag)
+      print("Message tags inside override_settings:", message.tags)
+  
+  # Check LEVEL_TAGS after override_settings
+  print("LEVEL_TAGS after override_settings:", LEVEL_TAGS)'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/reproduce_error.py
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+
+
+<function=str_replace_editor>
+<parameter=command>create</parameter>
+<parameter=path>/testbed/reproduce_error.py</parameter>
+<parameter=file_text>
+import os
+import sys
+import django
+from django.conf import settings
+from django.test import override_settings
+from django.contrib.messages import constants
+
+# Configure Django settings
+settings.configure(
+    MESSAGE_TAGS={},
+    INSTALLED_APPS=[
+        'django.contrib.messages',
+    ],
+)
+django.setup()
+
+# Import after configuration
+from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+from django.contrib.messages.utils import get_level_tags
+
+# Print initial LEVEL_TAGS
+print("Initial LEVEL_TAGS:", LEVEL_TAGS)
+
+# Define custom MESSAGE_TAGS
+custom_message_tags = {
+    constants.INFO: 'custom-info',
+    42: 'custom-level',
+}
+
+# Manually update settings
+settings.MESSAGE_TAGS = custom_message_tags
+
+# Get updated LEVEL_TAGS using utils.get_level_tags()
+updated_tags = get_level_tags()
+print("Updated tags from utils.get_level_tags()
+... [Response truncated - 2078 total characters] ...
+
+⏱️  Execution Time: 0.1510 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 14 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's run the script:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python reproduce_error.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Initial LEVEL_TAGS: {10: 'debug', 20: 'info', 25: 'success', 30: 'warning', 40: 'error'}
+Updated tags from utils.get_level_tags(): {10: 'debug', 20: 'custom-info', 25: 'success', 30: 'warning', 40: 'error', 42: 'custom-level'}
+LEVEL_TAGS after manual update: {10: 'debug', 20: 'info', 25: 'success', 30: 'warning', 40: 'error'}
+Message level_tag: 
+Message tags: 
+
+Testing with override_settings:
+Updated tags from utils.get_level_tags() inside override_settings: {10: 'debug', 20: 'custom-info', 25: 'success', 30: 'warning', 40: 'error', 42: 'custom-level'}
+LEVEL_TAGS inside override_settings: {10: 'debug', 20: 'info', 25: 'success', 30: 'warning', 40: 'error'}
+Message level_tag inside override_settings: 
+Message tags inside override_settings: 
+LEVEL_TAGS after override_settings: {10: 'debug', 20: 'info', 25: 'success', 30: 'warning', 40: 'error'}
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's run the script:
+
+<function=bash>
+<parameter=command>cd /testbed && python reproduce_error.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.3251 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 15 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Now I can see the issue clearly. When we manually update `settings.MESSAGE_TAGS`, the `LEVEL_TAGS` is updated correctly. However, when using `@override_settings`, the `LEVEL_TAGS` is not updated, even though `get_level_tags()` returns the correct values.
+
+Let's look at the implementation of `override_settings` to understand how it works:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/django/test/utils.py  --view_range 1 100
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/django/test/utils.py:
+     1	import asyncio
+     2	import collections
+     3	import logging
+     4	import os
+     5	import re
+     6	import sys
+     7	import time
+     8	import warnings
+     9	from contextlib import contextmanager
+    10	from functools import wraps
+    11	from io import StringIO
+    12	from itertools import chain
+    13	from types import SimpleNamespace
+    14	from unittest import TestCase, skipIf, skipUnless
+    15	from xml.dom.minidom import Node, parseString
+    16	
+    17	from django.apps import apps
+    18	from django.apps.registry import Apps
+    19	from django.conf import UserSettingsHolder, settings
+    20	from django.core import mail
+    21	from django.core.exceptions import ImproperlyConfigured
+    22	from django.core.signals import request_started
+    23	from django.db import DEFAULT_DB_ALIAS, connections, reset_queries
+    24	from django.db.models.options import Options
+    25	from django.template import Template
+    26	from django.test.signals import setting_changed, template_rendered
+    27	from django.urls import get_script_prefix, set_script_prefix
+    28	from django.utils.deprecation import RemovedInDjango50Warning
+    29	from django.utils.translation import deactivate
+    30	
+    31	try:
+    32	    import jinja2
+    33	except ImportError:
+    34	    jinja2 = None
+    35	
+    36	
+    37	__all__ = (
+    38	    'Approximate', 'ContextList', 'isolate_lru_cache', 'get_runner',
+    39	    'CaptureQueriesContext',
+    40	    'ignore_warnings', 'isolate_apps', 'modify_settings', 'override_settings',
+    41	    'override_system_checks', 'tag',
+    42	    'requires_tz_support',
+    43	    'setup_databases', 'setup_test_environment', 'teardown_test_environment',
+    44	)
+    45	
+    46	TZ_SUPPORT = hasattr(time, 'tzset')
+    47	
+    48	
+    49	class Approximate:
+    50	    def __init__(self, val, places=7):
+    51	        self.val = val
+    5
+
+... [Output truncated - 3704 total characters] ...
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Now I can see the issue clearly. When we manually update `settings.MESSAGE_TAGS`, the `LEVEL_TAGS` is updated correctly. However, when using `@override_settings`, the `LEVEL_TAGS` is not updated, even though `get_level_tags()` returns the correct values.
+
+Let's look at the implementation of `override_settings` to understand how it works:
+
+<function=str_replace_editor>
+<parameter=command>view</parameter>
+<parameter=path>/testbed/django/test/utils.py</parameter>
+<parameter=view_range>[1, 100]</parameter>
+</function>
+
+⏱️  Execution Time: 0.1988 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 16 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's continue reading the file to find the `override_settings` implementation:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/django/test/utils.py  --view_range 400 500
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/django/test/utils.py:
+   400	    def __enter__(self):
+   401	        return self.enable()
+   402	
+   403	    def __exit__(self, exc_type, exc_value, traceback):
+   404	        self.disable()
+   405	
+   406	    def decorate_class(self, cls):
+   407	        if issubclass(cls, TestCase):
+   408	            decorated_setUp = cls.setUp
+   409	
+   410	            def setUp(inner_self):
+   411	                context = self.enable()
+   412	                inner_self.addCleanup(self.disable)
+   413	                if self.attr_name:
+   414	                    setattr(inner_self, self.attr_name, context)
+   415	                decorated_setUp(inner_self)
+   416	
+   417	            cls.setUp = setUp
+   418	            return cls
+   419	        raise TypeError('Can only decorate subclasses of unittest.TestCase')
+   420	
+   421	    def decorate_callable(self, func):
+   422	        if asyncio.iscoroutinefunction(func):
+   423	            # If the inner function is an async function, we must execute async
+   424	            # as well so that the `with` statement executes at the right time.
+   425	            @wraps(func)
+   426	            async def inner(*args, **kwargs):
+   427	                with self as context:
+   428	                    if self.kwarg_name:
+   429	                        kwargs[self.kwarg_name] = context
+   430	                    return await func(*args, **kwargs)
+   431	        else:
+   432	            @wraps(func)
+   433	            def inner(*args, **kwargs):
+   434	                with self as context:
+   435	                    if self.kwarg_name:
+   436	                        kwargs[self.kwarg_name] = context
+   437	                    return func(*args, **kwargs)
+   438	        return inner
+   439	
+   440	    def __call__(self, decorated):
+   441	        if isinstance(decorated, type):
+   442	            return self.decorate_class(decorated)
+   443	       
+
+... [Output truncated - 4746 total characters] ...
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's continue reading the file to find the `override_settings` implementation:
+
+<function=str_replace_editor>
+<parameter=command>view</parameter>
+<parameter=path>/testbed/django/test/utils.py</parameter>
+<parameter=view_range>[400, 500]</parameter>
+</function>
+
+⏱️  Execution Time: 0.1465 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 17 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Now I understand the issue. When using `@override_settings`, the settings are temporarily changed, but the `LEVEL_TAGS` in `django.contrib.messages.storage.base` is not updated. The `LEVEL_TAGS` is a module-level variable that is only initialized once when the module is loaded.
+
+Let's look at the `Message` class in `base.py` to understand how it uses `LEVEL_TAGS`:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/django/contrib/messages/storage/base.py  --view_range 1 100
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/django/contrib/messages/storage/base.py:
+     1	from django.conf import settings
+     2	from django.contrib.messages import constants, utils
+     3	
+     4	LEVEL_TAGS = utils.get_level_tags()
+     5	
+     6	
+     7	class Message:
+     8	    """
+     9	    Represent an actual message that can be stored in any of the supported
+    10	    storage classes (typically session- or cookie-based) and rendered in a view
+    11	    or template.
+    12	    """
+    13	
+    14	    def __init__(self, level, message, extra_tags=None):
+    15	        self.level = int(level)
+    16	        self.message = message
+    17	        self.extra_tags = extra_tags
+    18	
+    19	    def _prepare(self):
+    20	        """
+    21	        Prepare the message for serialization by forcing the ``message``
+    22	        and ``extra_tags`` to str in case they are lazy translations.
+    23	        """
+    24	        self.message = str(self.message)
+    25	        self.extra_tags = str(self.extra_tags) if self.extra_tags is not None else None
+    26	
+    27	    def __eq__(self, other):
+    28	        if not isinstance(other, Message):
+    29	            return NotImplemented
+    30	        return self.level == other.level and self.message == other.message
+    31	
+    32	    def __str__(self):
+    33	        return str(self.message)
+    34	
+    35	    @property
+    36	    def tags(self):
+    37	        return ' '.join(tag for tag in [self.extra_tags, self.level_tag] if tag)
+    38	
+    39	    @property
+    40	    def level_tag(self):
+    41	        return LEVEL_TAGS.get(self.level, '')
+    42	
+    43	
+    44	class BaseStorage:
+    45	    """
+    46	    This is the base backend for temporary message storage.
+    47	
+    48	    This is not a complete class; to be a usable storage backend, it must be
+    49	    subclassed and the two methods ``_get`` and ``_store`` overridden.
+    50	    """
+    51	
+    5
+
+... [Output truncated - 4164 total characters] ...
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Now I understand the issue. When using `@override_settings`, the settings are temporarily changed, but the `LEVEL_TAGS` in `django.contrib.messages.storage.base` is not updated. The `LEVEL_TAGS` is a module-level variable that is only initialized once when the module is loaded.
+
+Let's look at the `Message` class in `base.py` to understand how it uses `LEVEL_TAGS`:
+
+<function=str_replace_editor>
+<parameter=command>view</parameter>
+<parameter=path>/testbed/django/contrib/messages/storage/base.py</parameter>
+<parameter=view_range>[1, 100]</parameter>
+</function>
+
+⏱️  Execution Time: 0.1448 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 18 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Now I understand the issue completely. The `LEVEL_TAGS` is a module-level variable in `base.py` that is initialized once when the module is loaded. When using `@override_settings`, the settings are temporarily changed, but `LEVEL_TAGS` is not updated.
+
+Let's also check the `utils.py` file to understand how `get_level_tags()` works:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor view /testbed/django/contrib/messages/utils.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Here's the result of running `cat -n` on /testbed/django/contrib/messages/utils.py:
+     1	from django.conf import settings
+     2	from django.contrib.messages import constants
+     3	
+     4	
+     5	def get_level_tags():
+     6	    """
+     7	    Return the message level tags.
+     8	    """
+     9	    return {
+    10	        **constants.DEFAULT_TAGS,
+    11	        **getattr(settings, 'MESSAGE_TAGS', {}),
+    12	    }
+    13
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Now I understand the issue completely. The `LEVEL_TAGS` is a module-level variable in `base.py` that is initialized once when the module is loaded. When using `@override_settings`, the settings are temporarily changed, but `LEVEL_TAGS` is not updated.
+
+Let's also check the `utils.py` file to understand how `get_level_tags()` works:
+
+<function=str_replace_editor>
+<parameter=command>view</parameter>
+<parameter=path>/testbed/django/contrib/messages/utils.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.1589 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 19 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+## Step 3: Edit the source code to resolve the issue
+
+Now I understand the issue. The problem is that `LEVEL_TAGS` is a module-level variable in `base.py` that is initialized once when the module is loaded. When using `@override_settings`, the settings are temporarily changed, but `LEVEL_TAGS` is not updated.
+
+The solution is to modify the `Message` class to use `get_level_tags()` dynamically instead of using the module-level `LEVEL_TAGS` variable. This way, it will always get the latest tags from the settings.
+
+Let's modify the `base.py` file:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor str_replace /testbed/django/contrib/messages/storage/base.py   --old_str 'from django.conf import settings
+
+Full Action:
+  str_replace_editor str_replace /testbed/django/contrib/messages/storage/base.py   --old_str 'from django.conf import settings
+  from django.contrib.messages import constants, utils
+  
+  LEVEL_TAGS = utils.get_level_tags()
+  
+  
+  class Message:
+      """
+      Represent an actual message that can be stored in any of the supported
+      storage classes (typically session- or cookie-based) and rendered in a view
+      or template.
+      """
+  
+      def __init__(self, level, message, extra_tags=None):
+          self.level = int(level)
+          self.message = message
+          self.extra_tags = extra_tags
+  
+      def _prepare(self):
+          """
+          Prepare the message for serialization by forcing the ``message``
+          and ``extra_tags`` to str in case they are lazy translations.
+          """
+          self.message = str(self.message)
+          self.extra_tags = str(self.extra_tags) if self.extra_tags is not None else None
+  
+      def __eq__(self, other):
+          if not isinstance(other, Message):
+              return NotImplemented
+          return self.level == other.level and self.message == other.message
+  
+      def __str__(self):
+          return str(self.message)
+  
+      @property
+      def tags(self):
+          return '"'"' '"'"'.join(tag for tag in [self.extra_tags, self.level_tag] if tag)
+  
+      @property
+      def level_tag(self):
+          return LEVEL_TAGS.get(self.level, '"'"''"'"')' --new_str 'from django.conf import settings
+  from django.contrib.messages import constants, utils
+  
+  
+  class Message:
+      """
+      Represent an actual message that can be stored in any of the supported
+      storage classes (typically session- or cookie-based) and rendered in a view
+      or template.
+      """
+  
+      def __init__(self, level, message, extra_tags=None):
+          self.level = int(level)
+          self.message = message
+          self.extra_tags = extra_tags
+  
+      def _prepare(self):
+          """
+          Prepare the message for serialization by forcing the ``message``
+          and ``extra_tags`` to str in case they are lazy translations.
+          """
+          self.message = str(self.message)
+          self.extra_tags = str(self.extra_tags) if self.extra_tags is not None else None
+  
+      def __eq__(self, other):
+          if not isinstance(other, Message):
+              return NotImplemented
+          return self.level == other.level and self.message == other.message
+  
+      def __str__(self):
+          return str(self.message)
+  
+      @property
+      def tags(self):
+          return '"'"' '"'"'.join(tag for tag in [self.extra_tags, self.level_tag] if tag)
+  
+      @property
+      def level_tag(self):
+          # Get the latest LEVEL_TAGS from utils to ensure it'"'"'s updated with any @override_settings
+          level_tags = utils.get_level_tags()
+          return level_tags.get(self.level, '"'"''"'"')'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+The file /testbed/django/contrib/messages/storage/base.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/django/contrib/messages/storage/base.py:
+     1	from django.conf import settings
+     2	from django.contrib.messages import constants, utils
+     3	
+     4	
+     5	class Message:
+     6	    """
+     7	    Represent an actual message that can be stored in any of the supported
+     8	    storage classes (typically session- or cookie-based) and rendered in a view
+     9	    or template.
+    10	    """
+    11	
+    12	    def __init__(self, level, message, extra_tags=None):
+    13	        self.level = int(level)
+    14	        self.message = message
+    15	        self.extra_tags = extra_tags
+    16	
+    17	    def _prepare(self):
+    18	        """
+    19	        Prepare the message for serialization by forcing the ``message``
+    20	        and ``extra_tags`` to str in case they are lazy translations.
+    21	        """
+    22	        self.message = str(self.message)
+    23	        self.extra_tags = str(self.extra_tags) if self.extra_tags is not None else None
+    24	
+    25	    def __eq__(self, other):
+    26	        if not isinstance(other, Message):
+    27	            return NotImplemented
+    28	        return self.level == other.level and self.message == other.message
+    29	
+    30	    def __str__(self):
+    31	        return str(self.message)
+    32	
+    33	    @property
+    34	    def tags(self):
+    35	        return ' '.join(tag for tag in [self.extra_tags, self.level_tag] if tag)
+    36	
+    37	    @property
+    38	    def level_tag(self):
+    39	        # Get the latest LEVEL_TAGS from utils to ensure it's updated with any @override_settings
+    40	        level_tags = utils.get_level_tags()
+    41	        return level_tags.get(self.level, '')
+    42	
+    43	
+    44	class BaseStorage:
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+## Step 3: Edit the source code to resolve the issue
+
+Now I understand the issue. The problem is that `LEVEL_TAGS` is a module-level variable in `base.py` that is initialized once when the module is loaded. When using `@override_settings`, the settings are temporarily changed, but `LEVEL_TAGS` is not updated.
+
+The solution is to modify the `Message` class to use `get_level_tags()` dynamically instead of using the module-level `LEVEL_TAGS` variable. This way, it will always get the latest tags from the settings.
+
+Let's modify the `base.py` file:
+
+<function=str_replace_editor>
+<parameter=command>str_replace</parameter>
+<parameter=path>/testbed/django/contrib/messages/storage/base.py</parameter>
+<parameter=old_str>
+from django.conf import settings
+from django.contrib.messages import constants, utils
+
+LEVEL_TAGS = utils.get_level_tags()
+
+
+class Message:
+    """
+    Represent an actual message that can be stored in any of the supported
+    storage classes (typically session- or cookie-based
+... [Response truncated - 3380 total characters] ...
+
+⏱️  Execution Time: 0.1701 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 20 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+## Step 4: Rerun the reproduce script to confirm the fix
+
+Let's update our reproduction script to make it more comprehensive:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor str_replace /testbed/reproduce_error.py   --old_str 'import os
+
+Full Action:
+  str_replace_editor str_replace /testbed/reproduce_error.py   --old_str 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings
+  from django.contrib.messages import constants
+  
+  # Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+  )
+  django.setup()
+  
+  # Import after configuration
+  from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+  from django.contrib.messages.utils import get_level_tags
+  
+  # Print initial LEVEL_TAGS
+  print("Initial LEVEL_TAGS:", LEVEL_TAGS)
+  
+  # Define custom MESSAGE_TAGS
+  custom_message_tags = {
+      constants.INFO: '"'"'custom-info'"'"',
+      42: '"'"'custom-level'"'"',
+  }
+  
+  # Manually update settings
+  settings.MESSAGE_TAGS = custom_message_tags
+  
+  # Get updated LEVEL_TAGS using utils.get_level_tags()
+  updated_tags = get_level_tags()
+  print("Updated tags from utils.get_level_tags():", updated_tags)
+  
+  # Check if LEVEL_TAGS was updated
+  print("LEVEL_TAGS after manual update:", LEVEL_TAGS)
+  
+  # Create a message with a custom level
+  message = Message(42, "Test message")
+  print("Message level_tag:", message.level_tag)
+  print("Message tags:", message.tags)
+  
+  # Now try with override_settings
+  print("\nTesting with override_settings:")
+  with override_settings(MESSAGE_TAGS=custom_message_tags):
+      # Get updated LEVEL_TAGS using utils.get_level_tags()
+      updated_tags = get_level_tags()
+      print("Updated tags from utils.get_level_tags() inside override_settings:", updated_tags)
+      
+      # Check if LEVEL_TAGS was updated
+      print("LEVEL_TAGS inside override_settings:", LEVEL_TAGS)
+      
+      # Create a message with a custom level
+      message = Message(42, "Test message inside override_settings")
+      print("Message level_tag inside override_settings:", message.level_tag)
+      print("Message tags inside override_settings:", message.tags)
+  
+  # Check LEVEL_TAGS after override_settings
+  print("LEVEL_TAGS after override_settings:", LEVEL_TAGS)' --new_str 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings
+  from django.contrib.messages import constants
+  
+  # Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+  )
+  django.setup()
+  
+  # Import after configuration
+  from django.contrib.messages.storage.base import Message
+  from django.contrib.messages.utils import get_level_tags
+  
+  print("=== Testing Message.level_tag with different settings ===")
+  
+  # Define custom MESSAGE_TAGS
+  custom_message_tags = {
+      constants.INFO: '"'"'custom-info'"'"',
+      42: '"'"'custom-level'"'"',
+  }
+  
+  # Test 1: Default settings
+  print("\nTest 1: Default settings")
+  message = Message(42, "Test message")
+  print(f"Message level: {message.level}")
+  print(f"Message level_tag: '"'"'{message.level_tag}'"'"'")
+  print(f"Message tags: '"'"'{message.tags}'"'"'")
+  
+  # Test 2: Manually update settings
+  print("\nTest 2: Manually update settings")
+  settings.MESSAGE_TAGS = custom_message_tags
+  message = Message(42, "Test message")
+  print(f"Message level: {message.level}")
+  print(f"Message level_tag: '"'"'{message.level_tag}'"'"'")
+  print(f"Message tags: '"'"'{message.tags}'"'"'")
+  
+  # Test 3: Reset settings and use override_settings
+  print("\nTest 3: Using override_settings")
+  settings.MESSAGE_TAGS = {}
+  with override_settings(MESSAGE_TAGS=custom_message_tags):
+      message = Message(42, "Test message")
+      print(f"Message level: {message.level}")
+      print(f"Message level_tag: '"'"'{message.level_tag}'"'"'")
+      print(f"Message tags: '"'"'{message.tags}'"'"'")
+  
+  # Test 4: Nested override_settings
+  print("\nTest 4: Nested override_settings")
+  settings.MESSAGE_TAGS = {}
+  with override_settings(MESSAGE_TAGS={42: '"'"'outer-level'"'"'}):
+      message1 = Message(42, "Outer message")
+      print(f"Outer message level_tag: '"'"'{message1.level_tag}'"'"'")
+      
+      with override_settings(MESSAGE_TAGS={42: '"'"'inner-level'"'"'}):
+          message2 = Message(42, "Inner message")
+          print(f"Inner message level_tag: '"'"'{message2.level_tag}'"'"'")
+      
+      message3 = Message(42, "Outer message again")
+      print(f"Outer message again level_tag: '"'"'{message3.level_tag}'"'"'")
+  
+  # Test 5: Test with standard message levels
+  print("\nTest 5: Test with standard message levels")
+  message = Message(constants.INFO, "Info message")
+  print(f"Info message level: {message.level}")
+  print(f"Info message level_tag: '"'"'{message.level_tag}'"'"'")
+  print(f"Info message tags: '"'"'{message.tags}'"'"'")
+  
+  # Final check
+  print("\nFinal check - Default settings restored:")
+  settings.MESSAGE_TAGS = {}
+  message = Message(42, "Test message")
+  print(f"Message level: {message.level}")
+  print(f"Message level_tag: '"'"'{message.level_tag}'"'"'")
+  print(f"Message tags: '"'"'{message.tags}'"'"'")'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+The file /testbed/reproduce_error.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/reproduce_error.py:
+     1	import os
+     2	import sys
+     3	import django
+     4	from django.conf import settings
+     5	from django.test import override_settings
+     6	from django.contrib.messages import constants
+     7	
+     8	# Configure Django settings
+     9	settings.configure(
+    10	    MESSAGE_TAGS={},
+    11	    INSTALLED_APPS=[
+    12	        'django.contrib.messages',
+    13	    ],
+    14	)
+    15	django.setup()
+    16	
+    17	# Import after configuration
+    18	from django.contrib.messages.storage.base import Message
+    19	from django.contrib.messages.utils import get_level_tags
+    20	
+    21	print("=== Testing Message.level_tag with different settings ===")
+    22	
+    23	# Define custom MESSAGE_TAGS
+    24	custom_message_tags = {
+    25	    constants.INFO: 'custom-info',
+    26	    42: 'custom-level',
+    27	}
+    28	
+    29	# Test 1: Default settings
+    30	print("\nTest 1: Default settings")
+    31	message = Message(42, "Test message")
+    32	print(f"Message level: {message.level}")
+    33	print(f"Message level_tag: '{message.level_tag}'")
+    34	print(f"Message tags: '{message.tags}'")
+    35	
+    36	# Test 2: Manually update settings
+    37	print("\nTest 2: Manually update settings")
+    38	settings.MESSAGE_TAGS = custom_message_tags
+    39	message = Message(42, "Test message")
+    40	print(f"Message level: {message.level}")
+    41	print(f"Message level_tag: '{message.level_tag}'")
+    42	print(f"Message tags: '{message.tags}'")
+    43	
+    44	# Test 3: Reset settings and use override_settings
+    45	print("\nTest 3: Using override_settings")
+    46	settings.MESSAGE_TAGS = {}
+    47	with override_settings(MESSAGE_TAGS=custom_message_tags):
+    48	    message = Message(42, "Test message")
+    49	    print(f"Message level: {message.level}")
+    50	    print(f"Message level_tag: '{
+
+... [Output truncated - 3532 total characters] ...
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+## Step 4: Rerun the reproduce script to confirm the fix
+
+Let's update our reproduction script to make it more comprehensive:
+
+<function=str_replace_editor>
+<parameter=command>str_replace</parameter>
+<parameter=path>/testbed/reproduce_error.py</parameter>
+<parameter=old_str>
+import os
+import sys
+import django
+from django.conf import settings
+from django.test import override_settings
+from django.contrib.messages import constants
+
+# Configure Django settings
+settings.configure(
+    MESSAGE_TAGS={},
+    INSTALLED_APPS=[
+        'django.contrib.messages',
+    ],
+)
+django.setup()
+
+# Import after configuration
+from django.contrib.messages.storage.base import Message, LEVEL_TAGS
+from django.contrib.messages.utils import get_level_tags
+
+# Print initial LEVEL_TAGS
+print("Initial LEVEL_TAGS:", LEVEL_TAGS)
+
+# Define custom MESSAGE_TAGS
+custom_message_tags = {
+    constants.INFO: 'custom-info',
+    42: 'custom-level',
+}
+
+# Manually update settings
+settings.MESSAGE_TAGS = custom_message_tags
+
+# Get
+... [Response truncated - 4905 total characters] ...
+
+⏱️  Execution Time: 0.1555 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 21 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's run the updated script to see if our fix works:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python reproduce_error.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+=== Testing Message.level_tag with different settings ===
+
+Test 1: Default settings
+Message level: 42
+Message level_tag: ''
+Message tags: ''
+
+Test 2: Manually update settings
+Message level: 42
+Message level_tag: 'custom-level'
+Message tags: 'custom-level'
+
+Test 3: Using override_settings
+Message level: 42
+Message level_tag: 'custom-level'
+Message tags: 'custom-level'
+
+Test 4: Nested override_settings
+Outer message level_tag: 'outer-level'
+Inner message level_tag: 'inner-level'
+Outer message again level_tag: 'outer-level'
+
+Test 5: Test with standard message levels
+Info message level: 20
+Info message level_tag: 'info'
+Info message tags: 'info'
+
+Final check - Default settings restored:
+Message level: 42
+Message level_tag: ''
+Message tags: ''
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's run the updated script to see if our fix works:
+
+<function=bash>
+<parameter=command>cd /testbed && python reproduce_error.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.3170 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 22 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Great! Our fix works perfectly. The `level_tag` property now correctly reflects the tags defined in the settings, even when using `@override_settings`.
+
+## Step 5: Think about edge cases and make sure the fix handles them
+
+Let's consider some edge cases:
+
+1. **Performance**: Calling `get_level_tags()` every time `level_tag` is accessed might have performance implications. However, this is unlikely to be a problem in practice, as the dictionary returned by `get_level_tags()` is small and the operation is fast.
+
+2. **Backward compatibility**: Our change maintains backward compatibility, as the behavior of `level_tag` is now consistent with the settings, which is the expected behavior.
+
+3. **Nested `@override_settings`**: Our test case 4 shows that nested `@override_settings` works correctly. The inner settings override the outer settings, and when the inner context is exited, the outer settings are restored.
+
+4. **Memory usage**: Our change doesn't increase memory usage significantly, as we're not storing additional data.
+
+5. **Thread safety**: Django's settings are thread-safe, and our change doesn't introduce any new thread-safety issues.
+
+Let's make one more test to ensure that our fix works with the actual test case in the PR description:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor create /testbed/test_pr_case.py --file_text 'import os
+
+Full Action:
+  str_replace_editor create /testbed/test_pr_case.py --file_text 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings, TestCase
+  from django.contrib.messages import constants, add_message
+  from django.contrib.messages.storage.base import Message
+  
+  # Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+      MIDDLEWARE_CLASSES=[],
+  )
+  django.setup()
+  
+  # Create a simple request class for testing
+  class DummyRequest:
+      def __init__(self):
+          self._messages = []
+          self.session = {}
+          self._message_storage = None
+  
+      def get_messages(self):
+          return self._messages
+  
+      def _store_messages(self, messages):
+          self._messages = messages
+  
+  # Create a test case
+  class MessageTagTest(TestCase):
+      def test_message_tags_with_override_settings(self):
+          # Define custom MESSAGE_TAGS
+          custom_message_tags = {
+              constants.INFO: '"'"'custom-info'"'"',
+              42: '"'"'custom-level'"'"',
+          }
+          
+          # Test with override_settings
+          with override_settings(MESSAGE_TAGS=custom_message_tags):
+              # Create a message with a custom level
+              message = Message(42, "Test message")
+              self.assertEqual(message.level_tag, '"'"'custom-level'"'"')
+              self.assertEqual(message.tags, '"'"'custom-level'"'"')
+              
+              # Create a request and add a message
+              request = DummyRequest()
+              add_message(request, 42, "Test message with add_message")
+              
+              # Check if the message has the correct tag
+              messages = request.get_messages()
+              self.assertEqual(len(messages), 1)
+              self.assertEqual(messages[0].level_tag, '"'"'custom-level'"'"')
+              self.assertEqual(messages[0].tags, '"'"'custom-level'"'"')
+  
+  # Run the test
+  if __name__ == '"'"'__main__'"'"':
+      from django.test.utils import setup_test_environment
+      setup_test_environment()
+      
+      from django.test.runner import DiscoverRunner
+      runner = DiscoverRunner()
+      runner.run_tests(['"'"'test_pr_case.py'"'"'])'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+File created successfully at: /testbed/test_pr_case.py
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Great! Our fix works perfectly. The `level_tag` property now correctly reflects the tags defined in the settings, even when using `@override_settings`.
+
+## Step 5: Think about edge cases and make sure the fix handles them
+
+Let's consider some edge cases:
+
+1. **Performance**: Calling `get_level_tags()` every time `level_tag` is accessed might have performance implications. However, this is unlikely to be a problem in practice, as the dictionary returned by `get_level_tags()` is small and the operation is fast.
+
+2. **Backward compatibility**: Our change maintains backward compatibility, as the behavior of `level_tag` is now consistent with the settings, which is the expected behavior.
+
+3. **Nested `@override_settings`**: Our test case 4 shows that nested `@override_settings` works correctly. The inner settings override the outer settings, and when the inner context is exited, the outer settings are restored.
+
+4. **Memory usage**: Our change doesn't increase memory usage significantly, as
+... [Response truncated - 3475 total characters] ...
+
+⏱️  Execution Time: 0.1504 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 23 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's run the test:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_pr_case.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/testbed/test_pr_case.py", line 65, in <module>
+    runner.run_tests(['test_pr_case.py'])
+  File "/testbed/django/test/runner.py", line 919, in run_tests
+    self.setup_test_environment()
+  File "/testbed/django/test/runner.py", line 705, in setup_test_environment
+    setup_test_environment(debug=self.debug_mode)
+  File "/testbed/django/test/utils.py", line 115, in setup_test_environment
+    raise RuntimeError(
+RuntimeError: setup_test_environment() was already called and can't be called again without first calling teardown_test_environment().
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's run the test:
+
+<function=bash>
+<parameter=command>cd /testbed && python test_pr_case.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.3363 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 24 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's modify our test to use a different approach:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor str_replace /testbed/test_pr_case.py   --old_str 'import os
+
+Full Action:
+  str_replace_editor str_replace /testbed/test_pr_case.py   --old_str 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings, TestCase
+  from django.contrib.messages import constants, add_message
+  from django.contrib.messages.storage.base import Message
+  
+  # Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+      MIDDLEWARE_CLASSES=[],
+  )
+  django.setup()
+  
+  # Create a simple request class for testing
+  class DummyRequest:
+      def __init__(self):
+          self._messages = []
+          self.session = {}
+          self._message_storage = None
+  
+      def get_messages(self):
+          return self._messages
+  
+      def _store_messages(self, messages):
+          self._messages = messages
+  
+  # Create a test case
+  class MessageTagTest(TestCase):
+      def test_message_tags_with_override_settings(self):
+          # Define custom MESSAGE_TAGS
+          custom_message_tags = {
+              constants.INFO: '"'"'custom-info'"'"',
+              42: '"'"'custom-level'"'"',
+          }
+          
+          # Test with override_settings
+          with override_settings(MESSAGE_TAGS=custom_message_tags):
+              # Create a message with a custom level
+              message = Message(42, "Test message")
+              self.assertEqual(message.level_tag, '"'"'custom-level'"'"')
+              self.assertEqual(message.tags, '"'"'custom-level'"'"')
+              
+              # Create a request and add a message
+              request = DummyRequest()
+              add_message(request, 42, "Test message with add_message")
+              
+              # Check if the message has the correct tag
+              messages = request.get_messages()
+              self.assertEqual(len(messages), 1)
+              self.assertEqual(messages[0].level_tag, '"'"'custom-level'"'"')
+              self.assertEqual(messages[0].tags, '"'"'custom-level'"'"')
+  
+  # Run the test
+  if __name__ == '"'"'__main__'"'"':
+      from django.test.utils import setup_test_environment
+      setup_test_environment()
+      
+      from django.test.runner import DiscoverRunner
+      runner = DiscoverRunner()
+      runner.run_tests(['"'"'test_pr_case.py'"'"'])' --new_str 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings
+  from django.contrib.messages import constants, add_message
+  from django.contrib.messages.storage.base import Message
+  from django.contrib.messages.storage import default_storage
+  
+  # Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+      MIDDLEWARE_CLASSES=[],
+  )
+  django.setup()
+  
+  # Create a simple test function
+  def test_message_tags_with_override_settings():
+      # Define custom MESSAGE_TAGS
+      custom_message_tags = {
+          constants.INFO: '"'"'custom-info'"'"',
+          42: '"'"'custom-level'"'"',
+      }
+      
+      # Test with override_settings
+      with override_settings(MESSAGE_TAGS=custom_message_tags):
+          # Create a message with a custom level
+          message = Message(42, "Test message")
+          print(f"Message level_tag: '"'"'{message.level_tag}'"'"'")
+          print(f"Message tags: '"'"'{message.tags}'"'"'")
+          
+          # Create a storage instance and add a message
+          storage = default_storage(None)
+          storage.add(42, "Test message with storage")
+          
+          # Get the messages and check their tags
+          messages = list(storage)
+          print(f"Storage message level_tag: '"'"'{messages[0].level_tag}'"'"'")
+          print(f"Storage message tags: '"'"'{messages[0].tags}'"'"'")
+  
+  # Run the test
+  if __name__ == '"'"'__main__'"'"':
+      test_message_tags_with_override_settings()'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+The file /testbed/test_pr_case.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/test_pr_case.py:
+     1	import os
+     2	import sys
+     3	import django
+     4	from django.conf import settings
+     5	from django.test import override_settings
+     6	from django.contrib.messages import constants, add_message
+     7	from django.contrib.messages.storage.base import Message
+     8	from django.contrib.messages.storage import default_storage
+     9	
+    10	# Configure Django settings
+    11	settings.configure(
+    12	    MESSAGE_TAGS={},
+    13	    INSTALLED_APPS=[
+    14	        'django.contrib.messages',
+    15	    ],
+    16	    MIDDLEWARE_CLASSES=[],
+    17	)
+    18	django.setup()
+    19	
+    20	# Create a simple test function
+    21	def test_message_tags_with_override_settings():
+    22	    # Define custom MESSAGE_TAGS
+    23	    custom_message_tags = {
+    24	        constants.INFO: 'custom-info',
+    25	        42: 'custom-level',
+    26	    }
+    27	    
+    28	    # Test with override_settings
+    29	    with override_settings(MESSAGE_TAGS=custom_message_tags):
+    30	        # Create a message with a custom level
+    31	        message = Message(42, "Test message")
+    32	        print(f"Message level_tag: '{message.level_tag}'")
+    33	        print(f"Message tags: '{message.tags}'")
+    34	        
+    35	        # Create a storage instance and add a message
+    36	        storage = default_storage(None)
+    37	        storage.add(42, "Test message with storage")
+    38	        
+    39	        # Get the messages and check their tags
+    40	        messages = list(storage)
+    41	        print(f"Storage message level_tag: '{messages[0].level_tag}'")
+    42	        print(f"Storage message tags: '{messages[0].tags}'")
+    43	
+    44	# Run the test
+    45	if __name__ == '__main__':
+    46	    test_message_tags_with_override_settings()
+Review the changes and make sure they are as expecte
+
+... [Output truncated - 2036 total characters] ...
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's modify our test to use a different approach:
+
+<function=str_replace_editor>
+<parameter=command>str_replace</parameter>
+<parameter=path>/testbed/test_pr_case.py</parameter>
+<parameter=old_str>
+import os
+import sys
+import django
+from django.conf import settings
+from django.test import override_settings, TestCase
+from django.contrib.messages import constants, add_message
+from django.contrib.messages.storage.base import Message
+
+# Configure Django settings
+settings.configure(
+    MESSAGE_TAGS={},
+    INSTALLED_APPS=[
+        'django.contrib.messages',
+    ],
+    MIDDLEWARE_CLASSES=[],
+)
+django.setup()
+
+# Create a simple request class for testing
+class DummyRequest:
+    def __init__(self):
+        self._messages = []
+        self.session = {}
+        self._message_storage = None
+
+    def get_messages(self):
+        return self._messages
+
+    def _store_messages(self, messages):
+        self._messages = messages
+
+# Create a test case
+class MessageTagTest(TestCase):
+    def test_message
+... [Response truncated - 3749 total characters] ...
+
+⏱️  Execution Time: 0.1530 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 25 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's run the test:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_pr_case.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Message level_tag: 'custom-level'
+Message tags: 'custom-level'
+Traceback (most recent call last):
+  File "/testbed/test_pr_case.py", line 46, in <module>
+    test_message_tags_with_override_settings()
+  File "/testbed/test_pr_case.py", line 36, in test_message_tags_with_override_settings
+    storage = default_storage(None)
+  File "/testbed/django/contrib/messages/storage/__init__.py", line 12, in default_storage
+    return import_string(settings.MESSAGE_STORAGE)(request)
+  File "/testbed/django/contrib/messages/storage/fallback.py", line 15, in __init__
+    self.storages = [storage_class(*args, **kwargs)
+  File "/testbed/django/contrib/messages/storage/fallback.py", line 15, in <listcomp>
+    self.storages = [storage_class(*args, **kwargs)
+  File "/testbed/django/contrib/messages/storage/cookie.py", line 76, in __init__
+    self.signer = signing.get_cookie_signer(salt=self.key_salt)
+  File "/testbed/django/core/signing.py", line 102, in get_cookie_signer
+    key = force_bytes(settings.SECRET_KEY)  # SECRET_KEY may be str or bytes.
+  File "/testbed/django/conf/__init__.py", line 92, in __getattr__
+    raise ImproperlyConfigured("The SECRET_KEY setting must not be empty.")
+django.core.exceptions.ImproperlyConfigured: The SECRET_KEY setting must not be empty.
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's run the test:
+
+<function=bash>
+<parameter=command>cd /testbed && python test_pr_case.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.3190 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 26 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's fix the test by adding a SECRET_KEY:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor str_replace /testbed/test_pr_case.py   --old_str '# Configure Django settings
+
+Full Action:
+  str_replace_editor str_replace /testbed/test_pr_case.py   --old_str '# Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+      MIDDLEWARE_CLASSES=[],
+  )
+  django.setup()' --new_str '# Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+      MIDDLEWARE_CLASSES=[],
+      SECRET_KEY='"'"'dummy-key'"'"',
+  )
+  django.setup()'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+The file /testbed/test_pr_case.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/test_pr_case.py:
+     5	from django.test import override_settings
+     6	from django.contrib.messages import constants, add_message
+     7	from django.contrib.messages.storage.base import Message
+     8	from django.contrib.messages.storage import default_storage
+     9	
+    10	# Configure Django settings
+    11	settings.configure(
+    12	    MESSAGE_TAGS={},
+    13	    INSTALLED_APPS=[
+    14	        'django.contrib.messages',
+    15	    ],
+    16	    MIDDLEWARE_CLASSES=[],
+    17	    SECRET_KEY='dummy-key',
+    18	)
+    19	django.setup()
+    20	
+    21	# Create a simple test function
+    22	def test_message_tags_with_override_settings():
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's fix the test by adding a SECRET_KEY:
+
+<function=str_replace_editor>
+<parameter=command>str_replace</parameter>
+<parameter=path>/testbed/test_pr_case.py</parameter>
+<parameter=old_str>
+# Configure Django settings
+settings.configure(
+    MESSAGE_TAGS={},
+    INSTALLED_APPS=[
+        'django.contrib.messages',
+    ],
+    MIDDLEWARE_CLASSES=[],
+)
+django.setup()
+</parameter>
+<parameter=new_str>
+# Configure Django settings
+settings.configure(
+    MESSAGE_TAGS={},
+    INSTALLED_APPS=[
+        'django.contrib.messages',
+    ],
+    MIDDLEWARE_CLASSES=[],
+    SECRET_KEY='dummy-key',
+)
+django.setup()
+</parameter>
+</function>
+
+⏱️  Execution Time: 0.1546 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 27 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's run the test again:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_pr_case.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Message level_tag: 'custom-level'
+Message tags: 'custom-level'
+Traceback (most recent call last):
+  File "/testbed/test_pr_case.py", line 47, in <module>
+    test_message_tags_with_override_settings()
+  File "/testbed/test_pr_case.py", line 37, in test_message_tags_with_override_settings
+    storage = default_storage(None)
+  File "/testbed/django/contrib/messages/storage/__init__.py", line 12, in default_storage
+    return import_string(settings.MESSAGE_STORAGE)(request)
+  File "/testbed/django/contrib/messages/storage/fallback.py", line 15, in __init__
+    self.storages = [storage_class(*args, **kwargs)
+  File "/testbed/django/contrib/messages/storage/fallback.py", line 15, in <listcomp>
+    self.storages = [storage_class(*args, **kwargs)
+  File "/testbed/django/contrib/messages/storage/session.py", line 18, in __init__
+    raise ImproperlyConfigured(
+django.core.exceptions.ImproperlyConfigured: The session-based temporary message storage requires session middleware to be installed, and come before the message middleware in the MIDDLEWARE list.
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's run the test again:
+
+<function=bash>
+<parameter=command>cd /testbed && python test_pr_case.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.3267 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 28 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's simplify our test to focus on the Message class:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: str_replace_editor str_replace /testbed/test_pr_case.py   --old_str 'import os
+
+Full Action:
+  str_replace_editor str_replace /testbed/test_pr_case.py   --old_str 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings
+  from django.contrib.messages import constants, add_message
+  from django.contrib.messages.storage.base import Message
+  from django.contrib.messages.storage import default_storage
+  
+  # Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+      MIDDLEWARE_CLASSES=[],
+      SECRET_KEY='"'"'dummy-key'"'"',
+  )
+  django.setup()
+  
+  # Create a simple test function
+  def test_message_tags_with_override_settings():
+      # Define custom MESSAGE_TAGS
+      custom_message_tags = {
+          constants.INFO: '"'"'custom-info'"'"',
+          42: '"'"'custom-level'"'"',
+      }
+      
+      # Test with override_settings
+      with override_settings(MESSAGE_TAGS=custom_message_tags):
+          # Create a message with a custom level
+          message = Message(42, "Test message")
+          print(f"Message level_tag: '"'"'{message.level_tag}'"'"'")
+          print(f"Message tags: '"'"'{message.tags}'"'"'")
+          
+          # Create a storage instance and add a message
+          storage = default_storage(None)
+          storage.add(42, "Test message with storage")
+          
+          # Get the messages and check their tags
+          messages = list(storage)
+          print(f"Storage message level_tag: '"'"'{messages[0].level_tag}'"'"'")
+          print(f"Storage message tags: '"'"'{messages[0].tags}'"'"'")
+  
+  # Run the test
+  if __name__ == '"'"'__main__'"'"':
+      test_message_tags_with_override_settings()' --new_str 'import os
+  import sys
+  import django
+  from django.conf import settings
+  from django.test import override_settings
+  from django.contrib.messages import constants
+  from django.contrib.messages.storage.base import Message
+  
+  # Configure Django settings
+  settings.configure(
+      MESSAGE_TAGS={},
+      INSTALLED_APPS=[
+          '"'"'django.contrib.messages'"'"',
+      ],
+      SECRET_KEY='"'"'dummy-key'"'"',
+  )
+  django.setup()
+  
+  # Create a simple test function
+  def test_message_tags_with_override_settings():
+      # Define custom MESSAGE_TAGS
+      custom_message_tags = {
+          constants.INFO: '"'"'custom-info'"'"',
+          42: '"'"'custom-level'"'"',
+      }
+      
+      # Test with override_settings
+      with override_settings(MESSAGE_TAGS=custom_message_tags):
+          # Create a message with a custom level
+          message = Message(42, "Test message")
+          print(f"Message level_tag: '"'"'{message.level_tag}'"'"'")
+          print(f"Message tags: '"'"'{message.tags}'"'"'")
+          
+          # Create another message with a standard level
+          info_message = Message(constants.INFO, "Info message")
+          print(f"Info message level_tag: '"'"'{info_message.level_tag}'"'"'")
+          print(f"Info message tags: '"'"'{info_message.tags}'"'"'")
+  
+  # Run the test
+  if __name__ == '"'"'__main__'"'"':
+      test_message_tags_with_override_settings()'
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+The file /testbed/test_pr_case.py has been edited. Here's the result of running `cat -n` on a snippet of /testbed/test_pr_case.py:
+     1	import os
+     2	import sys
+     3	import django
+     4	from django.conf import settings
+     5	from django.test import override_settings
+     6	from django.contrib.messages import constants
+     7	from django.contrib.messages.storage.base import Message
+     8	
+     9	# Configure Django settings
+    10	settings.configure(
+    11	    MESSAGE_TAGS={},
+    12	    INSTALLED_APPS=[
+    13	        'django.contrib.messages',
+    14	    ],
+    15	    SECRET_KEY='dummy-key',
+    16	)
+    17	django.setup()
+    18	
+    19	# Create a simple test function
+    20	def test_message_tags_with_override_settings():
+    21	    # Define custom MESSAGE_TAGS
+    22	    custom_message_tags = {
+    23	        constants.INFO: 'custom-info',
+    24	        42: 'custom-level',
+    25	    }
+    26	    
+    27	    # Test with override_settings
+    28	    with override_settings(MESSAGE_TAGS=custom_message_tags):
+    29	        # Create a message with a custom level
+    30	        message = Message(42, "Test message")
+    31	        print(f"Message level_tag: '{message.level_tag}'")
+    32	        print(f"Message tags: '{message.tags}'")
+    33	        
+    34	        # Create another message with a standard level
+    35	        info_message = Message(constants.INFO, "Info message")
+    36	        print(f"Info message level_tag: '{info_message.level_tag}'")
+    37	        print(f"Info message tags: '{info_message.tags}'")
+    38	
+    39	# Run the test
+    40	if __name__ == '__main__':
+    41	    test_message_tags_with_override_settings()
+Review the changes and make sure they are as expected. Edit the file again if necessary.
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's simplify our test to focus on the Message class:
+
+<function=str_replace_editor>
+<parameter=command>str_replace</parameter>
+<parameter=path>/testbed/test_pr_case.py</parameter>
+<parameter=old_str>
+import os
+import sys
+import django
+from django.conf import settings
+from django.test import override_settings
+from django.contrib.messages import constants, add_message
+from django.contrib.messages.storage.base import Message
+from django.contrib.messages.storage import default_storage
+
+# Configure Django settings
+settings.configure(
+    MESSAGE_TAGS={},
+    INSTALLED_APPS=[
+        'django.contrib.messages',
+    ],
+    MIDDLEWARE_CLASSES=[],
+    SECRET_KEY='dummy-key',
+)
+django.setup()
+
+# Create a simple test function
+def test_message_tags_with_override_settings():
+    # Define custom MESSAGE_TAGS
+    custom_message_tags = {
+        constants.INFO: 'custom-info',
+        42: 'custom-level',
+    }
+    
+    # Test with override_settings
+    with override_settings(MESSAGE_TAGS=custom_messag
+... [Response truncated - 2988 total characters] ...
+
+⏱️  Execution Time: 0.1516 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 29 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Let's run the test:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: cd /testbed && python test_pr_case.py
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+Message level_tag: 'custom-level'
+Message tags: 'custom-level'
+Info message level_tag: 'custom-info'
+Info message tags: 'custom-info'
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Let's run the test:
+
+<function=bash>
+<parameter=command>cd /testbed && python test_pr_case.py</parameter>
+</function>
+
+⏱️  Execution Time: 0.3344 seconds
+
+📁 Working Directory: /testbed
+
+
+████████████████████████████████████████████████████████████████████████████████████████████████████
+STEP 30 of 30
+████████████████████████████████████████████████████████████████████████████████████████████████████
+
+💭 AGENT'S THOUGHT PROCESS:
+----------------------------------------------------------------------------------------------------
+Great! Our fix works perfectly for the test case described in the PR description. The `level_tag` property now correctly reflects the tags defined in the settings, even when using `@override_settings`.
+
+## Summary of the fix
+
+The issue was that `LEVEL_TAGS` in `django.contrib.messages.storage.base` was a module-level variable that was only initialized once when the module was loaded. When using `@override_settings`, the settings were temporarily changed, but `LEVEL_TAGS` was not updated.
+
+Our fix was to modify the `Message` class to use `get_level_tags()` dynamically instead of using the module-level `LEVEL_TAGS` variable. This way, it will always get the latest tags from the settings, even when using `@override_settings`.
+
+The fix is minimal and maintains backward compatibility. It doesn't introduce any new dependencies or change the behavior of the `Message` class in any other way.
+
+Let's submit our fix:
+
+⚡ ACTION TAKEN:
+----------------------------------------------------------------------------------------------------
+Command: submit
+
+👁️  OBSERVATION/RESULT:
+----------------------------------------------------------------------------------------------------
+diff --git a/django/contrib/messages/storage/base.py b/django/contrib/messages/storage/base.py
+index 01422066a6..1f581096b4 100644
+--- a/django/contrib/messages/storage/base.py
++++ b/django/contrib/messages/storage/base.py
+@@ -1,8 +1,6 @@
+ from django.conf import settings
+ from django.contrib.messages import constants, utils
+ 
+-LEVEL_TAGS = utils.get_level_tags()
+-
+ 
+ class Message:
+     """
+@@ -38,7 +36,9 @@ class Message:
+ 
+     @property
+     def level_tag(self):
+-        return LEVEL_TAGS.get(self.level, '')
++        # Get the latest LEVEL_TAGS from utils to ensure it's updated with any @override_settings
++        level_tags = utils.get_level_tags()
++        return level_tags.get(self.level, '')
+ 
+ 
+ class BaseStorage:
+diff --git a/reproduce_error.py b/reproduce_error.py
+new file mode 100644
+index 0000000000..df90e0d156
+--- /dev/null
++++ b/reproduce_error.py
+@@ -0,0 +1,80 @@
++import os
++import sys
++import django
++from django.conf import settings
++from django.test import override_settings
++from django.contrib.messages import constants
++
++# Configure Django settings
++settings.configure(
++    MESSAGE_TAGS={},
++    INSTALLED_APPS=[
++        'django.contrib.messages',
++    ],
++)
++django.setup()
++
++# Import after configuration
++from django.contrib.messages.storage.base import Message
++from django.contrib.messages.utils import get_level_tags
++
++print("=== Testing Message.level_tag with different settings ===")
++
++# Define custom MESSAGE_TAGS
++custom_message_tags = {
++    constants.INFO: 'custom-info',
++    42: 'custom-level',
++}
++
++# Test 1: Default settings
++print("\nTest 1: Default settings")
++message = Message(42, "Test message")
++print(f"Message level: {message.level}")
++print(f"Message level_tag: '{message.level_tag}'")
++print(f"Message tags: '{message.tags}'")
++
++# Test 2: Manually update settings
++print("\nTest 2: Manually update settings")
++settings.MESSAGE_TAGS = custom_message_tags
++message = Message(42, "Test message")
++print(f"Message level: {message.level}
+
+... [Output truncated - 5138 total characters] ...
+
+📝 AGENT'S RESPONSE:
+----------------------------------------------------------------------------------------------------
+Great! Our fix works perfectly for the test case described in the PR description. The `level_tag` property now correctly reflects the tags defined in the settings, even when using `@override_settings`.
+
+## Summary of the fix
+
+The issue was that `LEVEL_TAGS` in `django.contrib.messages.storage.base` was a module-level variable that was only initialized once when the module was loaded. When using `@override_settings`, the settings were temporarily changed, but `LEVEL_TAGS` was not updated.
+
+Our fix was to modify the `Message` class to use `get_level_tags()` dynamically instead of using the module-level `LEVEL_TAGS` variable. This way, it will always get the latest tags from the settings, even when using `@override_settings`.
+
+The fix is minimal and maintains backward compatibility. It doesn't introduce any new dependencies or change the behavior of the `Message` class in any other way.
+
+Let's submit our fix:
+
+<function=submit>
+</function>
+
+⏱️  Execution Time: 0.1834 seconds
+
+📁 Working Directory: /testbed
+
+
+====================================================================================================
+TRAJECTORY SUMMARY
+====================================================================================================
+Total Steps Executed: 30
+
+Action Type Distribution:
+  str_replace_editor: 18
+  cd: 8
+  find: 2
+  rm: 1
+  submit: 1
+
+====================================================================================================
+END OF TRAJECTORY
+====================================================================================================
