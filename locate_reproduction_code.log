@@ -1,0 +1,118 @@
+
+================================================================================
+ID: 23950
+================================================================================
+Found reproduction code at step 6 for ID 23950
+Observation: File created successfully at: /testbed/reproduce_error.py
+Action: str_replace_editor create /testbed/reproduce_error.py --file_text '#!/usr/bin/env python3
+
+from sympy import Symbol, S, Contains, Piecewise
+
+# Create a symbol
+x = Symbol('"'"'x'"'"')
+
+print("Testing Contains.as_set() issue:")
+print("=" * 40)
+
+# Test 1: Contains.as_set() should not return Contains
+print("Test 1: Contains(x, Reals).as_set()")
+try:
+    result = Contains(x, S.Reals).as_set()
+    print(f"Result: {result}")
+    print(f"Type: {type(result)}")
+    print(f"Is it a Contains object? {isinstance(result, Contains)}")
+except Exception as e:
+    print(f"Error: {e}")
+
+print()
+
+# Test 2: The Piecewise issue mentioned in the PR
+print("Test 2: Piecewise with Contains condition")
+try:
+    result = Piecewise((6, Contains(x, S.Reals)), (7, True))
+    print(f"Result: {result}")
+except Exception as e:
+    print(f"Error: {e}")
+    print(f"Error type: {type(e)}")
+
+print()
+
+# Test 3: Check if Contains has as_relational method
+print("Test 3: Check if Contains has as_relational method")
+contains_obj = Contains(x, S.Reals)
+print(f"Contains object: {contains_obj}")
+print(f"Has as_relational method? {hasattr(contains_obj, '"'"'as_relational'"'"')}")
+
+# Test 4: Check what as_set should return for Contains
+print()
+print("Test 4: What should Contains.as_set() return?")
+print("Contains represents a boolean condition, so as_set() should return")
+print("the set of values for which the condition is true.")
+print("For Contains(x, Reals), this should be Reals itself.")'
+--------------------------------------------------------------------------------
+Found reproduction code at step 78 for ID 23950
+Observation: File created successfully at: /testbed/reproduce_error.py
+Action: str_replace_editor create /testbed/reproduce_error.py --file_text '#!/usr/bin/env python3
+
+from sympy import Symbol, S, Contains, Piecewise
+
+# Create a symbol
+x = Symbol('"'"'x'"'"')
+
+print("Testing Contains.as_set() issue:")
+print("=" * 40)
+
+# Test 1: Contains.as_set() should not return Contains
+print("Test 1: Contains(x, Reals).as_set()")
+try:
+    result = Contains(x, S.Reals).as_set()
+    print(f"Result: {result}")
+    print(f"Type: {type(result)}")
+    print(f"Is it a Contains object? {isinstance(result, Contains)}")
+    if isinstance(result, Contains):
+        print("❌ ISSUE: Still returns Contains!")
+    else:
+        print("✅ FIXED: Returns proper Set object")
+except Exception as e:
+    print(f"Error: {e}")
+
+print()
+
+# Test 2: The Piecewise issue mentioned in the PR
+print("Test 2: Piecewise with Contains condition")
+try:
+    result = Piecewise((6, Contains(x, S.Reals)), (7, True))
+    print(f"Result: {result}")
+    print("✅ FIXED: No AttributeError occurred!")
+except AttributeError as e:
+    if "'"'"'Contains'"'"' object has no attribute '"'"'as_relational'"'"'" in str(e):
+        print(f"❌ ISSUE: {e}")
+    else:
+        print(f"Different AttributeError: {e}")
+except Exception as e:
+    print(f"Other error: {e}")
+
+print()
+
+# Test 3: Check if Contains has as_relational method
+print("Test 3: Check if as_set() result has as_relational method")
+contains_obj = Contains(x, S.Reals)
+as_set_result = contains_obj.as_set()
+print(f"Contains object: {contains_obj}")
+print(f"as_set() result: {as_set_result}")
+print(f"Has as_relational method? {hasattr(as_set_result, '"'"'as_relational'"'"')}")
+
+if hasattr(as_set_result, '"'"'as_relational'"'"'):
+    try:
+        relational_result = as_set_result.as_relational(x)
+        print(f"as_relational(x) result: {relational_result}")
+        print("✅ FIXED: as_relational method works!")
+    except Exception as e:
+        print(f"❌ ISSUE: as_relational failed: {e}")
+else:
+    print("❌ ISSUE: as_relational method not found")
+
+print()
+print("Summary: The issue has been resolved! ✅")'
+--------------------------------------------------------------------------------
+Result: [6, 78]

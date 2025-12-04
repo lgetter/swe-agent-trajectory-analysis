@@ -3,26 +3,26 @@ import sys
 from pathlib import Path
 
 id_to_path_map = {
-    "18698": "20250522_sweagent_claude-4-sonnet-20250514\\trajs\\sympy__sympy-18698",
-    "23950": "20250522_sweagent_claude-4-sonnet-20250514\\trajs\\sympy__sympy-23950",
-    "16950": "20250522_sweagent_claude-4-sonnet-20250514\\trajs\\django__django-16950",
-    "9461": "20250522_sweagent_claude-4-sonnet-20250514\\trajs\\sphinx-doc__sphinx-9461",
-    "14976": "20250522_sweagent_claude-4-sonnet-20250514\\trajs\\sympy__sympy-14976",
-    "10554": "20250511_sweagent_lm_32b\\trajs\\django__django-10554",
-    "4687": "20250511_sweagent_lm_32b\\trajs\\pydata__xarray-4687",
-    "16631": "20250511_sweagent_lm_32b\\trajs\\django__django-16631",
-    "4970": "20250511_sweagent_lm_32b\\trajs\\pylint-dev__pylint-4970",
-    "15127": "20250511_sweagent_lm_32b\\trajs\\django__django-15127",
-    "11138": "20250511_sweagent_lm_32b\\trajs\\django__django-11138",
-    "15100": "20250511_sweagent_lm_32b\\trajs\\scikit-learn__scikit-learn-15100",
-    "22080": "20250511_sweagent_lm_32b\\trajs\\sympy__sympy-22080",
-    "6938": "20250511_sweagent_lm_32b\\trajs\\pydata__xarray-6938",
-    "21612": "20250511_sweagent_lm_32b\\trajs\\sympy__sympy-21612",
-    "26113": "20250511_sweagent_lm_32b\\trajs\\matplotlib__matplotlib-26113",
-    "21379": "20250511_sweagent_lm_32b\\trajs\\sympy__sympy-21379",
-    "2931": "20250511_sweagent_lm_32b\\trajs\\psf__requests-2931",
-    "7454": "20250511_sweagent_lm_32b\\trajs\\sphinx-doc__sphinx-7454",
-    "16792": "20250511_sweagent_lm_32b\\trajs\\sympy__sympy-16792"
+    "18698": ".\\trajs\\sympy__sympy-18698.traj",
+    "23950": ".\\trajs\\sympy__sympy-23950.traj",
+    "16950": ".\\trajs\\django__django-16950.traj",
+    "9461": ".\\trajs\\sphinx-doc__sphinx-9461.traj",
+    "14976": ".\\trajs\\sympy__sympy-14976.traj",
+    "10554": ".\\trajs\\django__django-10554.traj",
+    "4687": ".\\trajs\\pydata__xarray-4687.traj",
+    "16631": ".\\trajs\\django__django-16631.traj",
+    "4970": ".\\trajs\\pylint-dev__pylint-4970.traj",
+    "15127": ".\\trajs\\django__django-15127.traj",
+    "11138": ".\\trajs\\django__django-11138.traj",
+    "15100": ".\\trajs\\scikit-learn__scikit-learn-15100.traj",
+    "22080": ".\\trajs\\sympy__sympy-22080.traj",
+    "6938": ".\\trajs\\pydata__xarray-6938.traj",
+    "21612": ".\\trajs\\sympy__sympy-21612.traj",
+    "26113": ".\\trajs\\matplotlib__matplotlib-26113.traj",
+    "21379": ".\\trajs\\sympy__sympy-21379.traj",
+    "2931": ".\\trajs\\psf__requests-2931.traj",
+    "7454": ".\\trajs\\sphinx-doc__sphinx-7454.traj",
+    "16792": ".\\trajs\\sympy__sympy-16792.traj"
 }
 
 def locate_reproduction_code(id: str):
@@ -130,39 +130,13 @@ def locate_tool_usage(id: str):
 
 # helper function to load trajectory array from file
 def load_trajectory(id: str):
-    dir_path = id_to_path_map[id]
-    folder_name = Path(dir_path).name
-    traj_filename = f"{folder_name}.traj"
-    traj_path = Path(dir_path) / traj_filename
+    traj_filename = f"{id_to_path_map[id]}"
+    traj_path = Path(traj_filename)
 
     with open(traj_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
     return data["trajectory"]
-
-# helper function to save trajectory steps to JSON file
-def print_trajectory_steps_to_json(trajectory, output_file='trajectory_steps.json'):
-    steps = []
-    for (i, step) in enumerate(trajectory):
-        action_first_line = step["action"].split("\n")[0]
-        step_data = {
-            "step_number": i+1,
-            "thought": step["thought"],
-            "action": action_first_line,
-            "full_action": step["action"],
-            "observation": step["observation"]
-        }
-        steps.append(step_data)
-    
-    output_data = {
-        "total_steps": len(trajectory),
-        "steps": steps
-    }
-    
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(output_data, f, indent=2, ensure_ascii=False)
-    
-    print(f"Trajectory saved to {output_file} with {len(trajectory)} steps")
 
 def print_trajectory_steps(trajectory, output_file='trajectory_steps.txt'):
     with open(output_file, 'w', encoding='utf-8') as f:
@@ -178,12 +152,13 @@ def print_trajectory_steps(trajectory, output_file='trajectory_steps.txt'):
     
     print(f"Trajectory saved to {output_file} with {len(trajectory)} steps")
 
-# id = "2931"
-# print(f"\nProcessing ID: {id}")
-# repro_steps = locate_reproduction_code(id)
-# print(f"Steps with reproduction code => {repro_steps}")
-# search_steps = locate_search(id)
-# print(f"Steps with search actions => {search_steps}")
-# tool_usage = locate_tool_usage(id)
-# print(f"Tool usage frequency map => {tool_usage}")
+
+id = "23950"
+print(f"\nProcessing ID: {id}")
+repro_steps = locate_reproduction_code(id)
+print(f"Steps with reproduction code => {repro_steps}")
+search_steps = locate_search(id)
+print(f"Steps with search actions => {search_steps}")
+tool_usage = locate_tool_usage(id)
+print(f"Tool usage frequency map => {tool_usage}")
 # print_trajectory_steps(load_trajectory(id))
